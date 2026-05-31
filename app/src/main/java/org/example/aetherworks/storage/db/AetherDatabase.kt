@@ -21,7 +21,7 @@ import org.example.aetherworks.storage.db.entity.SecurityLogEntry
         Message::class,
         SecurityLogEntry::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @androidx.room.TypeConverters(Converters::class)
@@ -47,6 +47,7 @@ abstract class AetherDatabase : RoomDatabase() {
                     "aether_private.db"
                 )
                 .openHelperFactory(factory)
+                .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE_PRIVATE = instance
                 instance
@@ -62,6 +63,7 @@ abstract class AetherDatabase : RoomDatabase() {
                     "aether_shared.db"
                 )
                 .openHelperFactory(factory)
+                .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE_SHARED = instance
                 instance

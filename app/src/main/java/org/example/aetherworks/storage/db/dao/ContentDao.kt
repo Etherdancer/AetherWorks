@@ -24,6 +24,12 @@ interface ContentDao {
     @Query("SELECT * FROM content_units WHERE contentHash = :hash LIMIT 1")
     suspend fun getByHash(hash: String): ContentUnit?
 
+    @Query("SELECT * FROM content_units WHERE visibility = :visibility ORDER BY timestamp DESC")
+    fun getByVisibilitySync(visibility: Visibility): List<ContentUnit>
+
+    @Query("SELECT * FROM content_units WHERE contentHash = :hash LIMIT 1")
+    fun getByHashSync(hash: String): ContentUnit?
+
     @Query("SELECT * FROM content_units WHERE visibility = 'PUBLIC' ORDER BY timestamp ASC LIMIT 1")
     suspend fun getOldestPublic(): ContentUnit?
 }

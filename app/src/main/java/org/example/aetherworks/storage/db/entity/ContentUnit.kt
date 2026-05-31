@@ -20,5 +20,9 @@ data class ContentUnit(
     val importCount: Int,
     val powNonce: Long,
     val likeTokens: String,
-    val dislikeTokens: String
+    val dislikeTokens: String,
+    val imagePath: String? = null,
+    val videoPath: String? = null,
+    val thumbnailPath: String? = null,
+    val thumbnailBase64: String? = null
 )

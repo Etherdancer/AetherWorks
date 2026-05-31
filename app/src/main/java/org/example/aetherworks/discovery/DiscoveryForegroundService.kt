@@ -15,6 +15,7 @@ import androidx.core.app.ServiceCompat
 import org.example.aetherworks.MainActivity
 import org.example.aetherworks.crypto.KeyManager
 import org.example.aetherworks.persona.PersonaAgent
+import org.example.aetherworks.storage.db.AetherDatabase
 
 class DiscoveryForegroundService : Service() {
 
@@ -25,6 +26,7 @@ class DiscoveryForegroundService : Service() {
     }
 
     private var discoveryManager: DiscoveryManager? = null
+    private var p2pServer: P2PServer? = null
     private val ephemeralPeerId = java.util.UUID.randomUUID().toString().substring(0, 8)
 
     override fun onCreate() {
@@ -39,6 +41,7 @@ class DiscoveryForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP_SHARING) {
             discoveryManager?.stop()
+            p2pServer?.stop()
             stopSelf()
             return START_NOT_STICKY
         }
@@ -82,13 +85,17 @@ class DiscoveryForegroundService : Service() {
         }
 
         val personaAgent = PersonaAgent(this, KeyManager(this))
+        val db = AetherDatabase.getSharedDatabase(this, "dummy_passphrase".toByteArray()) // TODO: Proper passphrase handling
 
-        // Create presence packet. Port 0 means we're just broadcasting presence without a P2P server running yet.
+        p2pServer = P2PServer(this, db)
+        val serverPort = p2pServer?.start() ?: 0
+
+        // Create presence packet.
         val packet = PresencePacket(
             peerId = ephemeralPeerId,
             hasProfile = personaAgent.hasProfile(),
             categoryBitmask = 0L,
-            tcpPort = 0
+            tcpPort = serverPort
         )
         discoveryManager?.start(packet)
 
@@ -98,6 +105,7 @@ class DiscoveryForegroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         discoveryManager?.stop()
+        p2pServer?.stop()
     }
 
     override fun onBind(intent: Intent?): IBinder? {
