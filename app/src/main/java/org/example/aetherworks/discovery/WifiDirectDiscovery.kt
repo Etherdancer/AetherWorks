@@ -22,7 +22,11 @@ class WifiDirectDiscovery(private val context: Context) : DiscoveryProtocol {
     private var serviceRequest: WifiP2pDnsSdServiceRequest? = null
 
     init {
-        channel = wifiP2pManager?.initialize(context, Looper.getMainLooper(), null)
+        try {
+            channel = wifiP2pManager?.initialize(context, Looper.getMainLooper(), null)
+        } catch (e: SecurityException) {
+            channel = null
+        }
     }
 
     override fun startDiscovery(presencePacket: PresencePacket) {
