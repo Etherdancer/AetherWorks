@@ -45,20 +45,40 @@ class DiscoveryForegroundService : Service() {
 
         val notification = createNotification()
         
-        // Start foreground with connectedDevice type as required by Android 14+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ServiceCompat.startForeground(
-                this,
-                NOTIFICATION_ID,
-                notification,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val fgsType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
                 } else {
                     0
                 }
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+                ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, fgsType)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (e: SecurityException) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    ServiceCompat.startForeground(
+                        this,
+                        NOTIFICATION_ID,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+                    )
+                } else {
+                    startForeground(NOTIFICATION_ID, notification)
+                }
+            } catch (ex2: Exception) {
+                try {
+                    startForeground(NOTIFICATION_ID, notification)
+                } catch (ex3: Exception) {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+            }
+        } catch (e: Exception) {
+            stopSelf()
+            return START_NOT_STICKY
         }
 
         val personaAgent = PersonaAgent(this, KeyManager(this))

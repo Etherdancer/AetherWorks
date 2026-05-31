@@ -14,9 +14,13 @@ class SharingStateManager(private val context: Context) {
         if (_isSharingEnabled.value) return
         _isSharingEnabled.value = true
         
-        // Start the foreground service
-        val intent = Intent(context, org.example.aetherworks.discovery.DiscoveryForegroundService::class.java)
-        context.startForegroundService(intent)
+        try {
+            // Start the foreground service
+            val intent = Intent(context, org.example.aetherworks.discovery.DiscoveryForegroundService::class.java)
+            context.startForegroundService(intent)
+        } catch (e: Exception) {
+            _isSharingEnabled.value = false
+        }
         
         // TODO: Start the DiscoveryManager and P2P services here when implemented
     }

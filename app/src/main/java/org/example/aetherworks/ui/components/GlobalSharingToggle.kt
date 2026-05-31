@@ -6,6 +6,10 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import android.os.Build
 
 @Composable
 fun GlobalSharingToggle(
@@ -16,6 +20,13 @@ fun GlobalSharingToggle(
 ) {
     var showConsentDialog by remember { mutableStateOf(false) }
     var showRiskDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { _ ->
+        onEnableSharing()
+    }
 
     FloatingActionButton(
         onClick = {
@@ -66,7 +77,27 @@ fun GlobalSharingToggle(
                 Button(
                     onClick = {
                         showRiskDialog = false
-                        onEnableSharing()
+                        val permissions = buildList {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                add(android.Manifest.permission.POST_NOTIFICATIONS)
+                                add(android.Manifest.permission.NEARBY_WIFI_DEVICES)
+                            }
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                add(android.Manifest.permission.BLUETOOTH_SCAN)
+                                add(android.Manifest.permission.BLUETOOTH_CONNECT)
+                                add(android.Manifest.permission.BLUETOOTH_ADVERTISE)
+                            }
+                        }
+                        
+                        val ungranted = permissions.filter {
+                            androidx.core.content.ContextCompat.checkSelfPermission(context, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                        }
+                        
+                        if (ungranted.isEmpty()) {
+                            onEnableSharing()
+                        } else {
+                            permissionLauncher.launch(ungranted.toTypedArray())
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
