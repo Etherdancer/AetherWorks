@@ -64,20 +64,28 @@ class BleDiscovery(private val context: Context) : DiscoveryProtocol {
     override fun startDiscovery(presencePacket: PresencePacket) {
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) return
 
-        startAdvertising(presencePacket)
-        startScanning()
+        try {
+            startAdvertising(presencePacket)
+            startScanning()
+        } catch (e: SecurityException) {
+            // Permission denied, silently fail discovery instead of crashing
+        }
     }
 
     override fun stopDiscovery() {
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) return
 
-        if (isAdvertising) {
-            bleAdvertiser?.stopAdvertising(advertiseCallback)
-            isAdvertising = false
-        }
-        if (isScanning) {
-            bleScanner?.stopScan(scanCallback)
-            isScanning = false
+        try {
+            if (isAdvertising) {
+                bleAdvertiser?.stopAdvertising(advertiseCallback)
+                isAdvertising = false
+            }
+            if (isScanning) {
+                bleScanner?.stopScan(scanCallback)
+                isScanning = false
+            }
+        } catch (e: SecurityException) {
+            // Permission denied
         }
     }
 

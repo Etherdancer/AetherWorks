@@ -28,59 +28,67 @@ class WifiDirectDiscovery(private val context: Context) : DiscoveryProtocol {
     override fun startDiscovery(presencePacket: PresencePacket) {
         if (wifiP2pManager == null || channel == null) return
 
-        // 1. Broadcast our service
-        val record = mapOf(
-            "peerId" to presencePacket.peerId,
-            "hasProfile" to presencePacket.hasProfile.toString(),
-            "port" to presencePacket.tcpPort.toString()
-        )
-        val serviceInfo = WifiP2pDnsSdServiceInfo.newInstance(
-            "AetherWorks",
-            "_aetherworks._tcp",
-            record
-        )
+        try {
+            // 1. Broadcast our service
+            val record = mapOf(
+                "peerId" to presencePacket.peerId,
+                "hasProfile" to presencePacket.hasProfile.toString(),
+                "port" to presencePacket.tcpPort.toString()
+            )
+            val serviceInfo = WifiP2pDnsSdServiceInfo.newInstance(
+                "AetherWorks",
+                "_aetherworks._tcp",
+                record
+            )
 
-        wifiP2pManager.addLocalService(channel, serviceInfo, object : WifiP2pManager.ActionListener {
-            override fun onSuccess() {}
-            override fun onFailure(reason: Int) {}
-        })
+            wifiP2pManager.addLocalService(channel, serviceInfo, object : WifiP2pManager.ActionListener {
+                override fun onSuccess() {}
+                override fun onFailure(reason: Int) {}
+            })
 
-        // 2. Discover others
-        wifiP2pManager.setDnsSdResponseListeners(channel, { instanceName, registrationType, srcDevice ->
-            // Service available
-        }, { fullDomainName, recordMap, srcDevice ->
-            if (fullDomainName.contains("aetherworks")) {
-                val peerId = recordMap["peerId"]
-                val hasProfile = recordMap["hasProfile"]?.toBoolean() ?: false
-                val port = recordMap["port"]?.toIntOrNull() ?: 0
+            // 2. Discover others
+            wifiP2pManager.setDnsSdResponseListeners(channel, { instanceName, registrationType, srcDevice ->
+                // Service available
+            }, { fullDomainName, recordMap, srcDevice ->
+                if (fullDomainName.contains("aetherworks")) {
+                    val peerId = recordMap["peerId"]
+                    val hasProfile = recordMap["hasProfile"]?.toBoolean() ?: false
+                    val port = recordMap["port"]?.toIntOrNull() ?: 0
 
-                if (peerId != null) {
-                    val packet = PresencePacket(peerId, hasProfile, 0L, port)
-                    val current = _discoveredPeers.value.toMutableList()
-                    if (!current.any { it.peerId == packet.peerId }) {
-                        current.add(packet)
-                        _discoveredPeers.value = current
+                    if (peerId != null) {
+                        val packet = PresencePacket(peerId, hasProfile, 0L, port)
+                        val current = _discoveredPeers.value.toMutableList()
+                        if (!current.any { it.peerId == packet.peerId }) {
+                            current.add(packet)
+                            _discoveredPeers.value = current
+                        }
                     }
                 }
-            }
-        })
+            })
 
-        serviceRequest = WifiP2pDnsSdServiceRequest.newInstance()
-        wifiP2pManager.addServiceRequest(channel, serviceRequest, object : WifiP2pManager.ActionListener {
-            override fun onSuccess() {
-                wifiP2pManager.discoverServices(channel, object : WifiP2pManager.ActionListener {
-                    override fun onSuccess() {}
-                    override fun onFailure(reason: Int) {}
-                })
-            }
-            override fun onFailure(reason: Int) {}
-        })
+            serviceRequest = WifiP2pDnsSdServiceRequest.newInstance()
+            wifiP2pManager.addServiceRequest(channel, serviceRequest, object : WifiP2pManager.ActionListener {
+                override fun onSuccess() {
+                    wifiP2pManager.discoverServices(channel, object : WifiP2pManager.ActionListener {
+                        override fun onSuccess() {}
+                        override fun onFailure(reason: Int) {}
+                    })
+                }
+                override fun onFailure(reason: Int) {}
+            })
+        } catch (e: SecurityException) {
+            // Permission denied, fallback to other transports
+        }
     }
 
     override fun stopDiscovery() {
         if (wifiP2pManager == null || channel == null) return
 
-        wifiP2pManager.clearLocalServices(channel, null)
-        wifiP2pManager.clearServiceRequests(channel, null)
+        try {
+            wifiP2pManager.clearLocalServices(channel, null)
+            wifiP2pManager.clearServiceRequests(channel, null)
+        } catch (e: SecurityException) {
+            // Permission denied
+        }
     }
 }
