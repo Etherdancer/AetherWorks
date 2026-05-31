@@ -48,9 +48,9 @@ class GatekeeperViewModel(private val repository: GatekeeperRepository) : ViewMo
     }
 
     fun submitPassword(password: String) {
-        val success = repository.authenticate(password)
-        if (success) {
-            _uiState.value = GatekeeperUiState.Authenticated
+        val dbKey = repository.authenticate(password)
+        if (dbKey != null) {
+            _uiState.value = GatekeeperUiState.Authenticated(dbKey)
         } else {
             updateLockoutState()
             if (_uiState.value == GatekeeperUiState.PromptPassword) {
@@ -61,8 +61,8 @@ class GatekeeperViewModel(private val repository: GatekeeperRepository) : ViewMo
     }
 
     fun completeOnboarding(password: String) {
-        repository.completeOnboarding(password)
-        _uiState.value = GatekeeperUiState.Authenticated
+        val dbKey = repository.completeOnboarding(password)
+        _uiState.value = GatekeeperUiState.Authenticated(dbKey)
     }
 }
 
@@ -72,5 +72,5 @@ sealed class GatekeeperUiState {
     object PromptPassword : GatekeeperUiState()
     object PasswordError : GatekeeperUiState()
     data class LockedOut(val remainingSeconds: Long) : GatekeeperUiState()
-    object Authenticated : GatekeeperUiState()
+    data class Authenticated(val dbKey: ByteArray) : GatekeeperUiState()
 }

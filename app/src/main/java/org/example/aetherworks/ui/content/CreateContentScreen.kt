@@ -14,6 +14,14 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.example.aetherworks.storage.db.entity.Visibility
 import org.example.aetherworks.utils.MediaUtils
+import org.example.aetherworks.storage.db.AetherDatabase
+import org.example.aetherworks.storage.db.entity.ContentUnit
+import org.example.aetherworks.reputation.ReputationAgent
+import org.example.aetherworks.crypto.KeyManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.security.MessageDigest
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,16 +122,63 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
             Button(
                 onClick = {
                     coroutineScope.launch {
-                        // Compress and save media if any
+                        // Save to database using AetherDatabase
+                        val db = AetherDatabase.getPrivateDatabase() // We can use either, they are the same room instance technically, but logically we should just use Shared for all content except Private. Wait, AetherDatabase separates them.
+                        // For simplicity, let's just get the shared DB.
+                        val sharedDb = AetherDatabase.getSharedDatabase()
+                        
+                        var imgPath: String? = null
+                        var vidPath: String? = null
+                        var thumb64: String? = null
+                        
                         selectedMediaUri?.let { uri ->
                             if (isVideo) {
-                                MediaUtils.copyAndSaveVideo(context, uri)
+                                val res = MediaUtils.copyAndSaveVideo(context, uri)
+                                vidPath = res?.first
+                                thumb64 = res?.second
                             } else {
-                                MediaUtils.compressAndSaveImage(context, uri)
+                                val res = MediaUtils.compressAndSaveImage(context, uri)
+                                imgPath = res?.first
+                                thumb64 = res?.second
                             }
                         }
                         
-                        // TODO: Save to database using AetherDatabase
+                        val contentRaw = title + body + System.currentTimeMillis() + UUID.randomUUID().toString()
+                        val md = MessageDigest.getInstance("SHA-256")
+                        val hashBytes = md.digest(contentRaw.toByteArray())
+                        val hashString = hashBytes.joinToString("") { "%02x".format(it) }
+                        
+                        withContext(Dispatchers.IO) {
+                            val repAgent = ReputationAgent(context, KeyManager(context))
+                            // PoW expects the data to be the hashString
+                            val nonce = repAgent.generateProofOfWork(hashString)
+                            
+                            val unit = ContentUnit(
+                                contentHash = hashString,
+                                title = title,
+                                body = body,
+                                categoryFlags = "", // TODO: UI for Categories
+                                emotionFlags = "", // TODO: UI for Emotions
+                                visibility = visibility,
+                                authorAlias = "Anonymous", // TODO: Get from PersonaAgent
+                                timestamp = System.currentTimeMillis(),
+                                importCount = 0,
+                                powNonce = nonce,
+                                likeTokens = emptySet(),
+                                dislikeTokens = emptySet(),
+                                categoryTokens = emptyMap(),
+                                emotionTokens = emptyMap(),
+                                imagePath = imgPath,
+                                videoPath = vidPath,
+                                thumbnailBase64 = thumb64
+                            )
+                            
+                            if (visibility == Visibility.PRIVATE) {
+                                AetherDatabase.getPrivateDatabase().contentDao().insert(unit)
+                            } else {
+                                sharedDb.contentDao().insert(unit)
+                            }
+                        }
                         onNavigateBack()
                     }
                 },

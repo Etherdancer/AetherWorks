@@ -19,10 +19,12 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
         return prefs.getBoolean(PREF_ONBOARDING_COMPLETE, false)
     }
 
-    fun completeOnboarding(password: String) {
-        val hash = PasswordHasher.hashPassword(password)
-        keyManager.storePasswordHash(hash)
+    fun completeOnboarding(password: String): ByteArray {
+        val (salt, hash) = PasswordHasher.hash(password.toCharArray(), clearPassword = false)
+        val fullHash = salt + hash
+        keyManager.storePasswordHash(fullHash)
         prefs.edit().putBoolean(PREF_ONBOARDING_COMPLETE, true).apply()
+        return keyManager.deriveSqlCipherKey(hash)
     }
 
     fun isLockedOut(): Boolean {
@@ -36,19 +38,19 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
         return if (remaining > 0) remaining / 1000 else 0
     }
 
-    fun authenticate(password: String): Boolean {
-        if (isLockedOut()) return false
+    fun authenticate(password: String): ByteArray? {
+        if (isLockedOut()) return null
 
-        val storedHash = keyManager.getStoredPasswordHash() ?: return false
-        val success = PasswordHasher.verifyPassword(password, storedHash)
+        val storedHash = keyManager.getStoredPasswordHash() ?: return null
+        val computedHash = PasswordHasher.computeHashForDbKey(password, storedHash)
 
-        if (success) {
+        if (computedHash != null) {
             resetFailedAttempts()
             _authState.value = AuthState.Authenticated
-            return true
+            return keyManager.deriveSqlCipherKey(computedHash)
         } else {
             recordFailedAttempt()
-            return false
+            return null
         }
     }
 

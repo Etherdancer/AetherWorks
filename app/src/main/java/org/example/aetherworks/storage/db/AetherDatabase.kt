@@ -69,5 +69,13 @@ abstract class AetherDatabase : RoomDatabase() {
                 instance
             }
         }
+
+        fun getPrivateDatabase(): AetherDatabase {
+            return INSTANCE_PRIVATE ?: throw IllegalStateException("Private database not initialized")
+        }
+
+        fun getSharedDatabase(): AetherDatabase {
+            return INSTANCE_SHARED ?: throw IllegalStateException("Shared database not initialized")
+        }
     }
 }

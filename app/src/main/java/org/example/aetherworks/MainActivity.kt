@@ -16,6 +16,7 @@ import org.example.aetherworks.crypto.KeyManager
 import org.example.aetherworks.security.EmulatorDetector
 import org.example.aetherworks.security.GatekeeperRepository
 import org.example.aetherworks.security.RootDetector
+import org.example.aetherworks.storage.db.AetherDatabase
 import org.example.aetherworks.theme.AetherWorksTheme
 import org.example.aetherworks.ui.auth.GatekeeperUiState
 import org.example.aetherworks.ui.auth.GatekeeperViewModel
@@ -75,7 +76,12 @@ class MainActivity : ComponentActivity() {
             is GatekeeperUiState.PromptPassword, is GatekeeperUiState.PasswordError, is GatekeeperUiState.LockedOut -> {
               LockScreen(uiState = state, onSubmitPassword = { gatekeeperViewModel.submitPassword(it) })
             }
-            is GatekeeperUiState.Authenticated -> MainNavigation(sharingToggleViewModel = sharingToggleViewModel)
+            is GatekeeperUiState.Authenticated -> {
+                // Initialize databases with the real key
+                AetherDatabase.getPrivateDatabase(this@MainActivity, state.dbKey)
+                AetherDatabase.getSharedDatabase(this@MainActivity, state.dbKey)
+                MainNavigation(sharingToggleViewModel = sharingToggleViewModel)
+            }
           }
         }
       }

@@ -26,7 +26,10 @@ data class ContentHeader(
     val title: String,
     val authorAlias: String,
     val timestamp: Long,
-    val thumbnailBase64: String?
+    val thumbnailBase64: String?,
+    val categoryFlags: String,
+    val emotionFlags: String,
+    val reputationScore: Int
 )
 
 class P2PServer(
@@ -87,7 +90,10 @@ class P2PServer(
                                     title = unit.title,
                                     authorAlias = unit.authorAlias,
                                     timestamp = unit.timestamp,
-                                    thumbnailBase64 = unit.thumbnailBase64
+                                    thumbnailBase64 = unit.thumbnailBase64,
+                                    categoryFlags = unit.categoryFlags,
+                                    emotionFlags = unit.emotionFlags,
+                                    reputationScore = unit.likeTokens.size - unit.dislikeTokens.size
                                 )
                             }
                             writer.println(Json.encodeToString(headers))

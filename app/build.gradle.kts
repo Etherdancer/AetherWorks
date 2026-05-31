@@ -13,8 +13,8 @@ android {
         applicationId = "org.example.aetherworks"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.1.03"
+        versionCode = 5
+        versionName = "0.2.0-alpha"
     }
 
     buildTypes {
@@ -103,4 +103,11 @@ dependencies {
   implementation(libs.signal.protocol)
   // implementation(libs.tor.android) // Guardian project maven required
   implementation(libs.kotlinx.serialization.json)
+  
+  // CameraX and ZXing for Trust Verification (Phase 4)
+  implementation(libs.androidx.camera.core)
+  implementation(libs.androidx.camera.camera2)
+  implementation(libs.androidx.camera.lifecycle)
+  implementation(libs.androidx.camera.view)
+  implementation(libs.zxing.core)
 }

@@ -33,9 +33,11 @@ class DiscoveryForegroundService : Service() {
         super.onCreate()
         createNotificationChannel()
         
-        // Initialize discovery manager with NSD fallback
+        // Initialize discovery manager with NSD, BLE, and Wi-Fi Direct
         val nsdDiscovery = NsdDiscovery(this)
-        discoveryManager = DiscoveryManager(listOf(nsdDiscovery))
+        val bleDiscovery = BleDiscovery(this)
+        val wifiDirectDiscovery = WifiDirectDiscovery(this)
+        discoveryManager = DiscoveryManager(listOf(nsdDiscovery, bleDiscovery, wifiDirectDiscovery))
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -85,7 +87,13 @@ class DiscoveryForegroundService : Service() {
         }
 
         val personaAgent = PersonaAgent(this, KeyManager(this))
-        val db = AetherDatabase.getSharedDatabase(this, "dummy_passphrase".toByteArray()) // TODO: Proper passphrase handling
+        val db = try {
+            AetherDatabase.getSharedDatabase()
+        } catch (e: Exception) {
+            // Service started but DB not initialized? Should not happen if UI enforces unlock first.
+            stopSelf()
+            return START_NOT_STICKY
+        }
 
         p2pServer = P2PServer(this, db)
         val serverPort = p2pServer?.start() ?: 0

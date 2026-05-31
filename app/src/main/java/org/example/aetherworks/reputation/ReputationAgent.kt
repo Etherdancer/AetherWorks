@@ -1,62 +1,124 @@
 package org.example.aetherworks.reputation
 
-import android.util.Base64
-import org.example.aetherworks.crypto.KeyManager
+import android.content.Context
+import android.content.SharedPreferences
 import java.security.MessageDigest
+import org.example.aetherworks.crypto.KeyManager
+import org.example.aetherworks.storage.db.entity.ContentUnit
 
-/**
- * Decentralized Anonymous Rating System
- * Tracks reputation through community feedback without identifying voters.
- */
-class ReputationAgent(private val keyManager: KeyManager) {
+class ReputationAgent(context: Context, private val keyManager: KeyManager) {
 
-    // Lazy-loaded persistent secure random secret used to generate anonymous tokens.
-    // It never leaves the device.
-    private val voterSecretBase64: String by lazy {
-        Base64.encodeToString(keyManager.getOrGenerateVoterSecret(), Base64.NO_WRAP)
+    private val prefs: SharedPreferences = context.getSharedPreferences("reputation_prefs", Context.MODE_PRIVATE)
+
+    companion object {
+        const val POW_DIFFICULTY = 1 // Number of leading zero bytes required
+        const val MAX_VOTES_PER_HOUR = 50
     }
 
     /**
-     * Generates a deterministic, anonymous LIKE token for a specific content item.
-     * Formula: SHA-256(contentHash + voterSecret + LIKE)
+     * Generates a unique, non-reversible vote token for the given content hash.
+     * Prevents duplicate votes from the same device mathematically.
      */
-    fun generateLikeToken(contentHash: String): String {
-        return hash("$contentHash:$voterSecretBase64:LIKE")
+    fun generateVoteToken(contentHash: String): String {
+        val voterSecret = keyManager.getOrGenerateVoterSecret()
+        return sha256Hex(contentHash.toByteArray() + voterSecret)
     }
 
     /**
-     * Generates a deterministic, anonymous DISLIKE token for a specific content item.
-     * Formula: SHA-256(contentHash + voterSecret + DISLIKE)
-     */
-    fun generateDislikeToken(contentHash: String): String {
-        return hash("$contentHash:$voterSecretBase64:DISLIKE")
-    }
-
-    /**
-     * Generates a deterministic, anonymous FLAG token (for categories or emotions).
-     * Formula: SHA-256(contentHash + voterSecret + FLAG + flagName)
+     * Generates a token for a category or emotion flag.
      */
     fun generateFlagToken(contentHash: String, flagName: String): String {
-        return hash("$contentHash:$voterSecretBase64:FLAG:$flagName")
+        val voterSecret = keyManager.getOrGenerateVoterSecret()
+        return sha256Hex(contentHash.toByteArray() + flagName.toByteArray() + voterSecret)
     }
 
     /**
-     * Merges reputation token sets when discovering the same content from multiple peers.
-     * Using Set Union mathematically prevents double-counting.
+     * Checks if the user has exceeded their local rate limit for voting.
      */
-    fun mergeReputation(localTokens: Set<String>, remoteTokens: Set<String>): Set<String> {
-        val union = localTokens.union(remoteTokens)
+    fun canVote(): Boolean {
+        val now = System.currentTimeMillis()
+        val windowStart = now - (60 * 60 * 1000)
         
-        // Anti-Exploitation: Token Cardinality Caps to prevent storage exhaustion attacks
-        if (union.size > 10_000) {
-            return union.take(10_000).toSet()
+        // Cleanup old votes
+        val currentVotes = prefs.getStringSet("vote_timestamps", emptySet())?.mapNotNull { it.toLongOrNull() } ?: emptyList()
+        val recentVotes = currentVotes.filter { it > windowStart }
+        
+        if (recentVotes.size >= MAX_VOTES_PER_HOUR) {
+            return false
         }
-        return union
+        
+        // Record new vote timestamp
+        val updatedVotes = recentVotes + now
+        prefs.edit().putStringSet("vote_timestamps", updatedVotes.map { it.toString() }.toSet()).apply()
+        return true
     }
 
-    private fun hash(input: String): String {
+    /**
+     * Proof of work generator. Finds a nonce that satisfies the difficulty.
+     */
+    fun generateProofOfWork(data: String): Long {
+        var nonce = 0L
+        val dataBytes = data.toByteArray()
         val digest = MessageDigest.getInstance("SHA-256")
-        val bytes = digest.digest(input.toByteArray(Charsets.UTF_8))
-        return Base64.encodeToString(bytes, Base64.NO_WRAP)
+        
+        while (true) {
+            digest.reset()
+            digest.update(dataBytes)
+            digest.update(nonce.toString().toByteArray())
+            val hash = digest.digest()
+            if (checkDifficulty(hash, POW_DIFFICULTY)) {
+                return nonce
+            }
+            nonce++
+        }
+    }
+
+    /**
+     * Verifies the proof of work.
+     */
+    fun verifyProofOfWork(data: String, nonce: Long): Boolean {
+        val digest = MessageDigest.getInstance("SHA-256")
+        digest.update(data.toByteArray())
+        digest.update(nonce.toString().toByteArray())
+        val hash = digest.digest()
+        return checkDifficulty(hash, POW_DIFFICULTY)
+    }
+
+    private fun checkDifficulty(hash: ByteArray, difficulty: Int): Boolean {
+        for (i in 0 until difficulty) {
+            if (hash[i] != 0.toByte()) return false
+        }
+        return true
+    }
+
+    /**
+     * Unions token sets from a received content unit into the local content unit.
+     */
+    fun mergeReputation(local: ContentUnit, received: ContentUnit): ContentUnit {
+        val mergedLikes = (local.likeTokens + received.likeTokens).toMutableSet()
+        val mergedDislikes = (local.dislikeTokens + received.dislikeTokens).toMutableSet()
+        
+        // Cap cardinality at 10,000 to prevent memory exhaustion attacks
+        if (mergedLikes.size > 10000) {
+            val toDrop = mergedLikes.size - 10000
+            mergedLikes.removeAll(mergedLikes.take(toDrop).toSet())
+        }
+        if (mergedDislikes.size > 10000) {
+            val toDrop = mergedDislikes.size - 10000
+            mergedDislikes.removeAll(mergedDislikes.take(toDrop).toSet())
+        }
+
+        return local.copy(
+            likeTokens = mergedLikes,
+            dislikeTokens = mergedDislikes,
+            categoryTokens = (local.categoryTokens + received.categoryTokens).toMutableMap(),
+            emotionTokens = (local.emotionTokens + received.emotionTokens).toMutableMap()
+        )
+    }
+
+    private fun sha256Hex(data: ByteArray): String {
+        val md = MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(data)
+        return digest.joinToString("") { "%02x".format(it) }
     }
 }

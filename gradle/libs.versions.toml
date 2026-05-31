@@ -20,6 +20,8 @@ bouncycastle = "1.77"
 signalProtocol = "2.8.1"
 torAndroid = "0.4.8.9" # Standard Guardian Project release
 serialization = "1.6.3"
+camerax = "1.4.0"
+zxing = "3.5.3"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
@@ -56,6 +58,11 @@ signal-protocol = { module = "org.whispersystems:signal-protocol-java", version.
 # Note: Tor Android may require custom maven repo depending on the exact version, but we declare the coordinate here.
 tor-android = { module = "info.guardianproject:tor-android", version.ref = "torAndroid" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+androidx-camera-core = { module = "androidx.camera:camera-core", version.ref = "camerax" }
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
