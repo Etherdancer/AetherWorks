@@ -29,10 +29,21 @@ class NsdDiscovery(context: Context) : DiscoveryProtocol {
     override fun startDiscovery(presencePacket: PresencePacket) {
         val uniqueServiceName = "$BASE_SERVICE_NAME-$serviceNameSuffix"
 
+        val resolvedPort = if (presencePacket.tcpPort > 0) presencePacket.tcpPort else {
+            try {
+                val socket = java.net.ServerSocket(0)
+                val localPort = socket.localPort
+                socket.close()
+                localPort
+            } catch (e: Exception) {
+                8080
+            }
+        }
+
         val serviceInfo = NsdServiceInfo().apply {
             serviceName = uniqueServiceName
             serviceType = SERVICE_TYPE
-            port = presencePacket.tcpPort
+            port = resolvedPort
             
             // Encode presence packet into TXT record.
             // mDNS TXT record size limits usually apply to individual key-value pairs (255 bytes max).
