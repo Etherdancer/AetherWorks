@@ -57,6 +57,12 @@
             android:exported="false"
             android:foregroundServiceType="connectedDevice|dataSync" />
 
+        <!-- Shelter-style Content Renderer Sandbox -->
+        <service
+            android:name=".security.guard.ContentRendererService"
+            android:exported="false"
+            android:isolatedProcess="true" />
+
         <!-- All other components must have android:exported="false" -->
     </application>
 </manifest>

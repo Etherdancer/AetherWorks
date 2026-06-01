@@ -101,7 +101,7 @@ dependencies {
   implementation(libs.sqlcipher)
   implementation(libs.bouncycastle)
   implementation(libs.signal.protocol)
-  // implementation(libs.tor.android) // Guardian project maven required
+  // implementation(libs.tor.android) // Temporarily disabled due to repository resolution issues
   implementation(libs.kotlinx.serialization.json)
   
   // CameraX and ZXing for Trust Verification (Phase 4)
