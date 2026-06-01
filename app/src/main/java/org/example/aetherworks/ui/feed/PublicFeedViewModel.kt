@@ -43,9 +43,7 @@ class PublicFeedViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val db = AetherDatabase.getSharedDatabase()
-                // Wait, Room doesn't return Flow for these generated methods.
-                // We'll just fetch once. In a real app we'd observe the DB.
-                val content = db.contentDao().getByVisibilitySync(Visibility.PUBLIC)
+                val content = db.contentDao().getByVisibility(Visibility.PUBLIC)
                 _rawContent.value = content
             } catch (e: Exception) {
                 // Not initialized

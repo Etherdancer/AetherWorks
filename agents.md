@@ -4,8 +4,8 @@
 
 > **License:** This program is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License v3.0** as published by the Free Software Foundation. This program is distributed **WITHOUT ANY WARRANTY**; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [LICENSE](LICENSE) file for details.
 
-> **⚠️ DISTRIBUTION TARGET: F-DROID ONLY**
-> This application is designed exclusively for release on **F-Droid**, the free and open-source Android app repository. Every architectural decision, dependency choice, permission declaration, and build configuration in this document MUST comply with the [F-Droid Inclusion Policy](https://f-droid.org/en/docs/Inclusion_Policy/). Specifically:
+> **⚠️ DISTRIBUTION TARGETS: F-DROID AND GITHUB**
+> This application is designed for release on **F-Droid** and **GitHub Releases**. Even though GitHub is an allowed release platform, every architectural decision, dependency choice, permission declaration, and build configuration in this document MUST continue to strictly comply with the [F-Droid Inclusion Policy](https://f-droid.org/en/docs/Inclusion_Policy/) to ensure F-Droid compatibility is never broken. Specifically:
 > - **No Google Play Services.** No dependency on `com.google.android.gms` or any closed-source Google library. Ever.
 > - **No proprietary dependencies.** Every library must be free software under a GPL-3.0-compatible license (Apache-2.0, MIT, BSD, LGPL, or GPL).
 > - **No closed-source binaries.** No precompiled `.so` files, no obfuscated JARs, no proprietary native code.

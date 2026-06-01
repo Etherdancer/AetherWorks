@@ -109,6 +109,19 @@ class P2PServer(
                                 }
                             }
                         }
+                        "PROFILE" -> {
+                            val personaAgent = PersonaAgent(context, KeyManager(context))
+                            if (personaAgent.showProfileToNearbyUsers) {
+                                val profile = personaAgent.getProfile()
+                                if (profile != null) {
+                                    writer.println(Json.encodeToString(profile))
+                                } else {
+                                    writer.println("ERROR: NO_PROFILE")
+                                }
+                            } else {
+                                writer.println("ERROR: PROFILE_PRIVATE")
+                            }
+                        }
                         else -> {
                             writer.println("ERROR: UNKNOWN_COMMAND")
                         }
@@ -152,6 +165,25 @@ object P2PClient {
                 val response = reader.readLine()
                 if (response != null && response.startsWith("{")) {
                     return@withContext Json.decodeFromString<ContentUnit>(response)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return@withContext null
+    }
+
+    suspend fun fetchProfile(ip: String, port: Int): org.example.aetherworks.persona.Profile? = withContext(Dispatchers.IO) {
+        try {
+            Socket(ip, port).use { socket ->
+                socket.soTimeout = 5000
+                val writer = PrintWriter(socket.getOutputStream(), true)
+                val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+                
+                writer.println("PROFILE")
+                val response = reader.readLine()
+                if (response != null && response.startsWith("{")) {
+                    return@withContext Json.decodeFromString<org.example.aetherworks.persona.Profile>(response)
                 }
             }
         } catch (e: Exception) {

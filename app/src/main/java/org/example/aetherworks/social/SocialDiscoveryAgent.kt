@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.example.aetherworks.discovery.PresencePacket
 import org.example.aetherworks.crypto.KeyManager
+import org.example.aetherworks.discovery.P2PClient
 
 data class DiscoveredProfile(
     val peerId: String,
@@ -25,13 +26,26 @@ class SocialDiscoveryAgent(private val context: Context, private val keyManager:
     fun updatePeers(peers: List<PresencePacket>) {
         val current = _nearbyProfiles.value.toMutableList()
         peers.forEach { packet ->
-            if (!current.any { it.peerId == packet.peerId }) {
+            val existing = current.find { it.peerId == packet.peerId }
+            if (existing == null) {
                 current.add(DiscoveredProfile(
                     peerId = packet.peerId,
                     alias = "Peer ${packet.peerId}",
                     hasProfile = packet.hasProfile,
                     isAcquaintance = false
                 ))
+                
+                if (packet.hasProfile && packet.ip != null) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val fetchedProfile = P2PClient.fetchProfile(packet.ip!!, packet.tcpPort)
+                        if (fetchedProfile != null) {
+                            val updatedList = _nearbyProfiles.value.map { 
+                                if (it.peerId == packet.peerId) it.copy(alias = fetchedProfile.alias) else it 
+                            }
+                            _nearbyProfiles.value = updatedList
+                        }
+                    }
+                }
             }
         }
         _nearbyProfiles.value = current

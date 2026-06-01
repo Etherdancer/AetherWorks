@@ -73,6 +73,7 @@ class NsdDiscovery(context: Context) : DiscoveryProtocol {
                                 try {
                                     val jsonString = String(presenceBytes)
                                     val packet = Json.decodeFromString<PresencePacket>(jsonString)
+                                    packet.ip = serviceInfo.host?.hostAddress
                                     
                                     // Add to our list, replacing existing peer if necessary
                                     val current = _discoveredPeers.value.toMutableList()

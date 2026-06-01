@@ -97,4 +97,8 @@ class PersonaAgent(context: Context, private val keyManager: KeyManager) {
     fun hasProfile(): Boolean {
         return prefs.contains("profile_json") || prefs.contains("alias")
     }
+
+    var showProfileToNearbyUsers: Boolean
+        get() = prefs.getBoolean("showProfileToNearbyUsers", false)
+        set(value) = prefs.edit().putBoolean("showProfileToNearbyUsers", value).apply()
 }

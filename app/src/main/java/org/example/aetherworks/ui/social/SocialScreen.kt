@@ -8,16 +8,40 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import org.example.aetherworks.crypto.KeyManager
+import org.example.aetherworks.persona.PersonaAgent
 
 @Composable
 fun SocialScreen(modifier: Modifier = Modifier, viewModel: SocialViewModel = viewModel()) {
+    val context = LocalContext.current
+    val personaAgent = remember { PersonaAgent(context, KeyManager(context)) }
+    var showProfile by remember { mutableStateOf(personaAgent.showProfileToNearbyUsers) }
+    
     val profiles by viewModel.nearbyProfiles.collectAsState()
     
     val acquaintances = profiles.filter { it.isAcquaintance }
     val nearby = profiles.filter { !it.isAcquaintance }
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
-        Text("Social Network", style = MaterialTheme.typography.headlineMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Social Network", style = MaterialTheme.typography.headlineMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Show Profile", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end = 8.dp))
+                Switch(
+                    checked = showProfile,
+                    onCheckedChange = { 
+                        showProfile = it
+                        personaAgent.showProfileToNearbyUsers = it 
+                    }
+                )
+            }
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
         
