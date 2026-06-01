@@ -29,37 +29,37 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
     
     // About
     var about by remember { mutableStateOf(profile?.about?.value ?: "") }
-    var aboutVis by remember { mutableStateOf(profile?.about?.visibility ?: VisibilityLevel.PUBLIC) }
+    var aboutVis by remember { mutableStateOf(profile?.about?.visibility ?: VisibilityLevel.PRIVATE) }
     var guidingPrinciple by remember { mutableStateOf(profile?.guidingPrinciple?.value ?: "") }
-    var guidingPrincipleVis by remember { mutableStateOf(profile?.guidingPrinciple?.visibility ?: VisibilityLevel.PUBLIC) }
+    var guidingPrincipleVis by remember { mutableStateOf(profile?.guidingPrinciple?.visibility ?: VisibilityLevel.PRIVATE) }
     
     // Favorites
     var favMusic by remember { mutableStateOf(profile?.favoriteMusic?.value ?: "") }
-    var favMusicVis by remember { mutableStateOf(profile?.favoriteMusic?.visibility ?: VisibilityLevel.PUBLIC) }
+    var favMusicVis by remember { mutableStateOf(profile?.favoriteMusic?.visibility ?: VisibilityLevel.PRIVATE) }
     var favMovies by remember { mutableStateOf(profile?.favoriteMovies?.value ?: "") }
-    var favMoviesVis by remember { mutableStateOf(profile?.favoriteMovies?.visibility ?: VisibilityLevel.PUBLIC) }
+    var favMoviesVis by remember { mutableStateOf(profile?.favoriteMovies?.visibility ?: VisibilityLevel.PRIVATE) }
     
     // Interests
     var interests by remember { mutableStateOf(profile?.interests?.value ?: "") }
-    var interestsVis by remember { mutableStateOf(profile?.interests?.visibility ?: VisibilityLevel.PUBLIC) }
+    var interestsVis by remember { mutableStateOf(profile?.interests?.visibility ?: VisibilityLevel.PRIVATE) }
 
     // Demographics
     var occupation by remember { mutableStateOf(profile?.occupation?.value ?: "") }
-    var occupationVis by remember { mutableStateOf(profile?.occupation?.visibility ?: VisibilityLevel.PUBLIC) }
+    var occupationVis by remember { mutableStateOf(profile?.occupation?.visibility ?: VisibilityLevel.PRIVATE) }
     var relationship by remember { mutableStateOf(profile?.relationshipStatus?.value ?: "") }
-    var relationshipVis by remember { mutableStateOf(profile?.relationshipStatus?.visibility ?: VisibilityLevel.PUBLIC) }
+    var relationshipVis by remember { mutableStateOf(profile?.relationshipStatus?.visibility ?: VisibilityLevel.PRIVATE) }
 
     // Astrology
     var westernZodiac by remember { mutableStateOf(profile?.westernZodiac?.value ?: "") }
-    var westernZodiacVis by remember { mutableStateOf(profile?.westernZodiac?.visibility ?: VisibilityLevel.PUBLIC) }
+    var westernZodiacVis by remember { mutableStateOf(profile?.westernZodiac?.visibility ?: VisibilityLevel.PRIVATE) }
     var celticHoroscope by remember { mutableStateOf(profile?.celticHoroscope?.value ?: "") }
-    var celticHoroscopeVis by remember { mutableStateOf(profile?.celticHoroscope?.visibility ?: VisibilityLevel.PUBLIC) }
+    var celticHoroscopeVis by remember { mutableStateOf(profile?.celticHoroscope?.visibility ?: VisibilityLevel.PRIVATE) }
     var chineseZodiac by remember { mutableStateOf(profile?.chineseZodiac?.value ?: "") }
-    var chineseZodiacVis by remember { mutableStateOf(profile?.chineseZodiac?.visibility ?: VisibilityLevel.PUBLIC) }
+    var chineseZodiacVis by remember { mutableStateOf(profile?.chineseZodiac?.visibility ?: VisibilityLevel.PRIVATE) }
     var mayanKin by remember { mutableStateOf(profile?.mayanKin?.value ?: "") }
-    var mayanKinVis by remember { mutableStateOf(profile?.mayanKin?.visibility ?: VisibilityLevel.PUBLIC) }
+    var mayanKinVis by remember { mutableStateOf(profile?.mayanKin?.visibility ?: VisibilityLevel.PRIVATE) }
     var vedicRasi by remember { mutableStateOf(profile?.vedicRasi?.value ?: "") }
-    var vedicRasiVis by remember { mutableStateOf(profile?.vedicRasi?.visibility ?: VisibilityLevel.PUBLIC) }
+    var vedicRasiVis by remember { mutableStateOf(profile?.vedicRasi?.visibility ?: VisibilityLevel.PRIVATE) }
 
     Scaffold(
         topBar = {
