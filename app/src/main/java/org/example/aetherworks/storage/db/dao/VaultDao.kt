@@ -15,13 +15,13 @@ interface VaultDao {
     fun getPasswordsByCategory(category: String): Flow<List<VaultPassword>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertPassword(password: VaultPassword)
+    fun insertPassword(password: VaultPassword)
 
     @Delete
-    suspend fun deletePassword(password: VaultPassword)
+    fun deletePassword(password: VaultPassword)
 
     @Query("SELECT * FROM vault_passwords WHERE id = :id LIMIT 1")
-    suspend fun getPasswordById(id: String): VaultPassword?
+    fun getPasswordById(id: String): VaultPassword?
 
     // Notes
     @Query("SELECT * FROM vault_notes ORDER BY isPinned DESC, updatedAt DESC")
@@ -31,11 +31,11 @@ interface VaultDao {
     fun getNotesByFolder(folder: String): Flow<List<VaultNote>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertNote(note: VaultNote)
+    fun insertNote(note: VaultNote)
 
     @Delete
-    suspend fun deleteNote(note: VaultNote)
+    fun deleteNote(note: VaultNote)
 
     @Query("SELECT * FROM vault_notes WHERE id = :id LIMIT 1")
-    suspend fun getNoteById(id: String): VaultNote?
+    fun getNoteById(id: String): VaultNote?
 }

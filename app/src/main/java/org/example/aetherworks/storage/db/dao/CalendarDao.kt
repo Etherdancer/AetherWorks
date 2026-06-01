@@ -13,11 +13,11 @@ interface CalendarDao {
     fun getAllEvents(): Flow<List<CalendarEvent>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertEvent(event: CalendarEvent)
+    fun insertEvent(event: CalendarEvent)
 
     @Delete
-    suspend fun deleteEvent(event: CalendarEvent)
+    fun deleteEvent(event: CalendarEvent)
 
     @Query("SELECT * FROM calendar_events WHERE id = :id LIMIT 1")
-    suspend fun getEventById(id: String): CalendarEvent?
+    fun getEventById(id: String): CalendarEvent?
 }

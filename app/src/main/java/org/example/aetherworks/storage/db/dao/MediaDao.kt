@@ -16,11 +16,11 @@ interface MediaDao {
     fun getVideoMedia(): Flow<List<MediaItem>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMedia(item: MediaItem)
+    fun insertMedia(item: MediaItem)
 
     @Delete
-    suspend fun deleteMedia(item: MediaItem)
+    fun deleteMedia(item: MediaItem)
 
     @Query("SELECT * FROM vault_media WHERE id = :id LIMIT 1")
-    suspend fun getMediaById(id: String): MediaItem?
+    fun getMediaById(id: String): MediaItem?
 }
