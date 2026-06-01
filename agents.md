@@ -47,6 +47,7 @@ Every time the app is opened, access is guarded.
 * **Responsibilities:**
     * **Mandatory Authentication:** The app requires a password (or PIN / biometric) every single time it is opened — no "stay logged in" option.
     * **Secure Credential Storage:** The password hash is stored using Argon2id (or bcrypt as fallback) and never in plain text. Keys are hardware-backed via the Android Keystore (StrongBox / TEE).
+    * **Incognito Input (Keyboard Tracking Prevention):** Enforces `android:imeOptions="flagNoPersonalizedLearning"` and `InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD` on all sensitive fields to force standard keyboards (like Gboard) into Incognito Mode. A custom in-app keypad is provided for PINs to bypass system keyboards entirely (HeliBoard style).
     * **Brute-Force Protection:** After 5 failed attempts, enforce escalating lockout timers (30s → 60s → 5min → 15min). After 20 consecutive failures, wipe the app's encryption keys (data becomes irrecoverable).
     * **Emulator & Virtual Device Detection:** On every launch, the Gatekeeper runs a battery of environment checks:
         * `Build.FINGERPRINT`, `Build.MODEL`, `Build.MANUFACTURER`, `Build.PRODUCT`, `Build.HARDWARE` — check for known emulator strings (`generic`, `sdk`, `goldfish`, `ranchu`, `vbox`, `nox`, `bluestacks`, `genymotion`).
@@ -113,7 +114,9 @@ All user data lives in an encrypted local database that never leaves the device 
 * **Responsibilities:**
     * **Encrypted Database:** Room (SQLite) database encrypted with SQLCipher. The decryption key is derived from the user's password + a hardware-backed key from the Android Keystore.
     * **Three Storage Tiers:**
-        1. **Private Library** — Content the user creates or saves but does not share. Completely inaccessible to the network layer. Not included in any index broadcast. Cannot be read, inferred, or accessed by any external means.
+        1. **Private Library (Offline Knowledge Base & Passwords):** Content the user creates or saves but does not share. Completely inaccessible to the network layer. Not included in any index broadcast. Contains:
+            * **Password Vault:** Securely stores passwords and 2FA codes locally (Bitwarden style).
+            * **Obsidian-Style Notes:** Robust offline Markdown editor supporting tags, bidirectional `[[linking]]`, and a local Graph View to connect private thoughts.
         2. **Trusted-Only Library** — Content shared exclusively with verified Trusted Users via encrypted channels.
         3. **Public Library** — Content available to all nearby AetherWorks users when sharing is enabled.
     * **Content Creation Flow:** When a user creates new content, they must choose one of three visibility levels before saving:
@@ -121,6 +124,7 @@ All user data lives in an encrypted local database that never leaves the device 
         * 🤝 **Trusted Users Only** — Shared exclusively with verified trusted contacts.
         * 🌐 **Public** — Available to all connected devices.
     * **Save to Device Storage:** The user can export individual content items from their Private Library to the device's standard file system (e.g., Downloads folder). This is a one-way copy — the exported file is a standard format (text, image, etc.) and is no longer protected by the app's encryption.
+    * **Encrypted File Sharing (Cryptomator / Tresorit Style):** Users can export or share files directly. When shared with an acquaintance, the file is encrypted locally with an AES-256-GCM passphrase chosen by the user. It transfers P2P, and the receiver must enter the passphrase (sent out-of-band) to decrypt it.
     * **Data Isolation:** The Private Library is stored in a separate encrypted database file from the Public/Trusted libraries. Even if the Public database is somehow extracted, no Private data is accessible.
     * **Storage Quota & Eviction:** To prevent storage exhaustion attacks (malicious peers filling up your device), the Public Library has a strict maximum size quota (e.g., 500MB). When the quota is reached, the system automatically deletes the oldest or lowest-rated public content (LRU/Lowest-Reputation eviction).
     * **`android:allowBackup="false"`** — Prevent system backups from leaking app data.
@@ -133,6 +137,7 @@ Organizes and presents received content indexes for efficient, filterable browsi
 
 * **Role:** Provide a searchable, categorized view of content available from connected peers.
 * **Responsibilities:**
+    * **Mastodon-Style Microblogging UI:** In addition to long-form content, the Indexer supports a chronological feed of short "Notes" (Toots) broadcast over the P2P indexer. Includes support for Content Warnings (CWs) and hashtags.
     * **Lightweight Index Transfer:** When peers connect, only `ContentHeader` objects are exchanged initially — not full content. Headers contain: title, category flags, emotion flags, reputation score (as raw integer counts), import count, timestamp, content hash, author alias, and source trust level.
     * **Unverified Claims:** Because headers only contain integer scores (to save bandwidth) rather than the full cryptographic token sets, these scores are treated as **unverified claims**. The UI visually distinguishes these from verified local scores until the full content (and its token set) is imported and cryptographically verified.
     * **Content Categories (Category Flags):** A comprehensive set of content type flags. The user selects one or more when creating content. Used for filtering when browsing:
@@ -272,6 +277,7 @@ End-to-end encrypted private messaging between Trusted Users — modeled after B
         2. **Relay via Tor:** If direct connection is unavailable but internet is available, each device runs a Tor hidden service. Messages are routed through Tor onion services, ensuring that neither the sender's nor receiver's IP address is exposed, and no observer can determine who is communicating with whom.
         3. **Store-and-Forward via Mutual Contacts:** If neither direct nor Tor is available, messages can be relayed through other Trusted Users who are in contact with both parties. The relaying device cannot read the message. To prevent storage bloat on relay devices, all relayed messages have a strict **Time-To-Live (TTL) of 48 hours**, after which they are automatically deleted from the relay's storage if undelivered.
         4. **Offline Queue:** If no transport is available, messages are queued locally and delivered when a connection becomes available.
+    * **Private Video/Audio Calls (Jitsi Meet Style):** Initiates 1-on-1 encrypted video/audio calls using WebRTC (Apache 2.0). The WebRTC signaling occurs securely over the existing Briar/Tor P2P transport. Once signaling is complete, the WebRTC data channel handles the video stream peer-to-peer.
     * **Message Privacy Guarantees:**
         * Messages are encrypted end-to-end. No intermediary (including relay nodes) can read them.
         * Messages are stored encrypted on-device in the Private Library database.
@@ -387,10 +393,34 @@ Safely renders content received from untrusted peers.
 
 * **Role:** Display content without introducing XSS, injection, or rendering vulnerabilities.
 * **Responsibilities:**
+    * **App Isolation (Shelter Style):** To protect the host application from zero-day parsing vulnerabilities, the Renderer runs in a separate Android `android:isolatedProcess` sandbox.
     * **Text-Only Rendering:** Content is rendered as plain text or sanitized Markdown. No HTML rendering. No WebView for user content.
     * **Image Rendering:** Images are decoded using `BitmapFactory` with `inJustDecodeBounds` pre-check to prevent memory bombs. Maximum image dimensions: 4096x4096. All images re-encoded to WebP on import (strips metadata).
     * **No External URLs:** Content must not contain clickable external URLs. Any URL-like strings in content are rendered as plain text, not hyperlinks.
     * **Content Warnings:** If content is flagged with certain emotion tags (e.g., `Angry`, `Sad`, `Scared`, `Disgusted`) by a significant number of voters, show a soft content warning: *"Multiple users have flagged this content as potentially upsetting. View anyway?"*
+
+---
+
+## 15. The Sync Agent (Syncthing-Style Background Sync)
+
+Synchronizes the Private Library across multiple physical devices owned by the same user.
+
+* **Role:** Keep passwords, offline notes, and private content identical across phones/tablets/desktops.
+* **Responsibilities:**
+    * **Zero-Server Sync:** Uses the Syncthing Block Exchange Protocol (BEP). Devices connect directly via local network or Tor.
+    * **Automated Background Task:** Syncs automatically when devices see each other, ensuring the Password Vault and Obsidian-style notes are always up to date without ever touching Google Drive or Dropbox.
+
+---
+
+## 16. The Proxy Agent (Tor Routing & Anonymity)
+
+Provides network anonymity and anonymized external routing.
+
+* **Role:** Prevent IP leakage and allow safe external access.
+* **Responsibilities:**
+    * **Tor Daemon Integration:** Embeds the Orbot Tor backend.
+    * **Tor Proxy Mode (VPN Alternative):** Routes all app traffic through the Onion network, mimicking the privacy of commercial VPNs (like Mullvad/Proton) but entirely server-free.
+    * **Anonymized Link Routing (LibreTube Style):** If a user clicks a YouTube/external link in a post, the Proxy Agent intercepts it, rewrites it to a random Invidious/Piped instance, and routes the request exclusively over Tor. This allows media consumption without Google tracking.
 
 ---
 
@@ -437,7 +467,7 @@ Safely renders content received from untrusted peers.
 * **Min SDK:** 26 (Android 8.0) — required for proper Keystore, SQLCipher, BLE, and Wi-Fi Direct support.
 * **Target SDK:** 36 (Android 16 "Baklava").
 * **Database:** Room + SQLCipher. DataStore for non-sensitive preferences only.
-* **Networking:** Android framework P2P APIs only (BLE, Bluetooth Classic, Wi-Fi Direct, Wi-Fi Aware, NSD/mDNS) + TLS Sockets, Tor (messaging + remote trust verification). **No Google Play Services.**
+* **Networking:** Android framework P2P APIs only (BLE, Bluetooth Classic, Wi-Fi Direct, Wi-Fi Aware, NSD/mDNS) + TLS Sockets, Tor (messaging + remote trust verification), Syncthing BEP, and WebRTC. **No Google Play Services.**
 * **Cryptography:** Android Keystore (StrongBox preferred), AES-256-GCM, SHA-256, Ed25519, Argon2id, Signal Protocol (Double Ratchet + X3DH).
 * **Build System:** Gradle 9.x+ / AGP 9.x+.
 * **Source Standard:** All agent logic must reside within `src/main/kotlin` with strict package separation per agent.
@@ -450,7 +480,8 @@ Safely renders content received from untrusted peers.
     5. **Tor-Android** (Guardian Project, Apache-2.0/BSD) — Onion routing.
     6. **BouncyCastle** (`bcprov-jdk18on`, MIT/Apache-2.0) — Supplemental cryptography only. Do **NOT** use Google Tink — while its source is Apache-2.0, some versions pull transitive Google dependencies that F-Droid's build server will flag. BouncyCastle is a pure-Java library with zero Google dependencies.
     7. **Kotlinx Coroutines & Serialization** (Apache-2.0).
-    * **STRICTLY FORBIDDEN:** `com.google.android.gms:play-services-*` (Google Play Services), Firebase, AWS, Azure, proprietary crash reporters (Crashlytics, Bugsnag), proprietary analytics, or any library containing closed-source precompiled `.so` binaries.
+    8. **WebRTC Android SDK** (Apache-2.0) - For video calls.
+    9. **Syncthing-Android (Core)** (MPLv2.0) - For file synchronization.
 * **Permissions Required:**
     * `FOREGROUND_SERVICE` — Required to run the Discovery Agent as a foreground service when sharing is enabled.
     * `INTERNET` — Local P2P communication and Tor only. No HTTP to external servers.
