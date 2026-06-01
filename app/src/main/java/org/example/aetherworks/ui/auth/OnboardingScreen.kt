@@ -14,9 +14,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import org.example.aetherworks.auth.SecurePinPad
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,8 +24,8 @@ fun OnboardingScreen(
     onComplete: (String) -> Unit
 ) {
     var acceptedRisk by remember { mutableStateOf(false) }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    var step by remember { mutableIntStateOf(1) } // 1: Create, 2: Confirm
+    var firstPin by remember { mutableStateOf(CharArray(0)) }
     var showError by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -90,51 +90,38 @@ fun OnboardingScreen(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(
-                        text = "Create Master Password",
-                        style = MaterialTheme.typography.titleMedium
+                        text = if (step == 1) "Create Master PIN" else "Confirm Master PIN",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                     
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it; showError = false },
-                        label = { Text("Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-
-                    OutlinedTextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it; showError = false },
-                        label = { Text("Confirm Password") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        isError = showError
+                    SecurePinPad(
+                        onPinComplete = { pin ->
+                            if (step == 1) {
+                                firstPin = pin
+                                step = 2
+                                showError = false
+                            } else {
+                                if (firstPin.contentEquals(pin)) {
+                                    onComplete(String(pin))
+                                } else {
+                                    showError = true
+                                    step = 1
+                                    firstPin = CharArray(0)
+                                }
+                            }
+                        },
+                        pinLength = 6,
+                        randomizeLayout = true
                     )
 
                     if (showError) {
                         Text(
-                            text = "Passwords do not match or are too short.",
+                            text = "PINs did not match. Please try again.",
                             color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
-                    }
-
-                    Button(
-                        onClick = {
-                            if (password.length >= 6 && password == confirmPassword) {
-                                onComplete(password)
-                            } else {
-                                showError = true
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = password.isNotBlank() && confirmPassword.isNotBlank()
-                    ) {
-                        Text("Initialize Database")
                     }
                 }
             }

@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import org.example.aetherworks.auth.SecurePinPad
 
 @Composable
 fun LockScreen(
@@ -60,27 +61,14 @@ fun LockScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        if (password.isNotBlank() && !isLocked) {
-                            onSubmitPassword(password)
-                            password = ""
-                        }
+            SecurePinPad(
+                onPinComplete = { pin ->
+                    if (!isLocked) {
+                        onSubmitPassword(String(pin))
                     }
-                ),
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                isError = isError || isLocked,
-                enabled = !isLocked
+                },
+                pinLength = 6,
+                randomizeLayout = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -106,18 +94,7 @@ fun LockScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = {
-                    if (password.isNotBlank()) {
-                        onSubmitPassword(password)
-                        password = ""
-                    }
-                },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                enabled = password.isNotBlank() && !isLocked
-            ) {
-                Text("Unlock")
-            }
+            // Button removed as SecurePinPad submits automatically on completion
         }
     }
 }

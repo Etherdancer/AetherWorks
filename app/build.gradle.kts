@@ -110,4 +110,10 @@ dependencies {
   implementation(libs.androidx.camera.lifecycle)
   implementation(libs.androidx.camera.view)
   implementation(libs.zxing.core)
+  
+  // AetherWorks All-in-One Utility Dependencies
+  // implementation(libs.webrtc.android)
+  // implementation(libs.syncthing.core)
+  implementation(libs.exoplayer.core)
+  implementation(libs.exoplayer.ui)
 }

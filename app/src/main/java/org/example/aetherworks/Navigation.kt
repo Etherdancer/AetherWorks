@@ -3,6 +3,7 @@ package org.example.aetherworks
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Public
@@ -27,6 +28,7 @@ import org.example.aetherworks.ui.social.SocialScreen
 import org.example.aetherworks.ui.library.LibraryScreen
 import org.example.aetherworks.ui.content.CreateContentScreen
 import org.example.aetherworks.ui.profile.ProfileScreen
+import org.example.aetherworks.ui.utilities.UtilitiesScreen
 
 @Composable
 fun MainNavigation(sharingToggleViewModel: SharingToggleViewModel) {
@@ -35,7 +37,7 @@ fun MainNavigation(sharingToggleViewModel: SharingToggleViewModel) {
 
   // Find current tab
   val currentKey = backStack.lastOrNull() ?: FeedTab
-  val isMainTab = currentKey == FeedTab || currentKey == SocialTab || currentKey == LibraryTab
+  val isMainTab = currentKey == FeedTab || currentKey == SocialTab || currentKey == LibraryTab || currentKey == UtilitiesTab
 
   Scaffold(
       bottomBar = {
@@ -58,6 +60,12 @@ fun MainNavigation(sharingToggleViewModel: SharingToggleViewModel) {
                       onClick = { backStack.add(LibraryTab) },
                       icon = { Icon(Icons.Filled.List, contentDescription = "Library") },
                       label = { Text("Library") }
+                  )
+                  NavigationBarItem(
+                      selected = currentKey == UtilitiesTab,
+                      onClick = { backStack.add(UtilitiesTab) },
+                      icon = { Icon(Icons.Filled.Build, contentDescription = "Utilities") },
+                      label = { Text("Tools") }
                   )
               }
           }
@@ -88,6 +96,15 @@ fun MainNavigation(sharingToggleViewModel: SharingToggleViewModel) {
                   onNavigateToProfile = { backStack.add(ProfileSettings) }
               )
             }
+            entry<UtilitiesTab> {
+              UtilitiesScreen(
+                  modifier = Modifier.padding(paddingValues),
+                  onNavigateToVault = { backStack.add(VaultScreen) },
+                  onNavigateToCalendar = { backStack.add(CalendarScreen) },
+                  onNavigateToTasks = { backStack.add(TasksScreen) },
+                  onNavigateToMedia = { backStack.add(MediaPlayerScreen) }
+              )
+            }
             entry<CreateContent> {
               CreateContentScreen(
                   modifier = Modifier.safeDrawingPadding(),
@@ -100,6 +117,10 @@ fun MainNavigation(sharingToggleViewModel: SharingToggleViewModel) {
                   onNavigateBack = { backStack.removeLastOrNull() }
               )
             }
+            entry<VaultScreen> { Text("Vault Screen Placeholder", modifier = Modifier.padding(paddingValues)) }
+            entry<CalendarScreen> { Text("Calendar Screen Placeholder", modifier = Modifier.padding(paddingValues)) }
+            entry<TasksScreen> { Text("Tasks Screen Placeholder", modifier = Modifier.padding(paddingValues)) }
+            entry<MediaPlayerScreen> { Text("Media Player Placeholder", modifier = Modifier.padding(paddingValues)) }
           },
       )
   }

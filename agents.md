@@ -424,6 +424,31 @@ Provides network anonymity and anonymized external routing.
 
 ---
 
+## 17. The Utility Agent (Fossify Local Tools)
+
+Provides offline, ad-free basic utilities replacing the need for external Google/Samsung apps.
+
+* **Role:** Manage internal utilities (Calendar, Gallery, File Manager, Tasks) using the encrypted vault.
+* **Responsibilities:**
+    * **Fossify Suite Integration:** 
+        * **Calendar:** An offline event planner stored inside the encrypted Room database.
+        * **Gallery:** A secure image viewer for media inside the Private Vault, preventing export to tracked Android gallery apps.
+        * **File Manager:** A simple interface to browse, import, and export files to/from the encrypted AetherWorks database.
+    * **Habits & Tasks:** A Loop Habit Tracker / Tasks.org style checklist module that syncs automatically across devices via the Sync Agent (BEP).
+
+---
+
+## 18. The Media Agent (Offline Player & Feeds)
+
+Handles all media consumption and news aggregation privately.
+
+* **Role:** Play encrypted media and fetch external RSS feeds securely.
+* **Responsibilities:**
+    * **Internal Media Player:** A lightweight mpv/ExoPlayer integration that streams media directly from the encrypted database without writing to unencrypted storage.
+    * **RSS Reader (Feeder/AntennaPod style):** Fetches external news and podcast RSS feeds exclusively over Tor. Integrates these seamlessly alongside internal P2P social feeds.
+
+---
+
 ## Agent Interaction Workflows
 
 ### Workflow A: Anonymous Content Browsing
@@ -478,10 +503,20 @@ Provides network anonymity and anonymized external routing.
     3. **SQLCipher for Android** (Zetetic Community Edition, BSD) — Encrypted SQLite.
     4. **Signal Protocol** (e.g., `signal-protocol-java` GPLv3 or a modern FOSS Kotlin port) — Messaging E2EE.
     5. **Tor-Android** (Guardian Project, Apache-2.0/BSD) — Onion routing.
-    6. **BouncyCastle** (`bcprov-jdk18on`, MIT/Apache-2.0) — Supplemental cryptography only. Do **NOT** use Google Tink — while its source is Apache-2.0, some versions pull transitive Google dependencies that F-Droid's build server will flag. BouncyCastle is a pure-Java library with zero Google dependencies.
+    6. **BouncyCastle** (`bcprov-jdk18on`, MIT/Apache-2.0) — Supplemental cryptography only. Do **NOT** use Google Tink.
     7. **Kotlinx Coroutines & Serialization** (Apache-2.0).
     8. **WebRTC Android SDK** (Apache-2.0) - For video calls.
     9. **Syncthing-Android (Core)** (MPLv2.0) - For file synchronization.
+    
+    *The following open-source projects are being logically incorporated or heavily referenced for Phase 3 utilities. All integrated code MUST strictly comply with their respective copyleft licenses:*
+    10. **Aegis Authenticator** (GPLv3) - For 2FA/OTP token generation logic.
+    11. **Fossify Suite (Gallery, Calendar, Files, Contacts, Notes)** (GPLv3) - For local-only utility modules.
+    12. **Loop Habit Tracker** (GPLv3) - For the Habits tracking module.
+    13. **LocalSend** (MIT / GPLv3) - For mDNS local file discovery logic.
+    14. **NewPipe Extractor / ExoPlayer** (GPLv3 / Apache-2.0) - For the internal media player and video URL parsing.
+    15. **AntennaPod / Feeder** (GPLv3) - For the Tor-based RSS/Podcast feed parser.
+    16. **HeliBoard / FlorisBoard** (Apache-2.0) - For the custom, tracking-free in-app keypad.
+    17. **Scrambled Exif / ImagePipe** (GPLv3) - For the image metadata stripping logic.
 * **Permissions Required:**
     * `FOREGROUND_SERVICE` — Required to run the Discovery Agent as a foreground service when sharing is enabled.
     * `INTERNET` — Local P2P communication and Tor only. No HTTP to external servers.

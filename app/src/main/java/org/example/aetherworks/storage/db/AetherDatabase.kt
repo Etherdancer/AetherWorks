@@ -9,19 +9,27 @@ import org.example.aetherworks.storage.db.dao.ContentDao
 import org.example.aetherworks.storage.db.dao.MessageDao
 import org.example.aetherworks.storage.db.dao.PeerDao
 import org.example.aetherworks.storage.db.dao.SecurityLogDao
+import org.example.aetherworks.storage.db.entity.CalendarEvent
 import org.example.aetherworks.storage.db.entity.ContentUnit
 import org.example.aetherworks.storage.db.entity.KnownPeer
+import org.example.aetherworks.storage.db.entity.MediaItem
 import org.example.aetherworks.storage.db.entity.Message
 import org.example.aetherworks.storage.db.entity.SecurityLogEntry
+import org.example.aetherworks.storage.db.entity.VaultNote
+import org.example.aetherworks.storage.db.entity.VaultPassword
 
 @Database(
     entities = [
         ContentUnit::class,
         KnownPeer::class,
         Message::class,
-        SecurityLogEntry::class
+        SecurityLogEntry::class,
+        VaultPassword::class,
+        VaultNote::class,
+        MediaItem::class,
+        CalendarEvent::class
     ],
-    version = 2,
+    version = 5,
     exportSchema = false
 )
 @androidx.room.TypeConverters(Converters::class)
@@ -30,6 +38,12 @@ abstract class AetherDatabase : RoomDatabase() {
     abstract fun peerDao(): PeerDao
     abstract fun messageDao(): MessageDao
     abstract fun securityLogDao(): SecurityLogDao
+    
+    
+    // Vault (Phase 3 Utilities)
+    abstract fun vaultDao(): org.example.aetherworks.storage.db.dao.VaultDao
+    abstract fun mediaDao(): org.example.aetherworks.storage.db.dao.MediaDao
+    abstract fun calendarDao(): org.example.aetherworks.storage.db.dao.CalendarDao
 
     companion object {
         @Volatile

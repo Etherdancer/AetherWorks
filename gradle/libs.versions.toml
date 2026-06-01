@@ -22,6 +22,9 @@ torAndroid = "0.4.8.9" # Standard Guardian Project release
 serialization = "1.6.3"
 camerax = "1.4.0"
 zxing = "3.5.3"
+webrtc = "1.0.32006" # Apache 2.0 WebRTC build
+syncthing = "1.23.6"
+exoplayer = "2.19.1"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }
@@ -63,6 +66,10 @@ androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.r
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
 androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
 zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
+webrtc-android = { module = "org.webrtc:google-webrtc", version.ref = "webrtc" }
+syncthing-core = { module = "com.github.syncthing:syncthing-android", version.ref = "syncthing" }
+exoplayer-core = { module = "com.google.android.exoplayer:exoplayer-core", version.ref = "exoplayer" }
+exoplayer-ui = { module = "com.google.android.exoplayer:exoplayer-ui", version.ref = "exoplayer" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
