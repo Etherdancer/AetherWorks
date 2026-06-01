@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import org.example.aetherworks.auth.SecurePinPad
+import org.example.aetherworks.auth.SecureKeyboard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,9 +24,15 @@ fun OnboardingScreen(
     onComplete: (String) -> Unit
 ) {
     var acceptedRisk by remember { mutableStateOf(false) }
+    var acceptedLiability by remember { mutableStateOf(false) }
+    var acceptedPermanence by remember { mutableStateOf(false) }
     var step by remember { mutableIntStateOf(1) } // 1: Create, 2: Confirm
-    var firstPin by remember { mutableStateOf(CharArray(0)) }
+    var firstPassword by remember { mutableStateOf("") }
+    var currentInput by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
+    val passwordRegex = Regex("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%&\\-\\+()\\*\"':;!?]).{8,}$")
 
     Scaffold(
         topBar = {
@@ -67,57 +73,93 @@ fun OnboardingScreen(
                     Text("• This app does not collect any personal data.")
                     Text("• Profiles are entirely fictional — do not use your real name or personal identity.")
                     Text("• The developer is not responsible for any consequences, data loss, or interactions resulting from using this app.")
-                    Text("• You use this software entirely at your own risk.")
+                    Text("• You are explicitly and solely liable for any pirated or illegal content you choose to distribute.")
+                    Text("• Due to the decentralized P2P network, content made public CANNOT be permanently deleted. Once public, always public.")
                     Text("• This app runs on physical devices only.")
                 }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 8.dp)
-            ) {
-                Checkbox(
-                    checked = acceptedRisk,
-                    onCheckedChange = { acceptedRisk = it }
-                )
-                Text("I understand and accept all risks.")
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = acceptedRisk,
+                        onCheckedChange = { acceptedRisk = it }
+                    )
+                    Text("I understand and accept all general risks.", style = MaterialTheme.typography.bodyMedium)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = acceptedLiability,
+                        onCheckedChange = { acceptedLiability = it }
+                    )
+                    Text("I accept direct, sole liability for sharing pirated or illegal content.", style = MaterialTheme.typography.bodyMedium)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = acceptedPermanence,
+                        onCheckedChange = { acceptedPermanence = it }
+                    )
+                    Text("I understand that public content is permanently public.", style = MaterialTheme.typography.bodyMedium)
+                }
             }
 
             AnimatedVisibility(
-                visible = acceptedRisk,
+                visible = acceptedRisk && acceptedLiability && acceptedPermanence,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(
-                        text = if (step == 1) "Create Master PIN" else "Confirm Master PIN",
+                        text = if (step == 1) "Create Master Password" else "Confirm Master Password",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
+
+                    if (step == 1) {
+                        Text(
+                            text = "Requirements: Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 symbol.",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                        Text(
+                            text = "WARNING: There is no 'forgot password'. If you lose this password, you will permanently lose access to all your private data.",
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
+                    }
                     
-                    SecurePinPad(
-                        onPinComplete = { pin ->
+                    SecureKeyboard(
+                        currentPassword = currentInput,
+                        onPasswordChange = { currentInput = it },
+                        onSubmit = {
                             if (step == 1) {
-                                firstPin = pin
-                                step = 2
-                                showError = false
-                            } else {
-                                if (firstPin.contentEquals(pin)) {
-                                    onComplete(String(pin))
+                                if (passwordRegex.matches(currentInput)) {
+                                    firstPassword = currentInput
+                                    currentInput = ""
+                                    step = 2
+                                    showError = false
                                 } else {
                                     showError = true
+                                    errorMessage = "Password does not meet requirements."
+                                }
+                            } else {
+                                if (firstPassword == currentInput) {
+                                    onComplete(currentInput)
+                                } else {
+                                    showError = true
+                                    errorMessage = "Passwords do not match. Try again."
                                     step = 1
-                                    firstPin = CharArray(0)
+                                    firstPassword = ""
+                                    currentInput = ""
                                 }
                             }
-                        },
-                        pinLength = 6,
-                        randomizeLayout = true
+                        }
                     )
 
                     if (showError) {
                         Text(
-                            text = "PINs did not match. Please try again.",
+                            text = errorMessage,
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.align(Alignment.CenterHorizontally)

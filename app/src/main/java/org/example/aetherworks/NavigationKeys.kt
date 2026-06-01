@@ -18,3 +18,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object CalendarScreen : NavKey
 @Serializable data object TasksScreen : NavKey
 @Serializable data object MediaPlayerScreen : NavKey
+@Serializable data object ShoppingListScreen : NavKey
+@Serializable data object CookbookScreen : NavKey
+@Serializable data object OfflineMapsScreen : NavKey
+@Serializable data object TranslatorScreen : NavKey

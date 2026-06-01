@@ -1,6 +1,7 @@
 package org.example.aetherworks.storage.db.entity
 
 import androidx.room.Entity
+import androidx.room.Fts4
 import androidx.room.PrimaryKey
 
 enum class Visibility {
@@ -27,4 +28,13 @@ data class ContentUnit(
     val videoPath: String? = null,
     val thumbnailPath: String? = null,
     val thumbnailBase64: String? = null
+)
+
+@Fts4(contentEntity = ContentUnit::class)
+@Entity(tableName = "content_units_fts")
+data class ContentFtsEntity(
+    val title: String,
+    val body: String,
+    val categoryFlags: String,
+    val authorAlias: String
 )

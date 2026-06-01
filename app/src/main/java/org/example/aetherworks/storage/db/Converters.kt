@@ -31,4 +31,10 @@ class Converters {
 
     @TypeConverter
     fun toStringMapSet(value: String): Map<String, Set<String>> = if (value.isBlank()) emptyMap() else Json.decodeFromString(value)
+
+    @TypeConverter
+    fun fromStringList(value: List<String>): String = Json.encodeToString(value)
+
+    @TypeConverter
+    fun toStringList(value: String): List<String> = if (value.isBlank()) emptyList() else Json.decodeFromString(value)
 }

@@ -34,8 +34,11 @@
 1. **Zero Servers.** There are no servers. There is no cloud. There is no backend. Every device is sovereign.
 2. **Privacy by Default.** The safest choice is always the one that collects the least. The app never asks for personal data. Profiles are fictional personas — users are encouraged not to share real identities.
 3. **Informed Consent at Every Step.** Every action that sends or receives data requires explicit user consent. The user is told exactly what will happen before it happens.
-4. **User-at-Own-Risk.** The app developer is **not responsible** for any damage, inconvenience, data loss, or any other consequence resulting from using this app. The user uses the app **entirely at their own risk.** This must be acknowledged during onboarding and re-presented before any sharing activity.
+4. **User-at-Own-Risk (Strict Liability).** The app developer is **not responsible** for any damage, inconvenience, data loss, or any other consequence resulting from using this app. Furthermore, the user explicitly assumes **all liability** for the distribution of pirated or illegal content. The user uses the app **entirely at their own risk.** This must be acknowledged during onboarding and re-presented before any sharing activity.
 5. **Physical Devices Only.** The app runs exclusively on physical Android devices. Emulators and virtual devices are detected and blocked.
+6. **No Law Enforcement Backdoors.** The app operates on a zero-server, decentralized architecture using end-to-end encryption. It is mathematically and architecturally impossible to implement a backdoor exclusively for law enforcement. Any such mechanism would compromise the security of all users. Therefore, **absolutely no backdoors of any kind** will be implemented.
+7. **Once Public, Always Public.** Due to the decentralized and immutable nature of P2P networking, any content shared publicly cannot be permanently deleted or recalled from the network. The user must be explicitly warned of this reality.
+8. **Default Private & Mandatory Confirmation.** Every single feature, setting, and piece of content must default to **Private**. Any action that changes visibility to Public or shares data must trigger a mandatory, un-skippable confirmation dialog. There must be no "Don't ask again" checkbox for these critical actions.
 
 ---
 

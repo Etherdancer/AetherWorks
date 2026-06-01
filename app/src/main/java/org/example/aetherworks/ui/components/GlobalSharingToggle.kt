@@ -50,7 +50,7 @@ fun GlobalSharingToggle(
         AlertDialog(
             onDismissRequest = { showConsentDialog = false },
             title = { Text("Enable Data Sharing?") },
-            text = { Text("You are about to enable data sharing with nearby devices. Other users of this app on the same network or in Bluetooth/Wi-Fi Direct range will be able to see content you have marked as 'Public'. Do you want to continue?") },
+            text = { Text("You are about to enable data sharing with nearby devices. Other users of this app on the same network or in Bluetooth/Wi-Fi Direct range will be able to see content you have marked as 'Public'.\n\nWARNING: ONCE PUBLIC, ALWAYS PUBLIC. Content cannot be recalled. Do you want to continue?") },
             confirmButton = {
                 TextButton(onClick = {
                     showConsentDialog = false
@@ -72,7 +72,7 @@ fun GlobalSharingToggle(
             onDismissRequest = { showRiskDialog = false },
             icon = { Icon(Icons.Default.Warning, contentDescription = null) },
             title = { Text("Risk Disclosure") },
-            text = { Text("This app communicates with nearby devices over your local network, Bluetooth, and Wi-Fi Direct. On public networks (coffee shops, airports), other people on the same network may detect that you are running this app. The developer is not responsible for any consequences. You use this feature at your own risk.") },
+            text = { Text("This app communicates with nearby devices over your local network, Bluetooth, and Wi-Fi Direct. On public networks (coffee shops, airports), other people on the same network may detect that you are running this app. The developer is not responsible for any consequences. You are solely liable for the content you share. You use this feature at your own risk.") },
             confirmButton = {
                 Button(
                     onClick = {

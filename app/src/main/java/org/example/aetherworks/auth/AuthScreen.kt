@@ -21,6 +21,7 @@ fun AuthScreen(
     var isAuthenticating by remember { mutableStateOf(false) }
     var authError by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    var currentInput by remember { mutableStateOf("") }
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -42,7 +43,7 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "Enter your PIN to unlock the Gatekeeper.",
+                text = "Enter your Master Password to unlock the Gatekeeper.",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
             )
@@ -54,35 +55,31 @@ fun AuthScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Deriving encryption keys... This may take a moment to prevent brute-force attacks.")
             } else {
-                SecurePinPad(
-                    onPinComplete = { pin ->
+                SecureKeyboard(
+                    currentPassword = currentInput,
+                    onPasswordChange = { currentInput = it },
+                    onSubmit = {
+                        val password = currentInput
                         isAuthenticating = true
                         authError = null
                         
                         coroutineScope.launch {
                             try {
-                                // Offload heavy Argon2id hashing to IO dispatcher
                                 val derivedKey = withContext(Dispatchers.IO) {
-                                    // In a real scenario, the salt would be loaded from SharedPreferences
-                                    // For this initial UI testing, we generate a fake salt.
-                                    // Real implementation will query the DB/Prefs for the existing salt.
                                     val dummySalt = ByteArray(16) { 1 } 
-                                    gatekeeperAgent.deriveKeyFromPassword(pin, dummySalt)
+                                    gatekeeperAgent.deriveKeyFromPassword(password.toCharArray(), dummySalt)
                                 }
                                 
-                                // Clean up the pin array immediately
-                                Arrays.fill(pin, '\u0000')
-                                
+                                currentInput = ""
                                 onAuthSuccess(derivedKey)
                                 
                             } catch (e: Exception) {
                                 authError = "Authentication failed."
                                 isAuthenticating = false
+                                currentInput = ""
                             }
                         }
-                    },
-                    pinLength = 6,
-                    randomizeLayout = true
+                    }
                 )
             }
             

@@ -23,4 +23,7 @@ interface MediaDao {
 
     @Query("SELECT * FROM vault_media WHERE id = :id LIMIT 1")
     fun getMediaById(id: String): MediaItem?
+
+    @Query("UPDATE vault_media SET lastPlaybackPosition = :position, playbackSpeed = :speed WHERE id = :id")
+    fun updatePlaybackState(id: String, position: Long, speed: Float)
 }

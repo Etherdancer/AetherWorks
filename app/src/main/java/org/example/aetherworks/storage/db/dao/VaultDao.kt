@@ -20,6 +20,9 @@ interface VaultDao {
     @Delete
     fun deletePassword(password: VaultPassword)
 
+    @Query("DELETE FROM vault_passwords WHERE id = :id")
+    fun deletePasswordById(id: String)
+
     @Query("SELECT * FROM vault_passwords WHERE id = :id LIMIT 1")
     fun getPasswordById(id: String): VaultPassword?
 
@@ -29,6 +32,9 @@ interface VaultDao {
 
     @Query("SELECT * FROM vault_notes WHERE folder = :folder ORDER BY isPinned DESC, updatedAt DESC")
     fun getNotesByFolder(folder: String): Flow<List<VaultNote>>
+
+    @Query("SELECT * FROM vault_notes WHERE markdownContent LIKE '%' || :tag || '%' OR tags LIKE '%' || :tag || '%' OR title LIKE '%' || :tag || '%' ORDER BY isPinned DESC, updatedAt DESC")
+    fun getNotesByTag(tag: String): Flow<List<VaultNote>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertNote(note: VaultNote)

@@ -2,8 +2,8 @@ package org.example.aetherworks.storage.sync
 
 import android.content.Context
 import android.util.Log
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
@@ -13,12 +13,13 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class SyncthingManager(private val context: Context) : SyncManager {
 
-    private val _syncState = MutableStateFlow<SyncState>(SyncState.IDLE)
-    override val syncState: StateFlow<SyncState> = _syncState.asStateFlow()
+    private val _syncState = MutableStateFlow<SyncStatus>(SyncStatus.IDLE)
+    
+    override fun getSyncStatus(): Flow<SyncStatus> = _syncState.asStateFlow()
 
-    override fun startSync() {
+    override fun startSyncService() {
         Log.d(TAG, "Starting Syncthing daemon for vault sync...")
-        _syncState.value = SyncState.SYNCING
+        _syncState.value = SyncStatus.SYNCING
         
         // TODO: Initialize real syncthing-android BEP engine here.
         // For now, simulate startup and idle wait.
@@ -27,14 +28,22 @@ class SyncthingManager(private val context: Context) : SyncManager {
             Log.d(TAG, "Syncthing Daemon Started. Listening for paired devices.")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start Syncthing Daemon", e)
-            _syncState.value = SyncState.ERROR
+            _syncState.value = SyncStatus.ERROR
         }
     }
 
-    override fun stopSync() {
+    override fun stopSyncService() {
         Log.d(TAG, "Stopping Syncthing daemon...")
-        _syncState.value = SyncState.IDLE
+        _syncState.value = SyncStatus.IDLE
         // TODO: Actually stop the syncthing-android daemon.
+    }
+
+    override fun addTrustedDevice(deviceId: String) {
+        Log.d(TAG, "Adding trusted device: $deviceId")
+    }
+
+    override fun removeTrustedDevice(deviceId: String) {
+        Log.d(TAG, "Removing trusted device: $deviceId")
     }
 
     companion object {

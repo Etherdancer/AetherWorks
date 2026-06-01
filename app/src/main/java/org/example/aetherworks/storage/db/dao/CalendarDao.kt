@@ -18,6 +18,12 @@ interface CalendarDao {
     @Delete
     fun deleteEvent(event: CalendarEvent)
 
+    @Query("DELETE FROM calendar_events WHERE id = :id")
+    fun deleteEventById(id: String)
+
+    @Update
+    fun updateEvent(event: CalendarEvent)
+
     @Query("SELECT * FROM calendar_events WHERE id = :id LIMIT 1")
     fun getEventById(id: String): CalendarEvent?
 }

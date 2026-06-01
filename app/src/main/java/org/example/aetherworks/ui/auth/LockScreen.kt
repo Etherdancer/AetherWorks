@@ -17,7 +17,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import org.example.aetherworks.auth.SecurePinPad
+import org.example.aetherworks.auth.SecureKeyboard
 
 @Composable
 fun LockScreen(
@@ -61,14 +61,15 @@ fun LockScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            SecurePinPad(
-                onPinComplete = { pin ->
+            SecureKeyboard(
+                currentPassword = password,
+                onPasswordChange = { password = it },
+                onSubmit = {
                     if (!isLocked) {
-                        onSubmitPassword(String(pin))
+                        onSubmitPassword(password)
+                        password = ""
                     }
-                },
-                pinLength = 6,
-                randomizeLayout = true
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -94,7 +95,45 @@ fun LockScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Button removed as SecurePinPad submits automatically on completion
+            var showWipeConfirmDialog by remember { mutableStateOf(false) }
+
+            TextButton(
+                onClick = { showWipeConfirmDialog = true },
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Lost Password? Wipe App Data & Reset")
+            }
+
+            if (showWipeConfirmDialog) {
+                AlertDialog(
+                    onDismissRequest = { showWipeConfirmDialog = false },
+                    icon = { Icon(Icons.Default.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+                    title = { Text("Wipe All Data?") },
+                    text = { 
+                        Text(
+                            "This will permanently delete your database, profile, identity keys, and all private content. It cannot be undone. Are you sure?",
+                            color = MaterialTheme.colorScheme.error
+                        ) 
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                // TODO: Call actual wipe data function (Runtime.getRuntime().exec("pm clear org.example.aetherworks"))
+                                // Or trigger local broadcast to Gatekeeper
+                                showWipeConfirmDialog = false
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Wipe Everything")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showWipeConfirmDialog = false }) {
+                            Text("Cancel")
+                        }
+                    }
+                )
+            }
         }
     }
 }

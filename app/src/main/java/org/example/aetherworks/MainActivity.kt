@@ -24,6 +24,15 @@ import org.example.aetherworks.ui.auth.LockScreen
 import org.example.aetherworks.ui.auth.OnboardingScreen
 import org.example.aetherworks.networking.SharingStateManager
 import org.example.aetherworks.networking.SharingToggleViewModel
+import org.example.aetherworks.ui.feed.SharedBrowseViewModel
+import org.example.aetherworks.security.guard.ClipboardCleaner
+import org.example.aetherworks.ui.utilities.CalendarViewModel
+import org.example.aetherworks.ui.utilities.MediaViewModel
+import org.example.aetherworks.ui.utilities.TasksViewModel
+import org.example.aetherworks.ui.utilities.VaultViewModel
+import org.example.aetherworks.ui.utilities.ShoppingViewModel
+import org.example.aetherworks.ui.utilities.CookbookViewModel
+import org.example.aetherworks.utilities.media.MediaPlayerAgent
 
 class MainActivity : ComponentActivity() {
   private lateinit var gatekeeperRepo: GatekeeperRepository
@@ -78,9 +87,32 @@ class MainActivity : ComponentActivity() {
             }
             is GatekeeperUiState.Authenticated -> {
                 // Initialize databases with the real key
-                AetherDatabase.getPrivateDatabase(this@MainActivity, state.dbKey)
-                AetherDatabase.getSharedDatabase(this@MainActivity, state.dbKey)
-                MainNavigation(sharingToggleViewModel = sharingToggleViewModel)
+                val privateDb = AetherDatabase.getPrivateDatabase(this@MainActivity, state.dbKey)
+                val sharedDb = AetherDatabase.getSharedDatabase(this@MainActivity, state.dbKey)
+                
+                val clipboardCleaner = ClipboardCleaner(this@MainActivity)
+                val mediaPlayerAgent = MediaPlayerAgent(this@MainActivity)
+                
+                val vaultViewModel = VaultViewModel(privateDb.vaultDao())
+                val calendarViewModel = CalendarViewModel(privateDb.calendarDao())
+                val tasksViewModel = TasksViewModel(privateDb.calendarDao())
+                val mediaViewModel = MediaViewModel(privateDb.mediaDao(), mediaPlayerAgent)
+                val shoppingViewModel = ShoppingViewModel(privateDb.shoppingDao(), this@MainActivity.applicationContext)
+                val cookbookViewModel = CookbookViewModel(privateDb.recipeDao())
+
+                val sharedBrowseViewModel = SharedBrowseViewModel()
+
+                MainNavigation(
+                    sharingToggleViewModel = sharingToggleViewModel,
+                    vaultViewModel = vaultViewModel,
+                    calendarViewModel = calendarViewModel,
+                    tasksViewModel = tasksViewModel,
+                    mediaViewModel = mediaViewModel,
+                    shoppingViewModel = shoppingViewModel,
+                    cookbookViewModel = cookbookViewModel,
+                    sharedBrowseViewModel = sharedBrowseViewModel,
+                    clipboardCleaner = clipboardCleaner
+                )
             }
           }
         }

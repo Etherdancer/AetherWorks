@@ -116,4 +116,6 @@ dependencies {
   // implementation(libs.syncthing.core)
   implementation(libs.exoplayer.core)
   implementation(libs.exoplayer.ui)
+  implementation(libs.osmdroid.android)
+  implementation("com.kizitonwose.calendar:compose:2.5.0")
 }

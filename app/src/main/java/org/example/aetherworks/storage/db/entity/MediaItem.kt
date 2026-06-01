@@ -13,5 +13,7 @@ data class MediaItem(
     val sizeBytes: Long,
     val durationMs: Long = 0, // For audio/video
     val folder: String = "Root",
-    val addedAt: Long = System.currentTimeMillis()
+    val addedAt: Long = System.currentTimeMillis(),
+    val lastPlaybackPosition: Long = 0L,
+    val playbackSpeed: Float = 1.0f
 )

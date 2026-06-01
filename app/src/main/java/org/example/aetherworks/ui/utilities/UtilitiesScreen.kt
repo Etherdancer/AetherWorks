@@ -17,7 +17,11 @@ fun UtilitiesScreen(
     onNavigateToVault: () -> Unit,
     onNavigateToCalendar: () -> Unit,
     onNavigateToTasks: () -> Unit,
-    onNavigateToMedia: () -> Unit
+    onNavigateToMedia: () -> Unit,
+    onNavigateToShopping: () -> Unit,
+    onNavigateToCookbook: () -> Unit,
+    onNavigateToMaps: () -> Unit,
+    onNavigateToTranslator: () -> Unit
 ) {
     Scaffold(
         modifier = modifier,
@@ -63,6 +67,10 @@ fun UtilitiesScreen(
             UtilityCard(title = "Local Calendar", onClick = onNavigateToCalendar)
             UtilityCard(title = "Habits & Tasks", onClick = onNavigateToTasks)
             UtilityCard(title = "Media Player", onClick = onNavigateToMedia)
+            UtilityCard(title = "Shopping List", onClick = onNavigateToShopping)
+            UtilityCard(title = "Offline Cookbook", onClick = onNavigateToCookbook)
+            UtilityCard(title = "Offline Maps", onClick = onNavigateToMaps)
+            UtilityCard(title = "Offline Translator", onClick = onNavigateToTranslator)
         }
     }
 }

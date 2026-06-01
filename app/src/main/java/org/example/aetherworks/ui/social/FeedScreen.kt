@@ -67,7 +67,8 @@ fun FeedPostCard(post: ContentUnit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(text = post.authorAlias, style = MaterialTheme.typography.titleMedium)
-                Text(text = "Rep: ${post.reputationScore}", style = MaterialTheme.typography.labelMedium)
+                val reputationScore = post.likeTokens.size - post.dislikeTokens.size
+                Text(text = "Rep: $reputationScore", style = MaterialTheme.typography.labelMedium)
             }
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -75,7 +76,7 @@ fun FeedPostCard(post: ContentUnit) {
             var cwExpanded by remember { mutableStateOf(false) }
             
             if (cwExpanded) {
-                Text(text = post.textContent, style = MaterialTheme.typography.bodyLarge)
+                Text(text = post.body, style = MaterialTheme.typography.bodyLarge)
                 TextButton(onClick = { cwExpanded = false }) {
                     Text("Hide Content")
                 }

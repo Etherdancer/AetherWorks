@@ -5,9 +5,9 @@ import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import org.webrtc.PeerConnectionFactory
-import org.webrtc.PeerConnection
-import org.webrtc.MediaStream
+// import org.webrtc.PeerConnectionFactory
+// import org.webrtc.PeerConnection
+// import org.webrtc.MediaStream
 
 /**
  * WebRTC Call Agent (Jitsi Style)
@@ -19,8 +19,8 @@ class WebRtcCallAgent(private val context: Context) {
     private val _callState = MutableStateFlow<CallState>(CallState.IDLE)
     val callState: StateFlow<CallState> = _callState.asStateFlow()
     
-    private var peerConnectionFactory: PeerConnectionFactory? = null
-    private var peerConnection: PeerConnection? = null
+    // private var peerConnectionFactory: PeerConnectionFactory? = null
+    // private var peerConnection: PeerConnection? = null
 
     init {
         Log.d(TAG, "Initializing WebRtcCallAgent")
@@ -52,8 +52,8 @@ class WebRtcCallAgent(private val context: Context) {
     fun endCall() {
         Log.d(TAG, "Ending WebRTC call.")
         _callState.value = CallState.IDLE
-        peerConnection?.close()
-        peerConnection = null
+        // peerConnection?.close()
+        // peerConnection = null
     }
 
     companion object {

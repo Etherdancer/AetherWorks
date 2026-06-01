@@ -18,6 +18,13 @@ interface ContentDao {
     @Query("SELECT * FROM content_units WHERE title LIKE '%' || :query || '%' OR body LIKE '%' || :query || '%'")
     suspend fun search(query: String): List<ContentUnit>
 
+    @Query("""
+        SELECT content_units.* FROM content_units 
+        JOIN content_units_fts ON content_units.rowid = content_units_fts.docid
+        WHERE content_units_fts MATCH :query
+    """)
+    suspend fun searchSmartScan(query: String): List<ContentUnit>
+
     @Query("DELETE FROM content_units WHERE contentHash = :hash")
     suspend fun delete(hash: String): Int
 
