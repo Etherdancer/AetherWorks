@@ -11,7 +11,7 @@ AetherWorks is a decentralized content-sharing platform and social network with 
 *Warning: This app is for users 18 and older. The developer is not responsible for any damage, inconvenience, data loss, or any other consequence resulting from using this app.*
 
 **Support the Project**
-If you like AetherWorks and want to support its continued development, consider leaving a tip via the Lightning Network. Use the donation link provided on F-Droid.
+If you like AetherWorks and want to support its continued development, consider leaving a tip via Bitcoin. See the project's GitHub repository for details.
 
 **Bug Reports & Contact**
 If you encounter any issues or have bug reports, please email: etherdancer.zero553@aleeas.com
