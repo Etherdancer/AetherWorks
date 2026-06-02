@@ -17,11 +17,13 @@
 - **The Gatekeeper (Encrypted Access):** Access is guarded by a master password enforced via a custom in-app secure keyboard (to defeat system keyloggers). Data is encrypted at rest using AES-256-GCM and SQLCipher, locked behind Android Keystore hardware-backed keys.
 - **The Content Vault:** A three-tiered local storage system:
   - *Private Library:* A fully offline vault for passwords, 2FA codes, and Obsidian-style notes.
-  - *Trusted-Only Library:* Content encrypted and shared exclusively with verified cryptographic contacts.
+  - *Trusted-Only Library & Groups:* Content encrypted and shared exclusively with verified cryptographic contacts and private trusted groups.
   - *Public Library:* Broadcasted to all connected peers over the local mesh.
 - **Omni-Transport Discovery:** Seamlessly discovers nearby peers using Android Network Service Discovery (mDNS/NSD), Bluetooth Low Energy (BLE), Wi-Fi Direct, and local sockets — wrapped in **TLS 1.3** to defeat network eavesdropping (OWASP M5 mitigation).
-- **Decentralized Reputation:** An anonymous token-voting system ensures community moderation without centralized servers. Spam is mitigated via low-difficulty Proof-of-Work nonces and token cardinality caps.
+- **Decentralized Reputation:** An anonymous token-voting system ensures community moderation without centralized servers. Spam is mitigated via low-difficulty Proof-of-Work nonces and token cardinality caps. Content can be liked/disliked anonymously to manage public curation.
+- **Advanced Content Filtering:** Tag your notes with complex Categories and Emotions. Filter local and network content using robust source filters (All, Acquaintances, Trusted).
 - **Cryptographic Personas:** Profiles are fictional. Relationships are verified out-of-band using Ed25519 public key cryptography (similar to Briar or Signal).
+- **Modern Adaptive UI:** Fully responsive interface built on Material 3 with extensive edge-to-edge system support, dynamic dark mode, and enhanced accessibility scaling.
 
 ## ⚠️ Liability & Distribution
 
