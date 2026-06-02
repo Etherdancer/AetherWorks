@@ -1,6 +1,7 @@
 package org.example.aetherworks
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -34,6 +35,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
     enableEdgeToEdge()
 
     val emulatorDetector = EmulatorDetector(this)
@@ -82,7 +84,7 @@ class MainActivity : ComponentActivity() {
                 val privateDb = AetherDatabase.getPrivateDatabase(this@MainActivity, state.dbKey)
                 val sharedDb = AetherDatabase.getSharedDatabase(this@MainActivity, state.dbKey)
                 
-                val sharedBrowseViewModel = SharedBrowseViewModel()
+                val sharedBrowseViewModel = SharedBrowseViewModel(this@MainActivity.application)
 
                 MainNavigation(
                     sharingToggleViewModel = sharingToggleViewModel,

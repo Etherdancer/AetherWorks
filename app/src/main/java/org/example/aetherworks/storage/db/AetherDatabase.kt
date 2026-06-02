@@ -8,6 +8,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import net.sqlcipher.database.SupportFactory
 import org.example.aetherworks.storage.db.dao.ContentDao
+import org.example.aetherworks.storage.db.dao.GroupDao
 import org.example.aetherworks.storage.db.dao.MessageDao
 import org.example.aetherworks.storage.db.dao.PeerDao
 import org.example.aetherworks.storage.db.dao.SecurityLogDao
@@ -18,6 +19,8 @@ import org.example.aetherworks.storage.db.entity.KnownPeer
 import org.example.aetherworks.storage.db.entity.Message
 import org.example.aetherworks.storage.db.entity.SecurityLogEntry
 import org.example.aetherworks.storage.db.entity.RelayPacket
+import org.example.aetherworks.storage.db.entity.TrustGroup
+import org.example.aetherworks.storage.db.entity.GroupMember
 
 @Database(
     entities = [
@@ -26,9 +29,11 @@ import org.example.aetherworks.storage.db.entity.RelayPacket
         Message::class,
         SecurityLogEntry::class,
         ContentFtsEntity::class,
-        RelayPacket::class
+        RelayPacket::class,
+        TrustGroup::class,
+        GroupMember::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = false
 )
 @androidx.room.TypeConverters(Converters::class)
@@ -38,6 +43,7 @@ abstract class AetherDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun securityLogDao(): SecurityLogDao
     abstract fun relayPacketDao(): RelayPacketDao
+    abstract fun groupDao(): GroupDao
 
     companion object {
         val MIGRATION_6_7 = object : Migration(6, 7) {
@@ -101,6 +107,33 @@ abstract class AetherDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `trust_groups` (
+                        `groupId` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `createdAt` INTEGER NOT NULL,
+                        PRIMARY KEY(`groupId`)
+                    )
+                """)
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `group_members` (
+                        `groupId` TEXT NOT NULL,
+                        `publicKeyBase64` TEXT NOT NULL,
+                        PRIMARY KEY(`groupId`, `publicKeyBase64`),
+                        FOREIGN KEY(`groupId`) REFERENCES `trust_groups`(`groupId`) ON UPDATE NO ACTION ON DELETE CASCADE ,
+                        FOREIGN KEY(`publicKeyBase64`) REFERENCES `known_peers`(`publicKeyBase64`) ON UPDATE NO ACTION ON DELETE CASCADE 
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_group_members_groupId` ON `group_members` (`groupId`)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS `index_group_members_publicKeyBase64` ON `group_members` (`publicKeyBase64`)")
+                
+                database.execSQL("ALTER TABLE `known_peers` ADD COLUMN `encryptionPublicKeyBase64` TEXT")
+                database.execSQL("ALTER TABLE `content_units` ADD COLUMN `recipientKeyMapJson` TEXT")
+            }
+        }
+
         @Volatile
         private var INSTANCE_PRIVATE: AetherDatabase? = null
 
@@ -116,7 +149,7 @@ abstract class AetherDatabase : RoomDatabase() {
                     "aether_private.db"
                 )
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE_PRIVATE = instance
@@ -133,7 +166,7 @@ abstract class AetherDatabase : RoomDatabase() {
                     "aether_shared.db"
                 )
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE_SHARED = instance

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -36,47 +37,52 @@ fun LibraryScreen(
     val libraryContent by viewModel.libraryContent.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
 
-    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("My Library", style = MaterialTheme.typography.headlineMedium)
-            Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
-                Button(onClick = onNavigateToCreate) {
-                    Text("Create Content")
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onNavigateToProfile) {
-                        Text("Profile")
+    LazyColumn(
+        modifier = modifier.fillMaxSize().padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("My Library", style = MaterialTheme.typography.headlineMedium)
+                Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
+                    Button(onClick = onNavigateToCreate) {
+                        Text("Create Content")
                     }
-                    Button(onClick = onNavigateToAbout) {
-                        Text("About")
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = onNavigateToProfile) {
+                            Text("Profile")
+                        }
+                        Button(onClick = onNavigateToAbout) {
+                            Text("About")
+                        }
                     }
                 }
             }
         }
         
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { 
-                searchQuery = it
-                viewModel.loadContent(it)
-            },
-            label = { Text("Smart Scan") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
+        item {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { 
+                    searchQuery = it
+                    viewModel.loadContent(it)
+                },
+                label = { Text("Smart Scan") },
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 8.dp)
+            )
+        }
 
         if (libraryContent.isEmpty()) {
-            Text("No private or trusted content found.", modifier = Modifier.padding(top = 16.dp))
+            item {
+                Text("No private or trusted content found.", modifier = Modifier.padding(top = 8.dp))
+            }
         } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(libraryContent) { unit ->
-                    ContentCard(unit)
-                }
+            items(libraryContent) { unit ->
+                ContentCard(unit)
             }
         }
     }

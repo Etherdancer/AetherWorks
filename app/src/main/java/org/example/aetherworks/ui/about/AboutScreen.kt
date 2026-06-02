@@ -1,6 +1,8 @@
 package org.example.aetherworks.ui.about
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -28,6 +30,7 @@ fun AboutScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
         Column(
             modifier = modifier
                 .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)

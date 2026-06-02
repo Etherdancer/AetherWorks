@@ -19,6 +19,7 @@ import org.example.aetherworks.discovery.ContentHeader
 import org.example.aetherworks.storage.db.entity.ContentUnit
 import java.text.SimpleDateFormat
 import java.util.*
+import org.example.aetherworks.ui.feed.SharedBrowseViewModel.SourceFilter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +40,9 @@ fun SharedBrowseScreen(
             onSave = {
                 viewModel.saveToPrivateLibrary(viewingContent!!)
                 // Could show a toast here
+            },
+            onVote = { isLike ->
+                viewModel.vote(viewingContent!!, isLike)
             }
         )
     } else {
@@ -51,36 +55,58 @@ fun SharedBrowseScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    val searchQuery by viewModel.searchQuery.collectAsState()
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { viewModel.updateSearchQuery(it) },
-                        label = { Text("Smart Scan (Filter local headers)") },
-                        modifier = Modifier.fillMaxWidth().padding(16.dp)
-                    )
-                    
-                    val filteredHeaders = headers.filter { 
-                        it.second.title.contains(searchQuery, ignoreCase = true) ||
-                        it.second.authorAlias.contains(searchQuery, ignoreCase = true) ||
-                        it.second.categoryFlags.contains(searchQuery, ignoreCase = true)
+                val searchQuery by viewModel.searchQuery.collectAsState()
+                val filteredHeaders = headers.filter { 
+                    it.second.title.contains(searchQuery, ignoreCase = true) ||
+                    it.second.authorAlias.contains(searchQuery, ignoreCase = true) ||
+                    it.second.categoryFlags.contains(searchQuery, ignoreCase = true)
+                }
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { viewModel.updateSearchQuery(it) },
+                            label = { Text("Smart Scan (Filter local headers)") },
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                        )
+                        
+                        val currentFilter by viewModel.sourceFilter.collectAsState()
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                            SegmentedButton(
+                                selected = currentFilter == SourceFilter.ALL,
+                                onClick = { viewModel.updateSourceFilter(SourceFilter.ALL) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                            ) { Text("All") }
+                            SegmentedButton(
+                                selected = currentFilter == SourceFilter.ACQUAINTANCES,
+                                onClick = { viewModel.updateSourceFilter(SourceFilter.ACQUAINTANCES) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+                            ) { Text("Acquaintances") }
+                            SegmentedButton(
+                                selected = currentFilter == SourceFilter.TRUSTED,
+                                onClick = { viewModel.updateSourceFilter(SourceFilter.TRUSTED) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+                            ) { Text("Trusted") }
+                        }
                     }
 
                     if (filteredHeaders.isEmpty()) {
-                        Text(
-                            "No shared content matches your search, or sharing is not enabled on nearby devices.",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                        item {
+                            Text(
+                                "No shared content matches your search, or sharing is not enabled on nearby devices.",
+                                modifier = Modifier.padding(bottom = 16.dp),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
                     } else {
-                        LazyColumn(
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(filteredHeaders) { (ipPort, header) ->
-                                HeaderCard(ipPort = ipPort, header = header) {
-                                    viewModel.openContent(ipPort, header.contentHash)
-                                }
+                        items(filteredHeaders) { (ipPort, header) ->
+                            HeaderCard(ipPort = ipPort, header = header) {
+                                viewModel.openContent(ipPort, header.contentHash)
                             }
                         }
                     }
@@ -117,7 +143,8 @@ fun HeaderCard(ipPort: String, header: ContentHeader, onClick: () -> Unit) {
 fun ContentDetailOverlay(
     content: ContentUnit,
     onClose: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onVote: (Boolean) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -149,6 +176,17 @@ fun ContentDetailOverlay(
             if (content.videoPath != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Video content available at: ${content.videoPath}", style = MaterialTheme.typography.bodyMedium)
+            }
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Button(onClick = { onVote(true) }) {
+                    Text("👍 Like (${content.likeTokens.size})")
+                }
+                Button(onClick = { onVote(false) }) {
+                    Text("👎 Dislike (${content.dislikeTokens.size})")
+                }
             }
         }
     }

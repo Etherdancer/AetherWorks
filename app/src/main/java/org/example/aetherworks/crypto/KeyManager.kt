@@ -10,6 +10,10 @@ import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
 import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
+import org.bouncycastle.crypto.generators.X25519KeyPairGenerator
+import org.bouncycastle.crypto.params.X25519KeyGenerationParameters
+import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
+import org.bouncycastle.crypto.params.X25519PublicKeyParameters
 import java.security.KeyStore
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -29,6 +33,8 @@ class KeyManager(context: Context) {
         private const val KEY_DB_SECRET = "db_secret_encrypted"
         private const val KEY_ED25519_PRIV = "ed25519_priv_encrypted"
         private const val KEY_ED25519_PUB = "ed25519_pub"
+        private const val KEY_X25519_PRIV = "x25519_priv_encrypted"
+        private const val KEY_X25519_PUB = "x25519_pub"
         private const val KEY_VOTER_SECRET = "voter_secret_encrypted"
         private const val GCM_IV_LENGTH = 12
         private const val GCM_TAG_LENGTH = 128
@@ -136,6 +142,33 @@ class KeyManager(context: Context) {
         prefs.edit()
             .putString(KEY_ED25519_PRIV, Base64.encodeToString(encPriv, Base64.DEFAULT))
             .putString(KEY_ED25519_PUB, Base64.encodeToString(pubBytes, Base64.DEFAULT))
+            .apply()
+            
+        return Pair(privBytes, pubBytes)
+    }
+
+    fun getOrGenerateEncryptionIdentity(): Pair<ByteArray, ByteArray> {
+        val privEncStr = prefs.getString(KEY_X25519_PRIV, null)
+        val pubStr = prefs.getString(KEY_X25519_PUB, null)
+        if (privEncStr != null && pubStr != null) {
+            val priv = decryptData(Base64.decode(privEncStr, Base64.DEFAULT))
+            val pubBytes = Base64.decode(pubStr, Base64.DEFAULT)
+            return Pair(priv, pubBytes)
+        }
+        
+        val gen = X25519KeyPairGenerator()
+        gen.init(X25519KeyGenerationParameters(SecureRandom()))
+        val pair: AsymmetricCipherKeyPair = gen.generateKeyPair()
+        val privParams = pair.private as X25519PrivateKeyParameters
+        val pubParams = pair.public as X25519PublicKeyParameters
+        
+        val privBytes = privParams.encoded
+        val pubBytes = pubParams.encoded
+        
+        val encPriv = encryptData(privBytes)
+        prefs.edit()
+            .putString(KEY_X25519_PRIV, Base64.encodeToString(encPriv, Base64.DEFAULT))
+            .putString(KEY_X25519_PUB, Base64.encodeToString(pubBytes, Base64.DEFAULT))
             .apply()
             
         return Pair(privBytes, pubBytes)

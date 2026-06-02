@@ -16,5 +16,6 @@ data class KnownPeer(
     val alias: String,
     val avatarIndex: Int,
     val trustLevel: TrustLevel,
-    val onionAddress: String?
+    val onionAddress: String?,
+    val encryptionPublicKeyBase64: String? = null
 )

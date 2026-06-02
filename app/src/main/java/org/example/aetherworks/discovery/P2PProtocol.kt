@@ -42,6 +42,12 @@ class P2PServer(
     private var serverSocket: ServerSocket? = null
     private val isRunning = AtomicBoolean(false)
     private val executor = Executors.newFixedThreadPool(10) // Limit concurrency to prevent DoS
+    private val activeConnections = java.util.concurrent.ConcurrentHashMap<String, Int>()
+    
+    companion object {
+        private const val MAX_CONNECTIONS_PER_IP = 3
+    }
+    
     var localPort: Int = 0
         private set
 
@@ -56,7 +62,7 @@ class P2PServer(
             try {
                 while (isRunning.get()) {
                     val client = serverSocket?.accept() ?: break
-                    client.soTimeout = 10000 // Prevent connection hanging DoS
+                    client.soTimeout = 3000 // Prevent connection hanging DoS
                     executor.submit { handleClient(client) }
                 }
             } catch (e: Exception) {
@@ -73,9 +79,18 @@ class P2PServer(
         } catch (e: Exception) {}
         serverSocket = null
         executor.shutdownNow()
+        activeConnections.clear()
     }
 
     private fun handleClient(socket: Socket) {
+        val ip = socket.inetAddress?.hostAddress ?: "unknown"
+        val currentCount = activeConnections.getOrDefault(ip, 0)
+        if (currentCount >= MAX_CONNECTIONS_PER_IP) {
+            try { socket.close() } catch (e: Exception) {}
+            return
+        }
+        activeConnections[ip] = currentCount + 1
+
         try {
             socket.use { s ->
                 val reader = InputStreamReader(s.getInputStream())
@@ -156,6 +171,14 @@ class P2PServer(
             }
         } catch (e: Exception) {
             e.printStackTrace()
+        } finally {
+            val newCount = activeConnections.getOrDefault(ip, 1) - 1
+            if (newCount <= 0) {
+                activeConnections.remove(ip)
+            } else {
+                activeConnections[ip] = newCount
+            }
+            try { socket.close() } catch (e: Exception) {}
         }
     }
 
@@ -233,6 +256,10 @@ object P2PClient {
                     val computedHash = computedHashBytes.joinToString("") { "%02x".format(it) }
                     
                     if (computedHash == unit.contentHash && computedHash == hash) {
+                        if (!org.example.aetherworks.reputation.ReputationAgent.verifyProofOfWork(unit.contentHash, unit.powNonce)) {
+                            System.err.println("PoW mismatch. Rejecting ContentUnit from peer.")
+                            return@withContext null
+                        }
                         return@withContext unit
                     } else {
                         System.err.println("Hash mismatch. Rejecting ContentUnit from peer.")

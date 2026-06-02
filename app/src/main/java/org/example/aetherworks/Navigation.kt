@@ -26,6 +26,7 @@ import org.example.aetherworks.ui.components.GlobalSharingToggle
 import org.example.aetherworks.ui.feed.SharedBrowseScreen
 import org.example.aetherworks.ui.feed.SharedBrowseViewModel
 import org.example.aetherworks.ui.social.SocialScreen
+import org.example.aetherworks.ui.social.GroupsScreen
 import org.example.aetherworks.ui.library.LibraryScreen
 import org.example.aetherworks.ui.content.CreateContentScreen
 import org.example.aetherworks.ui.profile.ProfileScreen
@@ -83,7 +84,10 @@ fun MainNavigation(
               SharedBrowseScreen(modifier = Modifier.padding(paddingValues), viewModel = sharedBrowseViewModel)
             }
             entry<SocialTab> {
-              SocialScreen(modifier = Modifier.padding(paddingValues))
+              SocialScreen(
+                  modifier = Modifier.padding(paddingValues),
+                  onNavigateToGroups = { backStack.add(ManageGroups) }
+              )
             }
             entry<LibraryTab> {
               LibraryScreen(
@@ -109,6 +113,12 @@ fun MainNavigation(
               org.example.aetherworks.ui.about.AboutScreen(
                   modifier = Modifier.safeDrawingPadding(),
                   onNavigateBack = { backStack.removeLastOrNull() }
+              )
+            }
+            entry<ManageGroups> {
+              GroupsScreen(
+                  modifier = Modifier.safeDrawingPadding(),
+                  onBack = { backStack.removeLastOrNull() }
               )
             }
           },

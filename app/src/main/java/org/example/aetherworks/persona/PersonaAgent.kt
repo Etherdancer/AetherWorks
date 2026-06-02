@@ -21,6 +21,7 @@ data class ProfileField(
 @Serializable
 data class Profile(
     val publicKeyBase64: String,
+    val encryptionPublicKeyBase64: String? = null,
     val alias: String,
     val avatarPath: String? = null,
     val avatarId: Int = 0,
@@ -56,8 +57,15 @@ class PersonaAgent(context: Context, private val keyManager: KeyManager) {
         keyManager.getOrGenerateIdentity()
     }
 
+    private val x25519Keys: Pair<ByteArray, ByteArray> by lazy {
+        keyManager.getOrGenerateEncryptionIdentity()
+    }
+
     val publicKeyBase64: String
         get() = Base64.encodeToString(ed25519Keys.second, Base64.NO_WRAP)
+
+    val encryptionPublicKeyBase64: String
+        get() = Base64.encodeToString(x25519Keys.second, Base64.NO_WRAP)
 
     fun getProfile(): Profile? {
         val jsonString = prefs.getString("profile_json", null)
@@ -76,6 +84,7 @@ class PersonaAgent(context: Context, private val keyManager: KeyManager) {
         
         val migratedProfile = Profile(
             publicKeyBase64 = publicKeyBase64,
+            encryptionPublicKeyBase64 = encryptionPublicKeyBase64,
             alias = alias,
             avatarId = avatarId,
             about = if (bio.isNotEmpty()) ProfileField(bio, VisibilityLevel.PUBLIC) else null
@@ -87,7 +96,10 @@ class PersonaAgent(context: Context, private val keyManager: KeyManager) {
     fun saveProfile(profile: Profile) {
         require(profile.alias.isNotBlank()) { "Alias cannot be empty" }
         
-        val jsonString = Json.encodeToString(profile.copy(publicKeyBase64 = publicKeyBase64))
+        val jsonString = Json.encodeToString(profile.copy(
+            publicKeyBase64 = publicKeyBase64,
+            encryptionPublicKeyBase64 = encryptionPublicKeyBase64
+        ))
         prefs.edit()
             .putString("profile_json", jsonString)
             .putString("alias", profile.alias)

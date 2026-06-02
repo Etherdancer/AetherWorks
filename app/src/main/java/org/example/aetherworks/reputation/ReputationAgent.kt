@@ -13,6 +13,44 @@ class ReputationAgent(context: Context, private val keyManager: KeyManager) {
     companion object {
         const val POW_DIFFICULTY = 1 // Number of leading zero bytes required
         const val MAX_VOTES_PER_HOUR = 50
+
+        /**
+         * Proof of work generator. Finds a nonce that satisfies the difficulty.
+         */
+        fun generateProofOfWork(data: String): Long {
+            var nonce = 0L
+            val dataBytes = data.toByteArray()
+            val digest = MessageDigest.getInstance("SHA-256")
+            
+            while (true) {
+                digest.reset()
+                digest.update(dataBytes)
+                digest.update(nonce.toString().toByteArray())
+                val hash = digest.digest()
+                if (checkDifficulty(hash, POW_DIFFICULTY)) {
+                    return nonce
+                }
+                nonce++
+            }
+        }
+
+        /**
+         * Verifies the proof of work.
+         */
+        fun verifyProofOfWork(data: String, nonce: Long): Boolean {
+            val digest = MessageDigest.getInstance("SHA-256")
+            digest.update(data.toByteArray())
+            digest.update(nonce.toString().toByteArray())
+            val hash = digest.digest()
+            return checkDifficulty(hash, POW_DIFFICULTY)
+        }
+
+        private fun checkDifficulty(hash: ByteArray, difficulty: Int): Boolean {
+            for (i in 0 until difficulty) {
+                if (hash[i] != 0.toByte()) return false
+            }
+            return true
+        }
     }
 
     /**
@@ -50,44 +88,6 @@ class ReputationAgent(context: Context, private val keyManager: KeyManager) {
         // Record new vote timestamp
         val updatedVotes = recentVotes + now
         prefs.edit().putStringSet("vote_timestamps", updatedVotes.map { it.toString() }.toSet()).apply()
-        return true
-    }
-
-    /**
-     * Proof of work generator. Finds a nonce that satisfies the difficulty.
-     */
-    fun generateProofOfWork(data: String): Long {
-        var nonce = 0L
-        val dataBytes = data.toByteArray()
-        val digest = MessageDigest.getInstance("SHA-256")
-        
-        while (true) {
-            digest.reset()
-            digest.update(dataBytes)
-            digest.update(nonce.toString().toByteArray())
-            val hash = digest.digest()
-            if (checkDifficulty(hash, POW_DIFFICULTY)) {
-                return nonce
-            }
-            nonce++
-        }
-    }
-
-    /**
-     * Verifies the proof of work.
-     */
-    fun verifyProofOfWork(data: String, nonce: Long): Boolean {
-        val digest = MessageDigest.getInstance("SHA-256")
-        digest.update(data.toByteArray())
-        digest.update(nonce.toString().toByteArray())
-        val hash = digest.digest()
-        return checkDifficulty(hash, POW_DIFFICULTY)
-    }
-
-    private fun checkDifficulty(hash: ByteArray, difficulty: Int): Boolean {
-        for (i in 0 until difficulty) {
-            if (hash[i] != 0.toByte()) return false
-        }
         return true
     }
 

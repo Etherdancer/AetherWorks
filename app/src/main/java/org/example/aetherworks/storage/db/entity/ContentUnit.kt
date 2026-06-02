@@ -5,7 +5,7 @@ import androidx.room.Fts4
 import androidx.room.PrimaryKey
 
 enum class Visibility {
-    PRIVATE, TRUSTED, PUBLIC
+    PRIVATE, TRUSTED, PUBLIC, GROUP
 }
 
 @Entity(tableName = "content_units")
@@ -27,7 +27,8 @@ data class ContentUnit(
     val imagePath: String? = null,
     val videoPath: String? = null,
     val thumbnailPath: String? = null,
-    val thumbnailBase64: String? = null
+    val thumbnailBase64: String? = null,
+    val recipientKeyMapJson: String? = null
 )
 
 @Fts4(contentEntity = ContentUnit::class)

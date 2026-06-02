@@ -55,7 +55,7 @@ object SecureP2PManager {
             override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
         })
 
-        val context = SSLContext.getInstance("TLSv1.2")
+        val context = SSLContext.getInstance("TLSv1.3")
         context.init(keyManagerFactory.keyManagers, trustAllCerts, SecureRandom())
         return context
     }
