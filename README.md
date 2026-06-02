@@ -40,3 +40,9 @@ This program is free software: you can redistribute it and/or modify it under th
 ## 🐛 Bug Reports
 
 Please send bug reports to: `etherdancer.zero553@aleeas.com`
+
+## ⚡ Support & Donations
+
+If you'd like to support the continued development of AetherWorks, you can leave a tip via the Lightning Network:
+
+**Lightning Address / LNURL:** `lightning:your_lightning_address_here@domain.com`
