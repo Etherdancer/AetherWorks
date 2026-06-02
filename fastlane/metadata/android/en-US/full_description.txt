@@ -12,3 +12,6 @@ AetherWorks is a decentralized content-sharing platform and social network with 
 
 **Support the Project**
 If you like AetherWorks and want to support its continued development, consider leaving a tip via the Lightning Network. Use the donation link provided on F-Droid.
+
+**Bug Reports & Contact**
+If you encounter any issues or have bug reports, please email: etherdancer.zero553@aleeas.com

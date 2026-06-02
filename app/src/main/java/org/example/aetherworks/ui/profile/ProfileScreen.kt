@@ -182,6 +182,13 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+            
+            item {
+                Text("About & Support", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                Text("For bug reports and support, please contact:", style = MaterialTheme.typography.bodyMedium)
+                Text("etherdancer.zero553@aleeas.com", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
                 Spacer(modifier = Modifier.height(64.dp))
             }
         }
