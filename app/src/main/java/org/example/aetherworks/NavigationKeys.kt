@@ -11,3 +11,4 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object CreateContent : NavKey
 @Serializable data object ProfileSettings : NavKey
+@Serializable data object AboutSettings : NavKey

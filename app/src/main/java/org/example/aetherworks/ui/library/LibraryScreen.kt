@@ -30,6 +30,7 @@ fun LibraryScreen(
     modifier: Modifier = Modifier,
     onNavigateToCreate: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToAbout: () -> Unit,
     viewModel: LibraryViewModel = viewModel()
 ) {
     val libraryContent by viewModel.libraryContent.collectAsState()
@@ -45,8 +46,13 @@ fun LibraryScreen(
                 Button(onClick = onNavigateToCreate) {
                     Text("Create Content")
                 }
-                Button(onClick = onNavigateToProfile) {
-                    Text("Edit Profile")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = onNavigateToProfile) {
+                        Text("Profile")
+                    }
+                    Button(onClick = onNavigateToAbout) {
+                        Text("About")
+                    }
                 }
             }
         }

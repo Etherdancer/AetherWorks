@@ -89,7 +89,8 @@ fun MainNavigation(
               LibraryScreen(
                   modifier = Modifier.padding(paddingValues),
                   onNavigateToCreate = { backStack.add(CreateContent) },
-                  onNavigateToProfile = { backStack.add(ProfileSettings) }
+                  onNavigateToProfile = { backStack.add(ProfileSettings) },
+                  onNavigateToAbout = { backStack.add(AboutSettings) }
               )
             }
             entry<CreateContent> {
@@ -100,6 +101,12 @@ fun MainNavigation(
             }
             entry<ProfileSettings> {
               ProfileScreen(
+                  modifier = Modifier.safeDrawingPadding(),
+                  onNavigateBack = { backStack.removeLastOrNull() }
+              )
+            }
+            entry<AboutSettings> {
+              org.example.aetherworks.ui.about.AboutScreen(
                   modifier = Modifier.safeDrawingPadding(),
                   onNavigateBack = { backStack.removeLastOrNull() }
               )

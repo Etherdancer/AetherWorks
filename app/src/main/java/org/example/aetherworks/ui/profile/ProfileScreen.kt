@@ -8,8 +8,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.example.aetherworks.crypto.KeyManager
@@ -185,29 +183,6 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
                     }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
-            }
-            
-            item {
-                Text("About & Support", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                Text("For bug reports and support, please contact:", style = MaterialTheme.typography.bodyMedium)
-                Text("etherdancer.zero553@aleeas.com", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.secondary)
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text("Support the Developer", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                Text("If you like AetherWorks, consider leaving a tip via Bitcoin (Silent Payments).", style = MaterialTheme.typography.bodySmall)
-                
-                val clipboardManager = LocalClipboardManager.current
-                OutlinedButton(
-                    onClick = {
-                        clipboardManager.setText(AnnotatedString("sp1qqvc4svdel9fkulcyk8xjyyyhcqzfudtnmu8xrerkaqgv7wwt0hlxzqlp6xkyfwvaxnv7p93y3ckw6trkssvj4t52tlv235lye4kqr9fnhvxxemua"))
-                    },
-                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                ) {
-                    Text("Copy Bitcoin Donation Address")
-                }
-                
-                Spacer(modifier = Modifier.height(64.dp))
             }
         }
     }
