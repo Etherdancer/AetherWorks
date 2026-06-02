@@ -1,0 +1,14 @@
+AetherWorks is a decentralized content-sharing platform and social network with zero servers. All data lives on-device. The user has absolute sovereignty over what is shared, what is kept private, and who they interact with. Privacy is not a feature — it is the foundation.
+
+**Core Features:**
+* **Zero Servers:** There are no servers. There is no cloud. There is no backend. Every device is sovereign.
+* **Privacy by Default:** The safest choice is always the one that collects the least. The app never asks for personal data. Profiles are fictional personas.
+* **Offline First:** AetherWorks allows you to create, read, and manage your content fully offline. When you're ready, toggle the network to share with nearby peers.
+* **End-to-End Encrypted Data:** All data is encrypted at rest using AES-256-GCM. 
+* **Anonymous Ratings:** Track the reputation of content through community feedback without ever identifying who voted using cryptographic tokens.
+* **P2P Discovery:** Find other AetherWorks instances on nearby devices using Wi-Fi Direct, Wi-Fi Local Network, and Bluetooth.
+
+*Warning: This app is for users 18 and older. The developer is not responsible for any damage, inconvenience, data loss, or any other consequence resulting from using this app.*
+
+**Support the Project**
+If you like AetherWorks and want to support its continued development, consider leaving a tip via the Lightning Network. Use the donation link provided on F-Droid.
