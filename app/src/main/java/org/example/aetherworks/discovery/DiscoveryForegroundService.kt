@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import kotlinx.coroutines.launch
 import org.example.aetherworks.MainActivity
 import org.example.aetherworks.crypto.KeyManager
 import org.example.aetherworks.persona.PersonaAgent
@@ -106,6 +107,49 @@ class DiscoveryForegroundService : Service() {
             tcpPort = serverPort
         )
         discoveryManager?.start(packet)
+
+        // Background Relay Synchronization
+        val coroutineScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
+        coroutineScope.launch {
+            discoveryManager?.discoveredPeers?.collect { peers ->
+                peers.forEach { peer ->
+                    val peerIp = peer.ip
+                    if (peerIp != null && peer.tcpPort > 0) {
+                        try {
+                            val prefs = getSharedPreferences("aether_settings", Context.MODE_PRIVATE)
+                            val quotaMb = prefs.getInt("relay_quota_mb", 500)
+                            val maxBytes = quotaMb * 1024L * 1024L
+                            
+                            val myPubKey = personaAgent.publicKeyBase64
+                            val digest = java.security.MessageDigest.getInstance("SHA-256")
+                            val myHashedIdBytes = digest.digest(myPubKey.toByteArray())
+                            val myHashedId = myHashedIdBytes.joinToString("") { "%02x".format(it) }
+                            
+                            val packetIds = P2PClient.fetchRelayIndex(peerIp, peer.tcpPort) ?: emptyList()
+                            val relayDao = db.relayPacketDao()
+                            val currentUsage = relayDao.getTotalPayloadSize() ?: 0L
+                            
+                            // Naive fetch
+                            for (id in packetIds) {
+                                // Check if we already have it
+                                val exists = relayDao.getValidRelayPackets(System.currentTimeMillis()).any { it.packetId == id }
+                                if (!exists) {
+                                    val fetched = P2PClient.fetchRelayPacket(peerIp, peer.tcpPort, id)
+                                    if (fetched != null) {
+                                        val isForMe = (fetched.hashedRecipientId == myHashedId)
+                                        if (isForMe || currentUsage < maxBytes) {
+                                            relayDao.insertPacket(fetched)
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.e("RelaySync", "Failed to sync relay with peer", e)
+                        }
+                    }
+                }
+            }
+        }
 
         return START_STICKY
     }

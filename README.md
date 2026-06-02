@@ -36,3 +36,7 @@ AetherWorks is strictly built for F-Droid and GitHub Releases:
 ## 📄 License
 
 This program is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License v3.0** as published by the Free Software Foundation. This program is distributed **WITHOUT ANY WARRANTY**; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [LICENSE](LICENSE) file for details.
+
+## 🐛 Bug Reports
+
+Please send bug reports to: `etherdancer.zero553@aleeas.com`

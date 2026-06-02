@@ -146,6 +146,42 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
                 ProfileFieldInput("Celtic Horoscope", celticHoroscope, { celticHoroscope = it }, celticHoroscopeVis, { celticHoroscopeVis = it })
                 ProfileFieldInput("Mayan Kin", mayanKin, { mayanKin = it }, mayanKinVis, { mayanKinVis = it })
                 ProfileFieldInput("Vedic Rasi", vedicRasi, { vedicRasi = it }, vedicRasiVis, { vedicRasiVis = it })
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+            
+            item {
+                Text("Network & Relay Settings", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                Text("Maximum local storage for relaying encrypted messages from other users.", style = MaterialTheme.typography.bodySmall)
+                
+                val prefs = context.getSharedPreferences("aether_settings", android.content.Context.MODE_PRIVATE)
+                var relayQuotaMb by remember { mutableStateOf(prefs.getInt("relay_quota_mb", 500)) }
+                
+                val options = listOf(50, 100, 500, 1024, 2048, 5120)
+                val labels = listOf("50 MB", "100 MB", "500 MB (Default)", "1 GB", "2 GB", "5 GB")
+                
+                var expandedQuota by remember { mutableStateOf(false) }
+                
+                Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Button(onClick = { expandedQuota = true }, modifier = Modifier.fillMaxWidth()) {
+                        val currentLabel = labels[options.indexOf(relayQuotaMb).takeIf { it >= 0 } ?: 2]
+                        Text("Relay Storage Quota: $currentLabel")
+                    }
+                    DropdownMenu(
+                        expanded = expandedQuota,
+                        onDismissRequest = { expandedQuota = false }
+                    ) {
+                        options.forEachIndexed { index, size ->
+                            DropdownMenuItem(
+                                text = { Text(labels[index]) },
+                                onClick = {
+                                    relayQuotaMb = size
+                                    prefs.edit().putInt("relay_quota_mb", size).apply()
+                                    expandedQuota = false
+                                }
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(64.dp))
             }
         }

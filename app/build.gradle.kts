@@ -13,8 +13,8 @@ android {
         applicationId = "org.example.aetherworks"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.2.0-alpha"
+        versionCode = 6
+        versionName = "2.1.10_alpha"
     }
 
     buildTypes {
@@ -110,12 +110,4 @@ dependencies {
   implementation(libs.androidx.camera.lifecycle)
   implementation(libs.androidx.camera.view)
   implementation(libs.zxing.core)
-  
-  // AetherWorks All-in-One Utility Dependencies
-  // implementation(libs.webrtc.android)
-  // implementation(libs.syncthing.core)
-  implementation(libs.exoplayer.core)
-  implementation(libs.exoplayer.ui)
-  implementation(libs.osmdroid.android)
-  implementation("com.kizitonwose.calendar:compose:2.5.0")
 }

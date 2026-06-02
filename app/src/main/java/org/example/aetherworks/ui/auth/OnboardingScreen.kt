@@ -26,13 +26,14 @@ fun OnboardingScreen(
     var acceptedRisk by remember { mutableStateOf(false) }
     var acceptedLiability by remember { mutableStateOf(false) }
     var acceptedPermanence by remember { mutableStateOf(false) }
+    var acceptedAge by remember { mutableStateOf(false) }
     var step by remember { mutableIntStateOf(1) } // 1: Create, 2: Confirm
     var firstPassword by remember { mutableStateOf("") }
     var currentInput by remember { mutableStateOf("") }
     var showError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
 
-    val passwordRegex = Regex("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%&\\-\\+()\\*\"':;!?]).{8,}$")
+    val passwordRegex = Regex("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#\$%&\\-\\+()\\*\"':;!?]).{8,}\$")
 
     Scaffold(
         topBar = {
@@ -76,6 +77,7 @@ fun OnboardingScreen(
                     Text("• You are explicitly and solely liable for any pirated or illegal content you choose to distribute.")
                     Text("• Due to the decentralized P2P network, content made public CANNOT be permanently deleted. Once public, always public.")
                     Text("• This app runs on physical devices only.")
+                    Text("• You must be at least 18 years old to use this app.")
                 }
             }
 
@@ -101,10 +103,17 @@ fun OnboardingScreen(
                     )
                     Text("I understand that public content is permanently public.", style = MaterialTheme.typography.bodyMedium)
                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = acceptedAge,
+                        onCheckedChange = { acceptedAge = it }
+                    )
+                    Text("I confirm that I am at least 18 years old.", style = MaterialTheme.typography.bodyMedium)
+                }
             }
 
             AnimatedVisibility(
-                visible = acceptedRisk && acceptedLiability && acceptedPermanence,
+                visible = acceptedRisk && acceptedLiability && acceptedPermanence && acceptedAge,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {

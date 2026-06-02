@@ -11,18 +11,13 @@ import org.example.aetherworks.storage.db.dao.ContentDao
 import org.example.aetherworks.storage.db.dao.MessageDao
 import org.example.aetherworks.storage.db.dao.PeerDao
 import org.example.aetherworks.storage.db.dao.SecurityLogDao
-import org.example.aetherworks.storage.db.dao.RecipeDao
-import org.example.aetherworks.storage.db.entity.CalendarEvent
+import org.example.aetherworks.storage.db.dao.RelayPacketDao
 import org.example.aetherworks.storage.db.entity.ContentUnit
 import org.example.aetherworks.storage.db.entity.ContentFtsEntity
 import org.example.aetherworks.storage.db.entity.KnownPeer
-import org.example.aetherworks.storage.db.entity.MediaItem
 import org.example.aetherworks.storage.db.entity.Message
 import org.example.aetherworks.storage.db.entity.SecurityLogEntry
-import org.example.aetherworks.storage.db.entity.VaultNote
-import org.example.aetherworks.storage.db.entity.VaultPassword
-import org.example.aetherworks.storage.db.entity.ShoppingItem
-import org.example.aetherworks.storage.db.entity.RecipeEntity
+import org.example.aetherworks.storage.db.entity.RelayPacket
 
 @Database(
     entities = [
@@ -30,15 +25,10 @@ import org.example.aetherworks.storage.db.entity.RecipeEntity
         KnownPeer::class,
         Message::class,
         SecurityLogEntry::class,
-        VaultPassword::class,
-        VaultNote::class,
-        MediaItem::class,
-        CalendarEvent::class,
         ContentFtsEntity::class,
-        ShoppingItem::class,
-        RecipeEntity::class
+        RelayPacket::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @androidx.room.TypeConverters(Converters::class)
@@ -47,14 +37,7 @@ abstract class AetherDatabase : RoomDatabase() {
     abstract fun peerDao(): PeerDao
     abstract fun messageDao(): MessageDao
     abstract fun securityLogDao(): SecurityLogDao
-    
-    
-    // Vault (Phase 3 Utilities)
-    abstract fun vaultDao(): org.example.aetherworks.storage.db.dao.VaultDao
-    abstract fun mediaDao(): org.example.aetherworks.storage.db.dao.MediaDao
-    abstract fun calendarDao(): org.example.aetherworks.storage.db.dao.CalendarDao
-    abstract fun shoppingDao(): org.example.aetherworks.storage.db.dao.ShoppingDao
-    abstract fun recipeDao(): RecipeDao
+    abstract fun relayPacketDao(): RelayPacketDao
 
     companion object {
         val MIGRATION_6_7 = object : Migration(6, 7) {
@@ -102,6 +85,22 @@ abstract class AetherDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `relay_packets` (
+                        `packetId` TEXT NOT NULL,
+                        `hashedRecipientId` TEXT NOT NULL,
+                        `senderAlias` TEXT,
+                        `encryptedPayload` BLOB NOT NULL,
+                        `timestamp` INTEGER NOT NULL,
+                        `ttlExpiration` INTEGER NOT NULL,
+                        PRIMARY KEY(`packetId`)
+                    )
+                """)
+            }
+        }
+
         @Volatile
         private var INSTANCE_PRIVATE: AetherDatabase? = null
 
@@ -117,7 +116,7 @@ abstract class AetherDatabase : RoomDatabase() {
                     "aether_private.db"
                 )
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE_PRIVATE = instance
@@ -134,7 +133,7 @@ abstract class AetherDatabase : RoomDatabase() {
                     "aether_shared.db"
                 )
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE_SHARED = instance

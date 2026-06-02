@@ -15,11 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import com.google.android.exoplayer2.ui.PlayerView
 import org.example.aetherworks.discovery.ContentHeader
 import org.example.aetherworks.storage.db.entity.ContentUnit
-import org.example.aetherworks.utilities.media.MediaPlayerAgent
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -27,8 +24,7 @@ import java.util.*
 @Composable
 fun SharedBrowseScreen(
     modifier: Modifier = Modifier,
-    viewModel: SharedBrowseViewModel,
-    mediaPlayerAgent: MediaPlayerAgent
+    viewModel: SharedBrowseViewModel
 ) {
     val headers by viewModel.sharedHeaders.collectAsState()
     val loading by viewModel.loadingHeader.collectAsState()
@@ -38,14 +34,12 @@ fun SharedBrowseScreen(
         ContentDetailOverlay(
             content = viewingContent!!,
             onClose = {
-                mediaPlayerAgent.stop()
                 viewModel.clearViewingContent()
             },
             onSave = {
                 viewModel.saveToPrivateLibrary(viewingContent!!)
                 // Could show a toast here
-            },
-            mediaPlayerAgent = mediaPlayerAgent
+            }
         )
     } else {
         Scaffold(
@@ -123,8 +117,7 @@ fun HeaderCard(ipPort: String, header: ContentHeader, onClick: () -> Unit) {
 fun ContentDetailOverlay(
     content: ContentUnit,
     onClose: () -> Unit,
-    onSave: () -> Unit,
-    mediaPlayerAgent: MediaPlayerAgent
+    onSave: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -153,46 +146,9 @@ fun ContentDetailOverlay(
             Text("By ${content.authorAlias}", style = MaterialTheme.typography.labelLarge)
             Spacer(modifier = Modifier.height(16.dp))
             Text(content.body, style = MaterialTheme.typography.bodyLarge)
-            
             if (content.videoPath != null) {
                 Spacer(modifier = Modifier.height(16.dp))
-                VideoPlayerComponent(videoUri = content.videoPath, mediaPlayerAgent = mediaPlayerAgent)
-            }
-        }
-    }
-}
-
-@Composable
-fun VideoPlayerComponent(videoUri: String, mediaPlayerAgent: MediaPlayerAgent) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    var isPlaying by remember { mutableStateOf(false) }
-
-    DisposableEffect(Unit) {
-        val player = mediaPlayerAgent.initializePlayer()
-        onDispose {
-            mediaPlayerAgent.stop()
-        }
-    }
-
-    Card(modifier = Modifier.fillMaxWidth().height(250.dp)) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            if (!isPlaying) {
-                Button(onClick = {
-                    mediaPlayerAgent.playSecureMedia(Uri.parse(videoUri))
-                    isPlaying = true
-                }) {
-                    Text("Play Video")
-                }
-            } else {
-                AndroidView(
-                    factory = { ctx ->
-                        PlayerView(ctx).apply {
-                            player = mediaPlayerAgent.initializePlayer()
-                            useController = true
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+                Text("Video content available at: ${content.videoPath}", style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
