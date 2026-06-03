@@ -1,6 +1,8 @@
 package org.example.aetherworks.discovery
 
+import android.annotation.SuppressLint
 import android.content.Context
+import org.example.aetherworks.IAetherIpc
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -37,7 +39,7 @@ data class ContentHeader(
 
 class P2PServer(
     private val context: Context,
-    private val db: AetherDatabase
+    private val ipcService: IAetherIpc
 ) {
     private var serverSocket: ServerSocket? = null
     private val isRunning = AtomicBoolean(false)
@@ -113,63 +115,40 @@ class P2PServer(
 
                 when (command) {
                     "INDEX" -> {
-                        // Return all public headers
-                        val publicContent = db.contentDao().getByVisibilitySync(Visibility.PUBLIC)
-                        val headers = publicContent.map { unit ->
-                            ContentHeader(
-                                contentHash = unit.contentHash,
-                                title = unit.title,
-                                authorAlias = unit.authorAlias,
-                                timestamp = unit.timestamp,
-                                thumbnailBase64 = unit.thumbnailBase64,
-                                categoryFlags = unit.categoryFlags,
-                                emotionFlags = unit.emotionFlags,
-                                reputationScore = unit.likeTokens.size - unit.dislikeTokens.size
-                            )
-                        }
-                        writer.println(Json.encodeToString(headers))
+                        val response = ipcService.index
+                        if (response.isNotEmpty()) writer.println(response) else writer.println("[]")
                     }
                     "GET" -> {
                         if (parts.size > 1) {
                             val hash = parts[1]
-                            val unit = db.contentDao().getByHashSync(hash)
-                            if (unit != null && unit.visibility == Visibility.PUBLIC) {
-                                writer.println(Json.encodeToString(unit))
+                            val response = ipcService.getContent(hash)
+                            if (response.isNotEmpty()) {
+                                writer.println(response)
                             } else {
                                 writer.println("ERROR: NOT_FOUND_OR_PRIVATE")
                             }
                         }
                     }
                     "PROFILE" -> {
-                        val personaAgent = PersonaAgent(context, KeyManager(context))
-                        if (personaAgent.showProfileToNearbyUsers) {
-                            val profile = personaAgent.getProfile()
-                            if (profile != null) {
-                                writer.println(Json.encodeToString(profile))
-                            } else {
-                                writer.println("ERROR: NO_PROFILE")
-                            }
+                        val response = ipcService.profile
+                        if (response.isNotEmpty()) {
+                            writer.println(response)
                         } else {
-                            writer.println("ERROR: PROFILE_PRIVATE")
+                            writer.println("ERROR: PROFILE_PRIVATE_OR_NO_PROFILE")
                         }
                     }
                     "RELAY_INDEX" -> {
                         val currentTime = System.currentTimeMillis()
-                        val packets = kotlinx.coroutines.runBlocking {
-                            db.relayPacketDao().getValidRelayPackets(currentTime)
-                        }
-                        val packetIds = packets.map { it.packetId }
-                        writer.println(Json.encodeToString(packetIds))
+                        val response = ipcService.getRelayIndex(currentTime)
+                        if (response.isNotEmpty()) writer.println(response) else writer.println("[]")
                     }
                     "GET_RELAY" -> {
                         if (parts.size > 1) {
                             val packetId = parts[1]
                             val currentTime = System.currentTimeMillis()
-                            val packet = kotlinx.coroutines.runBlocking {
-                                db.relayPacketDao().getValidRelayPackets(currentTime).find { it.packetId == packetId }
-                            }
-                            if (packet != null) {
-                                writer.println(Json.encodeToString(packet))
+                            val response = ipcService.getRelayPacket(currentTime, packetId)
+                            if (response.isNotEmpty()) {
+                                writer.println(response)
                             } else {
                                 writer.println("ERROR: NOT_FOUND")
                             }

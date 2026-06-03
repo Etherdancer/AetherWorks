@@ -57,7 +57,13 @@
         <service
             android:name=".discovery.DiscoveryForegroundService"
             android:exported="false"
+            android:process=":network"
             android:foregroundServiceType="connectedDevice|dataSync" />
+
+        <!-- IPC Database Service in main process -->
+        <service
+            android:name=".storage.AetherDatabaseService"
+            android:exported="false" />
 
         <!-- Shelter-style Content Renderer Sandbox -->
         <service

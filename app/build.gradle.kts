@@ -30,7 +30,7 @@ android {
     }
     buildFeatures {
       compose = true
-      aidl = false
+      aidl = true
       buildConfig = false
       shaders = false
     }

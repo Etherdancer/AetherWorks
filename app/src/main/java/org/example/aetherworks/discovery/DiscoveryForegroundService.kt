@@ -14,9 +14,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import kotlinx.coroutines.launch
 import org.example.aetherworks.MainActivity
-import org.example.aetherworks.crypto.KeyManager
-import org.example.aetherworks.persona.PersonaAgent
-import org.example.aetherworks.storage.db.AetherDatabase
+import android.content.ServiceConnection
+import android.content.ComponentName
+import org.example.aetherworks.IAetherIpc
+import org.example.aetherworks.storage.AetherDatabaseService
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class DiscoveryForegroundService : Service() {
 
@@ -29,6 +32,18 @@ class DiscoveryForegroundService : Service() {
     private var discoveryManager: DiscoveryManager? = null
     private var p2pServer: P2PServer? = null
     private val ephemeralPeerId = java.util.UUID.randomUUID().toString().substring(0, 8)
+
+    private var ipcService: IAetherIpc? = null
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            ipcService = IAetherIpc.Stub.asInterface(service)
+            startServerAndDiscovery()
+        }
+        override fun onServiceDisconnected(name: ComponentName?) {
+            ipcService = null
+            stopSelf()
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -87,29 +102,30 @@ class DiscoveryForegroundService : Service() {
             return START_NOT_STICKY
         }
 
-        val personaAgent = PersonaAgent(this, KeyManager(this))
-        val db = try {
-            AetherDatabase.getSharedDatabase()
-        } catch (e: Exception) {
-            // Service started but DB not initialized? Should not happen if UI enforces unlock first.
-            stopSelf()
-            return START_NOT_STICKY
-        }
+        val intentIpc = Intent(this, AetherDatabaseService::class.java)
+        bindService(intentIpc, connection, Context.BIND_AUTO_CREATE)
+
+        return START_STICKY
+    }
+
+    private fun startServerAndDiscovery() {
+        val ipc = ipcService ?: return
 
         org.example.aetherworks.security.guard.SecureP2PManager.init(this)
-        p2pServer = P2PServer(this, db)
+        p2pServer = P2PServer(this, ipc)
         val serverPort = p2pServer?.start() ?: 0
 
-        // Create presence packet.
+        val myHashedId = ipc.myHashedId
+        val hasProfile = myHashedId.isNotEmpty()
+
         val packet = PresencePacket(
             peerId = ephemeralPeerId,
-            hasProfile = personaAgent.hasProfile(),
+            hasProfile = hasProfile,
             categoryBitmask = 0L,
             tcpPort = serverPort
         )
         discoveryManager?.start(packet)
 
-        // Background Relay Synchronization
         val coroutineScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
         coroutineScope.launch {
             discoveryManager?.discoveredPeers?.collect { peers ->
@@ -121,44 +137,36 @@ class DiscoveryForegroundService : Service() {
                             val quotaMb = prefs.getInt("relay_quota_mb", 500)
                             val maxBytes = quotaMb * 1024L * 1024L
                             
-                            val myPubKey = personaAgent.publicKeyBase64
-                            val digest = java.security.MessageDigest.getInstance("SHA-256")
-                            val myHashedIdBytes = digest.digest(myPubKey.toByteArray())
-                            val myHashedId = myHashedIdBytes.joinToString("") { "%02x".format(it) }
-                            
                             val packetIds = P2PClient.fetchRelayIndex(peerIp, peer.tcpPort) ?: emptyList()
-                            val relayDao = db.relayPacketDao()
-                            val currentUsage = relayDao.getTotalPayloadSize() ?: 0L
+                            val currentUsage = ipc.relayUsage
                             
-                            // Naive fetch
+                            val currentTime = System.currentTimeMillis()
                             for (id in packetIds) {
-                                // Check if we already have it
-                                val exists = relayDao.getValidRelayPackets(System.currentTimeMillis()).any { it.packetId == id }
+                                val exists = ipc.hasRelayPacket(currentTime, id)
                                 if (!exists) {
                                     val fetched = P2PClient.fetchRelayPacket(peerIp, peer.tcpPort, id)
                                     if (fetched != null) {
                                         val isForMe = (fetched.hashedRecipientId == myHashedId)
                                         if (isForMe || currentUsage < maxBytes) {
-                                            relayDao.insertPacket(fetched)
+                                            ipc.insertRelayPacket(Json.encodeToString(fetched))
                                         }
                                     }
                                 }
                             }
                         } catch (e: Exception) {
-                            android.util.Log.e("RelaySync", "Failed to sync relay with peer", e)
+                            // Suppress logs
                         }
                     }
                 }
             }
         }
-
-        return START_STICKY
     }
 
     override fun onDestroy() {
         super.onDestroy()
         discoveryManager?.stop()
         p2pServer?.stop()
+        try { unbindService(connection) } catch (e: Exception) {}
     }
 
     override fun onBind(intent: Intent?): IBinder? {

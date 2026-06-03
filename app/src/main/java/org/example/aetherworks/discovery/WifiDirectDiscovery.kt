@@ -13,6 +13,11 @@ import kotlinx.coroutines.flow.asStateFlow
 @SuppressLint("MissingPermission")
 class WifiDirectDiscovery(private val context: Context) : DiscoveryProtocol {
 
+    companion object {
+        const val SERVICE_INSTANCE = "_p2psync"
+        const val SERVICE_REG_TYPE = "_presence._tcp"
+    }
+
     private val wifiP2pManager: WifiP2pManager? = context.getSystemService(Context.WIFI_P2P_SERVICE) as? WifiP2pManager
     private var channel: WifiP2pManager.Channel? = null
 
