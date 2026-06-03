@@ -13,8 +13,8 @@ android {
         applicationId = "org.example.aetherworks"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.3.2.0_alpha"
+        versionCode = 10
+        versionName = "0.3.2.2_alpha"
     }
 
     buildTypes {
@@ -25,8 +25,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
       compose = true
@@ -50,7 +50,7 @@ ksp {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 dependencies {
