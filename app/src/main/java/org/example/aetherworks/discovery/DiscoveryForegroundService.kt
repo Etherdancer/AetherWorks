@@ -31,8 +31,22 @@ class DiscoveryForegroundService : Service() {
     }
 
     private var discoveryManager: DiscoveryManager? = null
+    private var bleDiscovery: BleDiscovery? = null
     private var p2pServer: P2PServer? = null
     private val ephemeralPeerId = java.util.UUID.randomUUID().toString().substring(0, 8)
+    
+    private val screenStateReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                Intent.ACTION_SCREEN_OFF -> {
+                    bleDiscovery?.setScanMode(android.bluetooth.le.ScanSettings.SCAN_MODE_OPPORTUNISTIC)
+                }
+                Intent.ACTION_SCREEN_ON -> {
+                    bleDiscovery?.setScanMode(android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_POWER)
+                }
+            }
+        }
+    }
 
     private var ipcService: IAetherIpc? = null
     private val connection = object : ServiceConnection {
@@ -52,9 +66,15 @@ class DiscoveryForegroundService : Service() {
         
         // Initialize discovery manager with NSD, BLE, and Wi-Fi Direct
         val nsdDiscovery = NsdDiscovery(this)
-        val bleDiscovery = BleDiscovery(this)
+        bleDiscovery = BleDiscovery(this)
         val wifiDirectDiscovery = WifiDirectDiscovery(this)
-        discoveryManager = DiscoveryManager(listOf(nsdDiscovery, bleDiscovery, wifiDirectDiscovery))
+        discoveryManager = DiscoveryManager(listOf(nsdDiscovery, bleDiscovery!!, wifiDirectDiscovery))
+        
+        val filter = android.content.IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+        }
+        registerReceiver(screenStateReceiver, filter)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -177,6 +197,7 @@ class DiscoveryForegroundService : Service() {
         super.onDestroy()
         discoveryManager?.stop()
         p2pServer?.stop()
+        try { unregisterReceiver(screenStateReceiver) } catch (e: Exception) {}
         try { unbindService(connection) } catch (e: Exception) {}
     }
 

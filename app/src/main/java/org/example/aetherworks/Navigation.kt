@@ -95,7 +95,13 @@ fun MainNavigation(
         entryProvider =
           entryProvider {
             entry<FeedTab> {
-              SharedBrowseScreen(modifier = Modifier.padding(paddingValues), viewModel = sharedBrowseViewModel)
+              SharedBrowseScreen(
+                  modifier = Modifier.padding(paddingValues), 
+                  viewModel = sharedBrowseViewModel,
+                  onShareToGroup = { title, body ->
+                      backStack.add(CreateContent(prefillTitle = title, prefillBody = body, forceVisibilityGroup = true))
+                  }
+              )
             }
             entry<SocialTab> {
               SocialScreen(
@@ -116,7 +122,9 @@ fun MainNavigation(
               CreateContentScreen(
                   modifier = Modifier.safeDrawingPadding(),
                   onNavigateBack = { backStack.removeLastOrNull() },
-                  initialTitle = key.prefillTitle ?: ""
+                  initialTitle = key.prefillTitle ?: "",
+                  initialBody = key.prefillBody ?: "",
+                  forceVisibilityGroup = key.forceVisibilityGroup
               )
             }
             entry<ProfileSettings> {

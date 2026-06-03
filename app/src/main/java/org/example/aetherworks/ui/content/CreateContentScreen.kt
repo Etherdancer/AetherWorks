@@ -50,13 +50,13 @@ val EMOTIONS = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit, initialTitle: String = "") {
+fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit, initialTitle: String = "", initialBody: String = "", forceVisibilityGroup: Boolean = false) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     
     var title by remember { mutableStateOf(initialTitle) }
-    var body by remember { mutableStateOf("") }
-    var visibility by remember { mutableStateOf(Visibility.PRIVATE) }
+    var body by remember { mutableStateOf(initialBody) }
+    var visibility by remember { mutableStateOf(if (forceVisibilityGroup) Visibility.GROUP else Visibility.PRIVATE) }
     var selectedMediaUri by remember { mutableStateOf<Uri?>(null) }
     var isVideo by remember { mutableStateOf(false) }
     var fileEncryptionPassphrase by remember { mutableStateOf("") }

@@ -1,0 +1,27 @@
+Categories:
+  - System
+  - Connectivity
+  - Security
+License: GPL-3.0-or-later
+AuthorName: AetherWorks Contributors
+AuthorEmail: etherdancer.zero553@aleeas.com
+SourceCode: https://github.com/Etherdancer/AetherWorks
+IssueTracker: https://github.com/Etherdancer/AetherWorks/issues
+Donate: https://github.com/Etherdancer/AetherWorks
+
+AutoUpdateMode: None
+UpdateCheckMode: None
+
+CurrentVersion: 0.3.2.1_alpha
+CurrentVersionCode: 9
+
+RepoType: git
+Repo: https://github.com/Etherdancer/AetherWorks
+
+Builds:
+  - versionName: '0.3.2.1_alpha'
+    versionCode: 9
+    commit: 'v0.3.2.1_alpha'
+    subdir: app
+    gradle:
+      - 'yes'

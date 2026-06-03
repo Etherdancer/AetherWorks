@@ -50,7 +50,7 @@ fun GlobalSharingToggle(
         AlertDialog(
             onDismissRequest = { showConsentDialog = false },
             title = { Text("Enable Data Sharing?") },
-            text = { Text("You are about to enable data sharing with nearby devices. Other users of this app on the same network or in Bluetooth/Wi-Fi Direct range will be able to see content you have marked as 'Public'.\n\nWARNING: ONCE PUBLIC, ALWAYS PUBLIC. Content cannot be recalled. Do you want to continue?") },
+            text = { Text("You are about to enable data sharing with nearby devices. Other users of this app on the same network or in Bluetooth/Wi-Fi Direct range will be able to see content you have marked as 'Public'.\n\nWARNING: ONCE PUBLIC, ALWAYS PUBLIC. Content cannot be recalled. Do you want to continue?\n\nTip: To save battery, keep this toggle OFF when you are at home, and only turn it ON when you are in public spaces.") },
             confirmButton = {
                 TextButton(onClick = {
                     showConsentDialog = false

@@ -114,7 +114,7 @@ class BleDiscovery(private val context: Context) : DiscoveryProtocol {
             .build()
 
         val settings = ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
             .build()
 
         bleScanner?.startScan(listOf(filter), settings, scanCallback)
@@ -150,5 +150,22 @@ class BleDiscovery(private val context: Context) : DiscoveryProtocol {
             categoryBitmask = 0L,
             tcpPort = tcpPort
         )
+    }
+
+    @SuppressLint("MissingPermission")
+    fun setScanMode(mode: Int) {
+        if (!isScanning || bleScanner == null) return
+        try {
+            bleScanner?.stopScan(scanCallback)
+            val filter = ScanFilter.Builder()
+                .setServiceUuid(SERVICE_UUID)
+                .build()
+            val settings = ScanSettings.Builder()
+                .setScanMode(mode)
+                .build()
+            bleScanner?.startScan(listOf(filter), settings, scanCallback)
+        } catch (e: SecurityException) {
+            // Permission denied
+        }
     }
 }

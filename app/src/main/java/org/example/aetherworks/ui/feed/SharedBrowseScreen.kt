@@ -10,6 +10,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,12 +32,17 @@ import org.example.aetherworks.storage.db.entity.ContentUnit
 import java.text.SimpleDateFormat
 import java.util.*
 import org.example.aetherworks.ui.feed.SharedBrowseViewModel.SourceFilter
+import org.example.aetherworks.ui.components.FlagConstants
+import org.example.aetherworks.ui.components.FlagConstants.FlagType
+import org.example.aetherworks.reputation.ReputationAgent
+import org.example.aetherworks.crypto.KeyManager
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SharedBrowseScreen(
-    modifier: Modifier = Modifier,
-    viewModel: SharedBrowseViewModel
+    modifier: Modifier = Modifier, 
+    viewModel: SharedBrowseViewModel,
+    onShareToGroup: (String, String) -> Unit = { _, _ -> }
 ) {
     val headers by viewModel.sharedHeaders.collectAsState()
     val loading by viewModel.loadingHeader.collectAsState()
@@ -44,15 +51,19 @@ fun SharedBrowseScreen(
     if (viewingContent != null) {
         ContentDetailOverlay(
             content = viewingContent!!,
-            onClose = {
-                viewModel.clearViewingContent()
-            },
+            onClose = { viewModel.clearViewingContent() },
             onSave = {
                 viewModel.saveToPrivateLibrary(viewingContent!!)
-                // Could show a toast here
             },
-            onVote = { isLike ->
-                viewModel.vote(viewingContent!!, isLike)
+            onVote = { isUpvote ->
+                viewModel.vote(viewingContent!!, isUpvote)
+            },
+            onFlagVote = { flag, category ->
+                viewModel.voteFlag(viewingContent!!, flag, category)
+            },
+            onShareToGroup = onShareToGroup,
+            onDeepLinkContent = { hash ->
+                viewModel.openContent("local:0", hash)
             }
         )
     } else {
@@ -154,7 +165,10 @@ fun ContentDetailOverlay(
     content: ContentUnit,
     onClose: () -> Unit,
     onSave: () -> Unit,
-    onVote: (Boolean) -> Unit
+    onVote: (Boolean) -> Unit,
+    onFlagVote: (FlagType, String) -> Unit,
+    onShareToGroup: (String, String) -> Unit,
+    onDeepLinkContent: (String) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -218,6 +232,19 @@ fun ContentDetailOverlay(
                         WebView(ctx).apply {
                             settings.javaScriptEnabled = false // Critical: No JS allowed
                             settings.domStorageEnabled = false
+                            
+                            webViewClient = object : android.webkit.WebViewClient() {
+                                override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                                    val url = request?.url?.toString()
+                                    if (url != null && url.startsWith("aether://content/")) {
+                                        val hash = url.substringAfter("aether://content/")
+                                        onDeepLinkContent(hash)
+                                        return true
+                                    }
+                                    return super.shouldOverrideUrlLoading(view, request)
+                                }
+                            }
+                            
                             loadDataWithBaseURL(null, htmlContent!!, "text/html", "UTF-8", null)
                         }
                     },
@@ -238,6 +265,103 @@ fun ContentDetailOverlay(
                 }
                 Button(onClick = { onVote(false) }) {
                     Text("👎 Dislike (${content.dislikeTokens.size})")
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = { onShareToGroup(content.title, "[Link to ${content.title}](aether://content/${content.contentHash})") },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Share to Group")
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            Divider()
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            FlagVotingSection(content = content, onFlagVote = onFlagVote)
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@Composable
+fun FlagVotingSection(
+    content: ContentUnit,
+    onFlagVote: (FlagType, String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val repAgent = remember { ReputationAgent(context, KeyManager(context)) }
+
+    val totalCategoryVotes = content.categoryTokens.values.sumOf { it.size }
+    val totalEmotionVotes = content.emotionTokens.values.sumOf { it.size }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { expanded = !expanded },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Tags & Emotions: $totalCategoryVotes Categories, $totalEmotionVotes Emotions",
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Icon(
+                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (expanded) "Collapse" else "Expand"
+                )
+            }
+
+            if (expanded) {
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text("What is this content about?", style = MaterialTheme.typography.labelMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    FlagConstants.CATEGORIES.forEach { category ->
+                        val tokenSet = content.categoryTokens[category] ?: emptySet()
+                        val myToken = remember(content.contentHash, category) { repAgent.generateFlagToken(content.contentHash, category) }
+                        val iVoted = tokenSet.contains(myToken)
+                        
+                        FilterChip(
+                            selected = iVoted,
+                            onClick = { if (!iVoted) onFlagVote(FlagType.CATEGORY, category) },
+                            label = { Text("$category (${tokenSet.size})") }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text("How did this make you feel?", style = MaterialTheme.typography.labelMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    FlagConstants.EMOTIONS.forEach { emotion ->
+                        val tokenSet = content.emotionTokens[emotion] ?: emptySet()
+                        val myToken = remember(content.contentHash, emotion) { repAgent.generateFlagToken(content.contentHash, emotion) }
+                        val iVoted = tokenSet.contains(myToken)
+                        
+                        FilterChip(
+                            selected = iVoted,
+                            onClick = { if (!iVoted) onFlagVote(FlagType.EMOTION, emotion) },
+                            label = { Text("$emotion (${tokenSet.size})") }
+                        )
+                    }
                 }
             }
         }

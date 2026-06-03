@@ -18,6 +18,7 @@ import org.example.aetherworks.storage.db.AetherDatabase
 import org.example.aetherworks.storage.db.entity.ContentUnit
 import org.example.aetherworks.storage.db.entity.TrustLevel
 import org.example.aetherworks.storage.db.entity.Visibility
+import org.example.aetherworks.ui.components.FlagConstants.FlagType
 
 class SharedBrowseViewModel(application: Application) : AndroidViewModel(application) {
     private val _sharedHeaders = MutableStateFlow<List<Pair<String, ContentHeader>>>(emptyList()) // Pair of IP/Port to Header
@@ -50,12 +51,40 @@ class SharedBrowseViewModel(application: Application) : AndroidViewModel(applica
     init {
         viewModelScope.launch {
             val peersFlow = db.peerDao().getAllPeers()
+            val localSharedFlow = sharedDb.contentDao().getSharedContentFlow()
             combine(
                 PeerRepository.discoveredPeers,
                 _sourceFilter,
-                peersFlow
-            ) { discoveredPeers, filter, knownPeers ->
+                peersFlow,
+                localSharedFlow
+            ) { discoveredPeers, filter, knownPeers, localSharedContent ->
                 val newHeaders = mutableListOf<Pair<String, ContentHeader>>()
+                
+                // Add local shared content
+                for (local in localSharedContent) {
+                    val isAcquaintance = knownPeers.any { it.alias == local.authorAlias }
+                    val isTrusted = knownPeers.any { it.alias == local.authorAlias && it.trustLevel != TrustLevel.ACQUAINTANCE }
+                    
+                    val include = when (filter) {
+                        SourceFilter.ALL -> true
+                        SourceFilter.ACQUAINTANCES -> isAcquaintance
+                        SourceFilter.TRUSTED -> isTrusted
+                    }
+                    if (include) {
+                        val header = ContentHeader(
+                            contentHash = local.contentHash,
+                            title = local.title,
+                            authorAlias = local.authorAlias,
+                            timestamp = local.timestamp,
+                            thumbnailBase64 = local.thumbnailBase64,
+                            categoryFlags = local.categoryFlags,
+                            emotionFlags = local.emotionFlags,
+                            reputationScore = local.likeTokens.size - local.dislikeTokens.size
+                        )
+                        newHeaders.add(Pair("local:0", header))
+                    }
+                }
+                
                 for (peer in discoveredPeers) {
                     val ip = peer.ip
                     if (ip != null && peer.tcpPort > 0) {
@@ -96,47 +125,59 @@ class SharedBrowseViewModel(application: Application) : AndroidViewModel(applica
         viewModelScope.launch {
             _loadingHeader.value = true
             val parts = ipPort.split(":")
+            var content: ContentUnit? = null
+            
             if (parts.size == 2) {
                 val ip = parts[0]
                 val port = parts[1].toIntOrNull() ?: 0
                 try {
-                    var content = P2PClient.fetchContent(ip, port, hash)
-                    if (content != null && content.visibility == Visibility.GROUP && content.recipientKeyMapJson != null) {
-                        val keyManager = KeyManager(getApplication())
-                        val myX25519Priv = keyManager.getOrGenerateEncryptionIdentity().first
-                        val unwrappedAesKey = GroupEncryption.unwrapKey(content.recipientKeyMapJson, myX25519Priv)
-                        
-                        if (unwrappedAesKey != null) {
-                            try {
-                                val encryptedPayload = android.util.Base64.decode(content.body, android.util.Base64.DEFAULT)
-                                val cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
-                                val iv = encryptedPayload.copyOfRange(0, 12)
-                                val ciphertext = encryptedPayload.copyOfRange(12, encryptedPayload.size)
-                                val keySpec = javax.crypto.spec.SecretKeySpec(unwrappedAesKey, "AES")
-                                val gcmSpec = javax.crypto.spec.GCMParameterSpec(128, iv)
-                                cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keySpec, gcmSpec)
-                                val decryptedBody = cipher.doFinal(ciphertext)
-                                content = content.copy(body = String(decryptedBody))
-                            } catch (e: Exception) {
-                                content = content.copy(body = "[Decryption Failed: Invalid Payload]")
-                            }
-                        } else {
-                            content = content.copy(body = "[Decryption Failed: You are not in this group or key unwrapping failed]")
-                        }
-                    }
-                    
-                    if (content != null) {
-                        val localStub = sharedDb.contentDao().getByHash(hash)
-                        if (localStub != null) {
-                            val repAgent = ReputationAgent(getApplication(), KeyManager(getApplication()))
-                            content = repAgent.mergeReputation(localStub, content)
-                            sharedDb.contentDao().insert(content)
-                        }
-                    }
-                    _viewingContent.value = content
-                } catch(e: Exception) {
-                    // Log
+                    content = P2PClient.fetchContent(ip, port, hash)
+                } catch(e: Exception) {}
+            }
+            
+            if (content == null) {
+                content = sharedDb.contentDao().getByHash(hash)
+                if (content == null) {
+                    content = db.contentDao().getByHash(hash)
                 }
+            }
+            
+            try {
+                if (content != null && content.visibility == Visibility.GROUP && content.recipientKeyMapJson != null) {
+                    val keyManager = KeyManager(getApplication())
+                    val myX25519Priv = keyManager.getOrGenerateEncryptionIdentity().first
+                    val unwrappedAesKey = GroupEncryption.unwrapKey(content.recipientKeyMapJson, myX25519Priv)
+                    
+                    if (unwrappedAesKey != null) {
+                        try {
+                            val encryptedPayload = android.util.Base64.decode(content.body, android.util.Base64.DEFAULT)
+                            val cipher = javax.crypto.Cipher.getInstance("AES/GCM/NoPadding")
+                            val iv = encryptedPayload.copyOfRange(0, 12)
+                            val ciphertext = encryptedPayload.copyOfRange(12, encryptedPayload.size)
+                            val keySpec = javax.crypto.spec.SecretKeySpec(unwrappedAesKey, "AES")
+                            val gcmSpec = javax.crypto.spec.GCMParameterSpec(128, iv)
+                            cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keySpec, gcmSpec)
+                            val decryptedBody = cipher.doFinal(ciphertext)
+                            content = content.copy(body = String(decryptedBody))
+                        } catch (e: Exception) {
+                            content = content.copy(body = "[Decryption Failed: Invalid Payload]")
+                        }
+                    } else {
+                        content = content.copy(body = "[Decryption Failed: You are not in this group or key unwrapping failed]")
+                    }
+                }
+                
+                if (content != null) {
+                    val localStub = sharedDb.contentDao().getByHash(hash)
+                    if (localStub != null && content !== localStub) {
+                        val repAgent = ReputationAgent(getApplication(), KeyManager(getApplication()))
+                        content = repAgent.mergeReputation(localStub, content!!)
+                        sharedDb.contentDao().insert(content!!)
+                    }
+                }
+                _viewingContent.value = content
+            } catch(e: Exception) {
+                // Log
             }
             _loadingHeader.value = false
         }
@@ -167,6 +208,39 @@ class SharedBrowseViewModel(application: Application) : AndroidViewModel(applica
             org.example.aetherworks.storage.StorageQuotaManager.enforcePublicQuota(getApplication())
             
             // Update viewing content
+            if (_viewingContent.value?.contentHash == unit.contentHash) {
+                _viewingContent.value = updatedUnit
+            }
+        }
+    }
+
+    fun voteFlag(unit: ContentUnit, flagType: FlagType, flagName: String) {
+        viewModelScope.launch {
+            val repAgent = ReputationAgent(getApplication(), KeyManager(getApplication()))
+            if (!repAgent.canVote()) return@launch
+
+            val token = repAgent.generateFlagToken(unit.contentHash, flagName)
+
+            val updatedUnit = when (flagType) {
+                FlagType.CATEGORY -> {
+                    val currentTokens = unit.categoryTokens.toMutableMap()
+                    val flagSet = currentTokens[flagName]?.toMutableSet() ?: mutableSetOf()
+                    flagSet.add(token)
+                    currentTokens[flagName] = flagSet
+                    unit.copy(categoryTokens = currentTokens)
+                }
+                FlagType.EMOTION -> {
+                    val currentTokens = unit.emotionTokens.toMutableMap()
+                    val flagSet = currentTokens[flagName]?.toMutableSet() ?: mutableSetOf()
+                    flagSet.add(token)
+                    currentTokens[flagName] = flagSet
+                    unit.copy(emotionTokens = currentTokens)
+                }
+            }
+
+            sharedDb.contentDao().insert(updatedUnit.copy(importCount = 0))
+            org.example.aetherworks.storage.StorageQuotaManager.enforcePublicQuota(getApplication())
+
             if (_viewingContent.value?.contentHash == unit.contentHash) {
                 _viewingContent.value = updatedUnit
             }
