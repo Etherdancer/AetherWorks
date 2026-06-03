@@ -14,7 +14,7 @@ import org.example.aetherworks.crypto.KeyManager
 import org.example.aetherworks.persona.PersonaAgent
 
 @Composable
-fun SocialScreen(modifier: Modifier = Modifier, onNavigateToGroups: () -> Unit = {}, viewModel: SocialViewModel = viewModel()) {
+fun SocialScreen(modifier: Modifier = Modifier, onNavigateToGroups: () -> Unit = {}, onNavigateToTrust: () -> Unit = {}, viewModel: SocialViewModel = viewModel()) {
     val context = LocalContext.current
     val personaAgent = remember { PersonaAgent(context, KeyManager(context)) }
     var showProfile by remember { mutableStateOf(personaAgent.showProfileToNearbyUsers) }
@@ -35,8 +35,13 @@ fun SocialScreen(modifier: Modifier = Modifier, onNavigateToGroups: () -> Unit =
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Social Network", style = MaterialTheme.typography.headlineMedium)
-                Button(onClick = onNavigateToGroups) {
-                    Text("Manage Groups")
+                Row {
+                    Button(onClick = onNavigateToTrust, modifier = Modifier.padding(end = 8.dp)) {
+                        Text("Trust QR")
+                    }
+                    Button(onClick = onNavigateToGroups) {
+                        Text("Groups")
+                    }
                 }
             }
             Row(

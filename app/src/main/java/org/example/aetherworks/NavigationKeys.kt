@@ -13,3 +13,6 @@ import kotlinx.serialization.Serializable
 @Serializable data object ProfileSettings : NavKey
 @Serializable data object AboutSettings : NavKey
 @Serializable data object ManageGroups : NavKey
+
+@Serializable data object RemoteLinkExchange : NavKey
+@Serializable data object TrustVerification : NavKey

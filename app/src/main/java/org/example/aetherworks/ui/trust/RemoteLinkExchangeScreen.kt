@@ -8,10 +8,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 import org.example.aetherworks.crypto.KeyManager
+import org.example.aetherworks.ui.utilities.QrCodeGenerator
 
 @Composable
-fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
+fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onNavigateToScanner: () -> Unit) {
     val context = LocalContext.current
     val keyManager = remember { KeyManager(context) }
     
@@ -25,9 +29,10 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) 
     }
     
     val shareLink = "aetherworks://rendezvous?pk=$pubKeyFingerprint&token=$rendezvousToken&sig=$sigBase64"
+    val qrBitmap = remember(shareLink) { QrCodeGenerator.generate(shareLink) }
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
-        Text("Remote Trust Verification", style = MaterialTheme.typography.headlineMedium)
+        Text("Trust Verification", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
         
         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
@@ -40,7 +45,7 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) 
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        Text("Step 1: Send Your Link", style = MaterialTheme.typography.titleMedium)
+        Text("Step 1: Scan or Send Link", style = MaterialTheme.typography.titleMedium)
         Text("Send this link to the person you want to trust. They must open it in AetherWorks.", modifier = Modifier.padding(top = 4.dp))
         
         OutlinedTextField(
@@ -65,6 +70,19 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) 
             Text("Share Link")
         }
         
+        if (qrBitmap != null) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Image(
+                bitmap = qrBitmap.asImageBitmap(),
+                contentDescription = "QR Code",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .padding(32.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
+        
         Spacer(modifier = Modifier.height(32.dp))
         
         Text("Step 2: Wait for Connection", style = MaterialTheme.typography.titleMedium)
@@ -73,6 +91,10 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) 
         CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
         
         Spacer(modifier = Modifier.weight(1f))
+        
+        Button(onClick = onNavigateToScanner, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+            Text("Open Camera to Scan")
+        }
         
         Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
             Text("Cancel")

@@ -14,6 +14,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import android.webkit.WebView
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
+import org.example.aetherworks.IContentRenderer
+import org.example.aetherworks.security.guard.ContentRendererService
 import androidx.compose.ui.unit.dp
 import org.example.aetherworks.discovery.ContentHeader
 import org.example.aetherworks.storage.db.entity.ContentUnit
@@ -172,7 +182,49 @@ fun ContentDetailOverlay(
         ) {
             Text("By ${content.authorAlias}", style = MaterialTheme.typography.labelLarge)
             Spacer(modifier = Modifier.height(16.dp))
-            Text(content.body, style = MaterialTheme.typography.bodyLarge)
+            
+            val context = LocalContext.current
+            var htmlContent by remember { mutableStateOf<String?>(null) }
+            
+            DisposableEffect(content.body) {
+                var binder: IContentRenderer? = null
+                val connection = object : ServiceConnection {
+                    override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+                        binder = IContentRenderer.Stub.asInterface(service)
+                        try {
+                            htmlContent = binder?.renderMarkdownToHtml(content.body) ?: "Renderer error"
+                        } catch (e: Exception) {
+                            htmlContent = "Error: ${e.message}"
+                        }
+                    }
+                    override fun onServiceDisconnected(name: ComponentName?) {
+                        binder = null
+                    }
+                }
+                
+                val intent = Intent(context, ContentRendererService::class.java)
+                context.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+                
+                onDispose {
+                    context.unbindService(connection)
+                }
+            }
+            
+            if (htmlContent == null) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            } else {
+                AndroidView(
+                    factory = { ctx ->
+                        WebView(ctx).apply {
+                            settings.javaScriptEnabled = false // Critical: No JS allowed
+                            settings.domStorageEnabled = false
+                            loadDataWithBaseURL(null, htmlContent!!, "text/html", "UTF-8", null)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp)
+                )
+            }
+            
             if (content.videoPath != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Video content available at: ${content.videoPath}", style = MaterialTheme.typography.bodyMedium)

@@ -30,6 +30,8 @@ import org.example.aetherworks.ui.social.GroupsScreen
 import org.example.aetherworks.ui.library.LibraryScreen
 import org.example.aetherworks.ui.content.CreateContentScreen
 import org.example.aetherworks.ui.profile.ProfileScreen
+import org.example.aetherworks.ui.trust.RemoteLinkExchangeScreen
+import org.example.aetherworks.ui.trust.TrustVerificationScreen
 @Composable
 fun MainNavigation(
     sharingToggleViewModel: SharingToggleViewModel,
@@ -86,7 +88,8 @@ fun MainNavigation(
             entry<SocialTab> {
               SocialScreen(
                   modifier = Modifier.padding(paddingValues),
-                  onNavigateToGroups = { backStack.add(ManageGroups) }
+                  onNavigateToGroups = { backStack.add(ManageGroups) },
+                  onNavigateToTrust = { backStack.add(RemoteLinkExchange) }
               )
             }
             entry<LibraryTab> {
@@ -119,6 +122,23 @@ fun MainNavigation(
               GroupsScreen(
                   modifier = Modifier.safeDrawingPadding(),
                   onBack = { backStack.removeLastOrNull() }
+              )
+            }
+            entry<RemoteLinkExchange> {
+              RemoteLinkExchangeScreen(
+                  modifier = Modifier.safeDrawingPadding(),
+                  onBack = { backStack.removeLastOrNull() },
+                  onNavigateToScanner = { backStack.add(TrustVerification) }
+              )
+            }
+            entry<TrustVerification> {
+              TrustVerificationScreen(
+                  modifier = Modifier.safeDrawingPadding(),
+                  onBack = { backStack.removeLastOrNull() },
+                  onTokenScanned = { token -> 
+                      // TODO: Handle scanned token
+                      backStack.removeLastOrNull() 
+                  }
               )
             }
           },
