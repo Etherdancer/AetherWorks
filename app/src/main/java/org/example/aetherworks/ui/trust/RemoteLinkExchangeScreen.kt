@@ -21,7 +21,10 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit, 
     
     // Generate a one-time rendezvous token
     val rendezvousToken = remember { java.util.UUID.randomUUID().toString() }
-    val pubKeyFingerprint = remember { "fingerprint-placeholder" } // TODO: actual Ed25519 fingerprint
+    val pubKeyFingerprint = remember { 
+        val pubKey = keyManager.getOrGenerateIdentity().second
+        android.util.Base64.encodeToString(pubKey, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
+    }
     
     val sigBase64 = remember {
         val sig = keyManager.signData(rendezvousToken.toByteArray(Charsets.UTF_8))

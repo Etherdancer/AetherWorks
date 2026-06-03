@@ -34,6 +34,7 @@ class ContentRendererService : Service() {
             html = html.replace(Regex("^# (.*?)$", RegexOption.MULTILINE)) { "<h1>${it.groupValues[1]}</h1>" }
             html = html.replace(Regex("^## (.*?)$", RegexOption.MULTILINE)) { "<h2>${it.groupValues[1]}</h2>" }
             html = html.replace(Regex("\\[(.*?)\\]\\((.*?)\\)")) { "<a href=\"${it.groupValues[2]}\">${it.groupValues[1]}</a>" }
+            html = html.replace(Regex("\\[\\[(.*?)\\]\\]")) { "<a href=\"aetherworks://content?title=${it.groupValues[1]}\">${it.groupValues[1]}</a>" }
             html = html.replace("\n", "<br/>")
 
             // 3. Wrap in a basic stylesheet for WebView

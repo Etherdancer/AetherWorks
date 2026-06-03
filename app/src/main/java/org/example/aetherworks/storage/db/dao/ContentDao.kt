@@ -39,4 +39,7 @@ interface ContentDao {
 
     @Query("SELECT * FROM content_units WHERE visibility = 'PUBLIC' ORDER BY timestamp ASC LIMIT 1")
     suspend fun getOldestPublic(): ContentUnit?
+
+    @Query("SELECT * FROM content_units WHERE visibility = 'PUBLIC' ORDER BY (length(likeTokens) - length(dislikeTokens)) ASC, timestamp ASC LIMIT :limit")
+    suspend fun getLowestReputationPublicContent(limit: Int): List<ContentUnit>
 }

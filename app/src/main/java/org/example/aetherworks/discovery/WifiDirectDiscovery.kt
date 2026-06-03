@@ -70,6 +70,23 @@ class WifiDirectDiscovery(private val context: Context) : DiscoveryProtocol {
                         if (!current.any { it.peerId == packet.peerId }) {
                             current.add(packet)
                             _discoveredPeers.value = current
+                            
+                            val config = android.net.wifi.p2p.WifiP2pConfig()
+                            config.deviceAddress = srcDevice.deviceAddress
+                            wifiP2pManager.connect(channel, config, object : WifiP2pManager.ActionListener {
+                                override fun onSuccess() {
+                                    wifiP2pManager.requestConnectionInfo(channel) { info ->
+                                        if (info.groupFormed && !info.isGroupOwner) {
+                                            val groupOwnerAddress = info.groupOwnerAddress.hostAddress
+                                            val updatedCurrent = _discoveredPeers.value.map { 
+                                                if (it.peerId == peerId) it.copy(ip = groupOwnerAddress) else it 
+                                            }
+                                            _discoveredPeers.value = updatedCurrent
+                                        }
+                                    }
+                                }
+                                override fun onFailure(reason: Int) {}
+                            })
                         }
                     }
                 }

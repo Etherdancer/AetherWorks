@@ -1,50 +1,46 @@
 # AetherWorks
 
-**AetherWorks** is a decentralized, serverless content-sharing platform and social network built for Android. All data lives on-device. The user has absolute sovereignty over what is shared, what is kept private, and who they interact with. Privacy is not a feature — it is the foundation.
+**AetherWorks** is a decentralized, zero-server content-sharing platform and social network. All data lives strictly on-device. The user has absolute sovereignty over what is shared, what is kept private, and who they interact with.
 
-> **Zero Servers. Zero Tracking. Zero Backdoors.**
+Privacy is not a feature — it is the foundation.
 
-## 🛡️ Core Principles
+> **⚠️ WARNING:** This app operates on a strict *User-at-Own-Risk* model. Because there are no central servers, all data is stored on your physical device. Once you mark content as "Public" and the Sharing toggle is active, your data is visible to nearby peers. The developer assumes zero liability for data loss or the consequences of usage.
 
-1. **Zero Servers:** There is no cloud. There is no backend. Every device is sovereign and communicates strictly peer-to-peer (P2P).
-2. **Privacy by Default:** Profiles are fictional personas. The app never asks for personal data and starts in an isolated, offline mode every time it is opened.
-3. **Informed Consent:** Every action that shares data requires an explicit, un-skippable confirmation. Once public, always public.
-4. **Physical Devices Only:** The app actively detects and blocks emulators, VM farms, and bot networks to protect the integrity of the peer-to-peer network.
-5. **No Law Enforcement Backdoors:** The app operates using end-to-end encryption with hardware-backed keys. It is mathematically and architecturally impossible to implement a backdoor.
+## Core Architecture & Features
 
-## ✨ Key Features
+1. **Zero Servers**: There is no "cloud" or backend. Every physical device is a sovereign node in a decentralized mesh network.
+2. **Omni-Transport Discovery**: The app automatically negotiates P2P connections over:
+   - Wi-Fi Direct (High bandwidth)
+   - Local Network (mDNS/NSD)
+   - Bluetooth Low Energy (BLE) / Classic (Fallback)
+3. **Hardware-Backed Encryption**: All data is encrypted at rest using SQLCipher (AES-256-GCM) with keys bound to the Android Keystore's secure element (StrongBox/TEE).
+4. **Decentralized Reputation**: Content quality is managed via an anonymous, cryptographic token-voting system. Duplicate votes from the same device are mathematically impossible, and "likes" are federated through a set-union algorithm.
+5. **Physical Devices Only**: Emulators and virtual devices are strictly blocked to prevent bot networks and fake voting farms.
 
-- **The Gatekeeper (Encrypted Access):** Access is guarded by a master password enforced via a custom in-app secure keyboard (to defeat system keyloggers). Data is encrypted at rest using AES-256-GCM and SQLCipher, locked behind Android Keystore hardware-backed keys.
-- **The Content Vault:** A three-tiered local storage system:
-  - *Private Library:* A fully offline vault for passwords, 2FA codes, and Obsidian-style notes.
-  - *Trusted-Only Library & Groups:* Content encrypted and shared exclusively with verified cryptographic contacts and private trusted groups.
-  - *Public Library:* Broadcasted to all connected peers over the local mesh.
-- **Omni-Transport Discovery:** Seamlessly discovers nearby peers using Android Network Service Discovery (mDNS/NSD), Bluetooth Low Energy (BLE), Wi-Fi Direct, and local sockets — wrapped in **TLS 1.3** to defeat network eavesdropping (OWASP M5 mitigation).
-- **Decentralized Reputation:** An anonymous token-voting system ensures community moderation without centralized servers. Spam is mitigated via low-difficulty Proof-of-Work nonces and token cardinality caps. Content can be liked/disliked anonymously to manage public curation.
-- **Advanced Content Filtering:** Tag your notes with complex Categories and Emotions. Filter local and network content using robust source filters (All, Acquaintances, Trusted).
-- **Cryptographic Personas:** Profiles are fictional. Relationships are verified out-of-band using Ed25519 public key cryptography (similar to Briar or Signal).
-- **Modern Adaptive UI:** Fully responsive interface built on Material 3 with extensive edge-to-edge system support, dynamic dark mode, and enhanced accessibility scaling.
+## F-Droid Compatibility & Build Requirements
 
-## ⚠️ Liability & Distribution
+AetherWorks is built specifically with the [F-Droid Inclusion Policy](https://f-droid.org/en/docs/Inclusion_Policy/) in mind. 
+- **No Google Play Services (GMS)**
+- **No Proprietary Dependencies**
+- **No Telemetry or Crashlytics**
+- **100% Free Software under GPL-3.0**
 
-The developer assumes **zero liability** for the use of this application. Users explicitly assume all liability for the distribution of content (including pirated or illegal material). Users operate this app entirely at their own risk.
+### How to Build
 
-**F-Droid Compatibility**
-AetherWorks is strictly built for F-Droid and GitHub Releases:
-- **No Google Play Services** (No GMS dependencies).
-- **No Proprietary Code** (100% Free Software).
-- **No Telemetry** (No crash reporters, analytics, or tracking).
+1. Clone the repository.
+2. Ensure you have the Android SDK (API 36) installed.
+3. Build the APK using the standard Gradle wrapper:
 
-## 📄 License
+```bash
+./gradlew assembleDebug
+# OR for release:
+./gradlew assembleRelease
+```
 
-This program is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License v3.0** as published by the Free Software Foundation. This program is distributed **WITHOUT ANY WARRANTY**; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [LICENSE](LICENSE) file for details.
+## Contributing
 
-## 🐛 Bug Reports
+Because AetherWorks adheres to strict privacy and F-Droid guidelines, any pull requests introducing closed-source libraries, cloud analytics, or GMS dependencies will be automatically rejected. Please open an issue to discuss major architectural changes before submitting a PR.
 
-Please send bug reports to: `etherdancer.zero553@aleeas.com`
+## License
 
-## ⚡ Support & Donations
-
-If you'd like to support the continued development of AetherWorks, you can leave a tip via Bitcoin. For maximum privacy, we use a BIP352 Silent Payment address:
-
-**Bitcoin (Silent Payment):** `sp1qqvc4svdel9fkulcyk8xjyyyhcqzfudtnmu8xrerkaqgv7wwt0hlxzqlp6xkyfwvaxnv7p93y3ckw6trkssvj4t52tlv235lye4kqr9fnhvxxemua`
+This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.

@@ -142,7 +142,7 @@ abstract class AetherDatabase : RoomDatabase() {
 
         fun getPrivateDatabase(context: Context, passhprase: ByteArray): AetherDatabase {
             return INSTANCE_PRIVATE ?: synchronized(this) {
-                val factory = SupportFactory(passhprase)
+                val factory = SupportFactory(passhprase, null, false)
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AetherDatabase::class.java,
@@ -159,7 +159,7 @@ abstract class AetherDatabase : RoomDatabase() {
 
         fun getSharedDatabase(context: Context, passhprase: ByteArray): AetherDatabase {
             return INSTANCE_SHARED ?: synchronized(this) {
-                val factory = SupportFactory(passhprase)
+                val factory = SupportFactory(passhprase, null, false)
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AetherDatabase::class.java,

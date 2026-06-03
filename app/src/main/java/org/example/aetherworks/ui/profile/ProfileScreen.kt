@@ -182,6 +182,37 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
                         }
                     }
                 }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Maximum local storage for the Public Library before older content is evicted.", style = MaterialTheme.typography.bodySmall)
+                
+                var publicQuotaMb by remember { mutableStateOf(prefs.getInt("public_library_quota_mb", 500)) }
+                val publicOptions = listOf(100, 500, 1024, 2048, -1)
+                val publicLabels = listOf("100 MB", "500 MB (Default)", "1 GB", "2 GB", "Unlimited")
+                var expandedPublicQuota by remember { mutableStateOf(false) }
+
+                Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Button(onClick = { expandedPublicQuota = true }, modifier = Modifier.fillMaxWidth()) {
+                        val currentLabel = publicLabels[publicOptions.indexOf(publicQuotaMb).takeIf { it >= 0 } ?: 1]
+                        Text("Public Library Quota: $currentLabel")
+                    }
+                    DropdownMenu(
+                        expanded = expandedPublicQuota,
+                        onDismissRequest = { expandedPublicQuota = false }
+                    ) {
+                        publicOptions.forEachIndexed { index, size ->
+                            DropdownMenuItem(
+                                text = { Text(publicLabels[index]) },
+                                onClick = {
+                                    publicQuotaMb = size
+                                    prefs.edit().putInt("public_library_quota_mb", size).apply()
+                                    expandedPublicQuota = false
+                                }
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }

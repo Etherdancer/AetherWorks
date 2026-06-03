@@ -108,10 +108,15 @@ class MainActivity : ComponentActivity() {
                 }
                 
                 val sharedBrowseViewModel = SharedBrowseViewModel(this@MainActivity.application)
+                
+                val deepLinkTitle = if (intent?.action == android.content.Intent.ACTION_VIEW && intent?.data?.scheme == "aetherworks") {
+                    intent?.data?.getQueryParameter("title")
+                } else null
 
                 MainNavigation(
                     sharingToggleViewModel = sharingToggleViewModel,
-                    sharedBrowseViewModel = sharedBrowseViewModel
+                    sharedBrowseViewModel = sharedBrowseViewModel,
+                    initialDeepLinkTitle = deepLinkTitle
                 )
             }
           }

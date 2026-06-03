@@ -23,6 +23,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.security.MessageDigest
 import java.util.UUID
+import java.io.File
+import java.io.FileOutputStream
+import org.example.aetherworks.crypto.FileEncryptionUtil
 
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -47,15 +50,18 @@ val EMOTIONS = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
+fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit, initialTitle: String = "") {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     
-    var title by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialTitle) }
     var body by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(Visibility.PRIVATE) }
     var selectedMediaUri by remember { mutableStateOf<Uri?>(null) }
     var isVideo by remember { mutableStateOf(false) }
+    var fileEncryptionPassphrase by remember { mutableStateOf("") }
+    var selectedEncryptedFileUri by remember { mutableStateOf<Uri?>(null) }
+    var showPreview by remember { mutableStateOf(false) }
 
     val db = AetherDatabase.getPrivateDatabase()
     val groupDao = db.groupDao()
@@ -71,6 +77,12 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         selectedMediaUri = uri
+    }
+
+    val filePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedEncryptedFileUri = uri
     }
 
     Scaffold(
@@ -99,15 +111,34 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = body,
-                onValueChange = { body = it },
-                label = { Text("Content") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 150.dp),
-                maxLines = 10
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Content Editor", style = MaterialTheme.typography.titleMedium)
+                Switch(
+                    checked = showPreview,
+                    onCheckedChange = { showPreview = it }
+                )
+                Text("Live Preview")
+            }
+            if (showPreview) {
+                // Live preview placeholder. In full implementation, this binds to ContentRendererService
+                Surface(modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp), tonalElevation = 2.dp) {
+                    Text(body, modifier = Modifier.padding(8.dp))
+                }
+            } else {
+                OutlinedTextField(
+                    value = body,
+                    onValueChange = { body = it },
+                    label = { Text("Content") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 150.dp),
+                    maxLines = 10
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
             
             Text("Visibility")
@@ -212,9 +243,32 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                     Text("Attach Video")
                 }
             }
+            Button(onClick = { 
+                filePicker.launch("*/*") 
+            }, modifier = Modifier.padding(top = 8.dp)) {
+                Text("Attach Encrypted File")
+            }
             
             if (selectedMediaUri != null) {
                 Text("Media attached: ${if (isVideo) "Video" else "Image"}", color = MaterialTheme.colorScheme.primary)
+            }
+            if (selectedEncryptedFileUri != null) {
+                val fileName = selectedEncryptedFileUri?.lastPathSegment ?: "Unknown File"
+                Text("File attached for encryption: $fileName", color = MaterialTheme.colorScheme.primary)
+                var passwordVisible by remember { mutableStateOf(false) }
+                OutlinedTextField(
+                    value = fileEncryptionPassphrase,
+                    onValueChange = { fileEncryptionPassphrase = it },
+                    label = { Text("Encryption Passphrase") },
+                    visualTransformation = if (passwordVisible) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Password),
+                    trailingIcon = {
+                        TextButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Text(if (passwordVisible) "Hide" else "Show")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -240,6 +294,19 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                                 val res = MediaUtils.compressAndSaveImage(context, uri)
                                 imgPath = res?.first
                                 thumb64 = res?.second
+                            }
+                        }
+                        
+                        selectedEncryptedFileUri?.let { uri ->
+                            if (fileEncryptionPassphrase.isNotEmpty()) {
+                                val inputStream = context.contentResolver.openInputStream(uri)
+                                if (inputStream != null) {
+                                    val outFile = File(context.filesDir, "encrypted_${System.currentTimeMillis()}.aether")
+                                    val outputStream = FileOutputStream(outFile)
+                                    FileEncryptionUtil.encrypt(inputStream, outputStream, fileEncryptionPassphrase.toCharArray())
+                                    // Optionally store the file path somewhere, like in the body
+                                    body += "\n\n[Encrypted File Attached: ${outFile.name}]"
+                                }
                             }
                         }
                         
@@ -303,6 +370,7 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                                 AetherDatabase.getPrivateDatabase().contentDao().insert(unit)
                             } else {
                                 sharedDb.contentDao().insert(unit)
+                                org.example.aetherworks.storage.StorageQuotaManager.enforcePublicQuota(context)
                             }
                         }
                         onNavigateBack()

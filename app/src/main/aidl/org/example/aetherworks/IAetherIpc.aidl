@@ -12,4 +12,5 @@ interface IAetherIpc {
     String getMyHashedId();
     boolean hasRelayPacket(long currentTime, String packetId);
     void insertRelayPacket(String packetJson);
+    void enforceStorageQuota();
 }

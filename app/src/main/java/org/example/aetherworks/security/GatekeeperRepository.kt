@@ -39,7 +39,12 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
     }
 
     private fun getFailedAttempts(): Int {
-        val encStr = prefs.getString(PREF_FAILED_ATTEMPTS, null) ?: return 0
+        val encStr = try {
+            prefs.getString(PREF_FAILED_ATTEMPTS, null)
+        } catch (e: ClassCastException) {
+            prefs.edit().remove(PREF_FAILED_ATTEMPTS).apply()
+            null
+        } ?: return 0
         return try {
             val bytes = keyManager.decryptData(android.util.Base64.decode(encStr, android.util.Base64.DEFAULT))
             java.nio.ByteBuffer.wrap(bytes).int
@@ -53,7 +58,12 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
     }
 
     private fun getLockoutUntil(): Long {
-        val encStr = prefs.getString(PREF_LOCKOUT_UNTIL, null) ?: return 0L
+        val encStr = try {
+            prefs.getString(PREF_LOCKOUT_UNTIL, null)
+        } catch (e: ClassCastException) {
+            prefs.edit().remove(PREF_LOCKOUT_UNTIL).apply()
+            null
+        } ?: return 0L
         return try {
             val bytes = keyManager.decryptData(android.util.Base64.decode(encStr, android.util.Base64.DEFAULT))
             java.nio.ByteBuffer.wrap(bytes).long

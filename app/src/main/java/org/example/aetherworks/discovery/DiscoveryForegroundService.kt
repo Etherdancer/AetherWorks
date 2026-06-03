@@ -13,6 +13,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.isActive
 import org.example.aetherworks.MainActivity
 import android.content.ServiceConnection
 import android.content.ComponentName
@@ -129,7 +130,8 @@ class DiscoveryForegroundService : Service() {
         val coroutineScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO)
         coroutineScope.launch {
             discoveryManager?.discoveredPeers?.collect { peers ->
-                peers.forEach { peer ->
+                val sampledPeers = peers.shuffled().take(3)
+                sampledPeers.forEach { peer ->
                     val peerIp = peer.ip
                     if (peerIp != null && peer.tcpPort > 0) {
                         try {
@@ -158,6 +160,15 @@ class DiscoveryForegroundService : Service() {
                         }
                     }
                 }
+            }
+        }
+
+        coroutineScope.launch {
+            while (isActive) {
+                try {
+                    ipc.enforceStorageQuota()
+                } catch (e: Exception) {}
+                kotlinx.coroutines.delay(5 * 60 * 1000L) // Check every 5 minutes
             }
         }
     }

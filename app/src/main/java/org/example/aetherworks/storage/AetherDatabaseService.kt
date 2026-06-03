@@ -134,6 +134,12 @@ class AetherDatabaseService : Service() {
                 // ignore
             }
         }
+
+        override fun enforceStorageQuota() {
+            kotlinx.coroutines.runBlocking {
+                org.example.aetherworks.storage.StorageQuotaManager.enforcePublicQuota(this@AetherDatabaseService)
+            }
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder {

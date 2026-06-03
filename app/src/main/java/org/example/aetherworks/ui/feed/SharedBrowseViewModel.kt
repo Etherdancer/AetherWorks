@@ -124,6 +124,15 @@ class SharedBrowseViewModel(application: Application) : AndroidViewModel(applica
                             content = content.copy(body = "[Decryption Failed: You are not in this group or key unwrapping failed]")
                         }
                     }
+                    
+                    if (content != null) {
+                        val localStub = sharedDb.contentDao().getByHash(hash)
+                        if (localStub != null) {
+                            val repAgent = ReputationAgent(getApplication(), KeyManager(getApplication()))
+                            content = repAgent.mergeReputation(localStub, content)
+                            sharedDb.contentDao().insert(content)
+                        }
+                    }
                     _viewingContent.value = content
                 } catch(e: Exception) {
                     // Log
@@ -155,6 +164,7 @@ class SharedBrowseViewModel(application: Application) : AndroidViewModel(applica
             }
             
             sharedDb.contentDao().insert(updatedUnit.copy(importCount = 0)) // Save as stub if not exists
+            org.example.aetherworks.storage.StorageQuotaManager.enforcePublicQuota(getApplication())
             
             // Update viewing content
             if (_viewingContent.value?.contentHash == unit.contentHash) {

@@ -45,6 +45,7 @@ class P2PServer(
     private val isRunning = AtomicBoolean(false)
     private val executor = Executors.newFixedThreadPool(10) // Limit concurrency to prevent DoS
     private val activeConnections = java.util.concurrent.ConcurrentHashMap<String, Int>()
+    private val activeTotalConnections = java.util.concurrent.atomic.AtomicInteger(0)
     
     companion object {
         private const val MAX_CONNECTIONS_PER_IP = 3
@@ -91,12 +92,19 @@ class P2PServer(
             try { socket.close() } catch (e: Exception) {}
             return
         }
+        
+        val totalCount = activeTotalConnections.incrementAndGet()
         activeConnections[ip] = currentCount + 1
 
         try {
             socket.use { s ->
                 val reader = InputStreamReader(s.getInputStream())
                 val writer = PrintWriter(s.getOutputStream(), true)
+
+                if (totalCount > 8) {
+                    writer.println("ERROR: BUSY")
+                    return@use
+                }
 
                 val request = readBoundedLine(s.getInputStream(), 4096) ?: return@use
                 val parts = request.split(" ")
@@ -168,6 +176,7 @@ class P2PServer(
             } else {
                 activeConnections[ip] = newCount
             }
+            activeTotalConnections.decrementAndGet()
             try { socket.close() } catch (e: Exception) {}
         }
     }
@@ -193,7 +202,7 @@ class P2PServer(
 
 object P2PClient {
     // Shared read bounded buffer logic (5 MB limit for large responses)
-    private fun readBoundedResponse(input: InputStream, maxLength: Int = 5_000_000): String? {
+    private suspend fun readBoundedResponse(input: InputStream, maxLength: Int = 5_000_000): String? {
         val builder = java.lang.StringBuilder()
         var count = 0
         while (count < maxLength) {
@@ -207,7 +216,12 @@ object P2PClient {
             }
         }
         if (count >= maxLength) return null // Protection against memory DoS
-        return if (builder.isEmpty()) null else builder.toString()
+        val response = if (builder.isEmpty()) null else builder.toString()
+        if (response != null && response.startsWith("ERROR: BUSY")) {
+            kotlinx.coroutines.delay((1000L..3000L).random())
+            return null
+        }
+        return response
     }
 
     suspend fun fetchIndex(ip: String, port: Int): List<ContentHeader>? = withContext(Dispatchers.IO) {
