@@ -13,8 +13,8 @@ android {
         applicationId = "org.example.aetherworks"
         minSdk = 26
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.3.2.3_alpha"
+        versionCode = 13
+        versionName = "0.3.4.0_alpha"
     }
 
     buildTypes {

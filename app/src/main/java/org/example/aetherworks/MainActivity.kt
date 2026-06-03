@@ -41,22 +41,7 @@ class MainActivity : ComponentActivity() {
     window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
     enableEdgeToEdge()
 
-    try {
-        val packageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
-        val signatures = packageInfo.signatures
-        if (signatures != null && signatures.isNotEmpty()) {
-            val md = MessageDigest.getInstance("SHA-256")
-            val hashBytes = md.digest(signatures[0].toByteArray())
-            val hashString = hashBytes.joinToString("") { "%02x".format(it) }
-            // Only a placeholder known hash for demonstration. In a real scenario, this would be the actual release hash.
-            val knownGoodHashes = listOf("known_good_hash_placeholder")
-            if (!knownGoodHashes.contains(hashString)) {
-                Log.e("AetherWorksSecurity", "CRITICAL WARNING: APK signature hash $hashString does not match known F-Droid or release hashes. App may be tampered with!")
-            }
-        }
-    } catch (e: Exception) {
-        Log.e("AetherWorksSecurity", "Failed to verify APK signature: ${e.message}")
-    }
+
 
     val emulatorDetector = EmulatorDetector(this)
     if (emulatorDetector.isEmulator()) {

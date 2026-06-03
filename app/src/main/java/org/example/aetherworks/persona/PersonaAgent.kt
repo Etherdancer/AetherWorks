@@ -68,7 +68,31 @@ class PersonaAgent(context: Context, private val keyManager: KeyManager) {
         get() = Base64.encodeToString(x25519Keys.second, Base64.NO_WRAP)
 
     fun getProfile(): Profile? {
-        val jsonString = prefs.getString("profile_json", null)
+        // FIX M1: Read encrypted profile JSON first; fall back to plaintext for migration
+        val encryptedStr = prefs.getString("profile_json_enc", null)
+        val jsonString: String? = if (encryptedStr != null) {
+            try {
+                val bytes = Base64.decode(encryptedStr, Base64.DEFAULT)
+                String(keyManager.decryptData(bytes), Charsets.UTF_8)
+            } catch (e: Exception) {
+                null // Decryption failure — treat as no profile
+            }
+        } else {
+            // Migrate legacy plaintext profile_json to encrypted storage
+            val legacy = prefs.getString("profile_json", null)
+            if (legacy != null) {
+                // Re-save as encrypted; the next getProfile() call will use the encrypted path
+                try {
+                    val enc = keyManager.encryptData(legacy.toByteArray(Charsets.UTF_8))
+                    prefs.edit()
+                        .putString("profile_json_enc", Base64.encodeToString(enc, Base64.DEFAULT))
+                        .remove("profile_json")
+                        .apply()
+                } catch (e: Exception) { /* Continue with plaintext if migration fails */ }
+                legacy
+            } else null
+        }
+
         if (jsonString != null) {
             return try {
                 Json.decodeFromString<Profile>(jsonString)
@@ -77,7 +101,7 @@ class PersonaAgent(context: Context, private val keyManager: KeyManager) {
             }
         }
         
-        // Fallback for previous version
+        // Fallback for previous version (alias-only storage)
         val alias = prefs.getString("alias", null) ?: return null
         val bio = prefs.getString("bio", "") ?: ""
         val avatarId = prefs.getInt("avatarId", 0)
@@ -100,14 +124,18 @@ class PersonaAgent(context: Context, private val keyManager: KeyManager) {
             publicKeyBase64 = publicKeyBase64,
             encryptionPublicKeyBase64 = encryptionPublicKeyBase64
         ))
+        // FIX M1: Encrypt profile JSON before storing. The alias is kept as a
+        // separate plaintext entry only because hasProfile() needs it without decryption.
+        val encryptedBytes = keyManager.encryptData(jsonString.toByteArray(Charsets.UTF_8))
         prefs.edit()
-            .putString("profile_json", jsonString)
+            .putString("profile_json_enc", Base64.encodeToString(encryptedBytes, Base64.DEFAULT))
+            .remove("profile_json") // Remove any legacy plaintext entry
             .putString("alias", profile.alias)
             .apply()
     }
 
     fun hasProfile(): Boolean {
-        return prefs.contains("profile_json") || prefs.contains("alias")
+        return prefs.contains("profile_json_enc") || prefs.contains("profile_json") || prefs.contains("alias")
     }
 
     var showProfileToNearbyUsers: Boolean

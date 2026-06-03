@@ -32,7 +32,19 @@ class RootDetector {
     }
 
     private fun checkDangerousProps(): Boolean {
-        // Just checking standard build properties often modified by root or Magisk
-        return false // Keeping this light to avoid false positives on privacy ROMs
+        val dangerousProps = mapOf(
+            "ro.debuggable" to "1",
+            "ro.secure" to "0",
+            "ro.build.selinux" to "0"
+        )
+        return try {
+            dangerousProps.any { (prop, dangerousValue) ->
+                val process = Runtime.getRuntime().exec(arrayOf("getprop", prop))
+                val result = process.inputStream.bufferedReader().readLine()?.trim() ?: ""
+                result == dangerousValue
+            }
+        } catch (e: Exception) {
+            false // If we can't execute getprop, don't block the app
+        }
     }
 }

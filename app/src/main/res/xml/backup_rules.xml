@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    IMPORTANT: This file applies ONLY to Android 11 (API 30) and below.
+    Android 12+ (API 31+) uses data_extraction_rules.xml instead.
+    Both files exclude all app data from cloud backup and device transfer.
+    android:allowBackup="false" in the Manifest is the primary control.
 -->
 <full-backup-content>
     <exclude domain="sharedpref" path="."/>

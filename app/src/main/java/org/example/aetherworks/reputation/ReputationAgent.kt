@@ -18,38 +18,14 @@ class ReputationAgent(context: Context, private val keyManager: KeyManager) {
          * Proof of work generator. Finds a nonce that satisfies the difficulty.
          */
         fun generateProofOfWork(data: String): Long {
-            var nonce = 0L
-            val dataBytes = data.toByteArray()
-            val digest = MessageDigest.getInstance("SHA-256")
-            
-            while (true) {
-                digest.reset()
-                digest.update(dataBytes)
-                digest.update(nonce.toString().toByteArray())
-                val hash = digest.digest()
-                if (checkDifficulty(hash, POW_DIFFICULTY)) {
-                    return nonce
-                }
-                nonce++
-            }
+            return ProofOfWork.generate(data, POW_DIFFICULTY)
         }
 
         /**
          * Verifies the proof of work.
          */
         fun verifyProofOfWork(data: String, nonce: Long): Boolean {
-            val digest = MessageDigest.getInstance("SHA-256")
-            digest.update(data.toByteArray())
-            digest.update(nonce.toString().toByteArray())
-            val hash = digest.digest()
-            return checkDifficulty(hash, POW_DIFFICULTY)
-        }
-
-        private fun checkDifficulty(hash: ByteArray, difficulty: Int): Boolean {
-            for (i in 0 until difficulty) {
-                if (hash[i] != 0.toByte()) return false
-            }
-            return true
+            return ProofOfWork.verify(data, nonce, POW_DIFFICULTY)
         }
     }
 

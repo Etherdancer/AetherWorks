@@ -28,8 +28,12 @@ data class ContentUnit(
     val videoPath: String? = null,
     val thumbnailPath: String? = null,
     val thumbnailBase64: String? = null,
-    val recipientKeyMapJson: String? = null
+    val recipientKeyMapJson: String? = null,
+    // FIX C3: Ed25519 authorship signature. Null = legacy unsigned content (treated as valid).
+    val authorSignatureBase64: String? = null,
+    val authorPublicKeyBase64: String? = null
 )
+
 
 @Fts4(contentEntity = ContentUnit::class)
 @Entity(tableName = "content_units_fts")

@@ -46,6 +46,18 @@ class SocialDiscoveryAgent(private val context: Context, private val keyManager:
                         }
                     }
                 }
+            } else {
+                if (existing.alias == "Peer ${packet.peerId}" && packet.hasProfile && packet.ip != null) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val fetchedProfile = P2PClient.fetchProfile(packet.ip!!, packet.tcpPort)
+                        if (fetchedProfile != null) {
+                            val updatedList = _nearbyProfiles.value.map { 
+                                if (it.peerId == packet.peerId) it.copy(alias = fetchedProfile.alias) else it 
+                            }
+                            _nearbyProfiles.value = updatedList
+                        }
+                    }
+                }
             }
         }
         _nearbyProfiles.value = current

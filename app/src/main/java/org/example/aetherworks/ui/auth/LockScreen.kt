@@ -26,6 +26,7 @@ fun LockScreen(
     uiState: GatekeeperUiState,
     onSubmitPassword: (String) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var password by remember { mutableStateOf("") }
 
     val isError = uiState is GatekeeperUiState.PasswordError
@@ -122,9 +123,8 @@ fun LockScreen(
                     confirmButton = {
                         Button(
                             onClick = {
-                                // TODO: Call actual wipe data function (Runtime.getRuntime().exec("pm clear org.example.aetherworks"))
-                                // Or trigger local broadcast to Gatekeeper
-                                showWipeConfirmDialog = false
+                                val activityManager = context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+                                activityManager.clearApplicationUserData()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                         ) {

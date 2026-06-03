@@ -38,8 +38,18 @@ class DiscoveryManager(private val protocols: List<DiscoveryProtocol>) {
                     protocol.discoveredPeers.collect { peers ->
                         val current = _discoveredPeers.value.toMutableList()
                         peers.forEach { peer ->
-                            if (!current.any { it.peerId == peer.peerId }) {
+                            val index = current.indexOfFirst { it.peerId == peer.peerId }
+                            if (index == -1) {
                                 current.add(peer)
+                            } else {
+                                val existing = current[index]
+                                current[index] = existing.copy(
+                                    ip = peer.ip ?: existing.ip,
+                                    hasProfile = peer.hasProfile || existing.hasProfile,
+                                    categoryBitmask = peer.categoryBitmask or existing.categoryBitmask,
+                                    tcpPort = if (peer.tcpPort > 0) peer.tcpPort else existing.tcpPort,
+                                    timestamp = maxOf(peer.timestamp, existing.timestamp)
+                                )
                             }
                         }
                         _discoveredPeers.value = current

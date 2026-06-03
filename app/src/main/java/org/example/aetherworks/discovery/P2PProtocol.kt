@@ -2,9 +2,13 @@ package org.example.aetherworks.discovery
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.SharedPreferences
+import android.util.Base64
 import org.example.aetherworks.IAetherIpc
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -14,6 +18,7 @@ import org.example.aetherworks.security.guard.SecureP2PManager
 import org.example.aetherworks.storage.db.AetherDatabase
 import org.example.aetherworks.storage.db.entity.ContentUnit
 import org.example.aetherworks.storage.db.entity.RelayPacket
+import org.example.aetherworks.storage.db.entity.SecurityLogEntry
 import org.example.aetherworks.storage.db.entity.Visibility
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -23,6 +28,7 @@ import java.net.Socket
 import java.security.MessageDigest
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.net.ssl.SSLSocket
 import kotlin.concurrent.thread
 
 @Serializable
@@ -46,9 +52,27 @@ class P2PServer(
     private val executor = Executors.newFixedThreadPool(10) // Limit concurrency to prevent DoS
     private val activeConnections = java.util.concurrent.ConcurrentHashMap<String, Int>()
     private val activeTotalConnections = java.util.concurrent.atomic.AtomicInteger(0)
-    
+    private val tofuPrefs: SharedPreferences =
+        context.getSharedPreferences("tofu_certs", Context.MODE_PRIVATE)
+
     companion object {
         private const val MAX_CONNECTIONS_PER_IP = 3
+    }
+
+    /**
+     * FIX H3: Returns true only if the connecting peer's TLS certificate fingerprint
+     * matches a previously TOFU-pinned entry for this IP address.
+     * Untrusted peers (new or fingerprint-changed) are denied access to PROFILE and relay data.
+     */
+    private fun isTrustedPeer(socket: Socket): Boolean {
+        val sslSocket = socket as? SSLSocket ?: return false
+        val chain = try { sslSocket.session?.peerCertificates } catch (e: Exception) { return false }
+        if (chain.isNullOrEmpty()) return false
+        val cert = chain[0] as? java.security.cert.X509Certificate ?: return false
+        val md = MessageDigest.getInstance("SHA-256")
+        val fingerprint = Base64.encodeToString(md.digest(cert.encoded), Base64.NO_WRAP)
+        val ip = socket.inetAddress?.hostAddress ?: return false
+        return tofuPrefs.getString("cert_$ip", null) == fingerprint
     }
     
     var localPort: Int = 0
@@ -89,6 +113,7 @@ class P2PServer(
         val ip = socket.inetAddress?.hostAddress ?: "unknown"
         val currentCount = activeConnections.getOrDefault(ip, 0)
         if (currentCount >= MAX_CONNECTIONS_PER_IP) {
+            P2PClient.logSecurityEvent("RATE_LIMIT_EXCEEDED", "peer=$ip")
             try { socket.close() } catch (e: Exception) {}
             return
         }
@@ -138,6 +163,11 @@ class P2PServer(
                         }
                     }
                     "PROFILE" -> {
+                        // FIX H3: Only TOFU-pinned peers may request profiles
+                        if (!isTrustedPeer(s)) {
+                            writer.println("ERROR: NOT_TRUSTED")
+                            return@use
+                        }
                         val response = ipcService.profile
                         if (response.isNotEmpty()) {
                             writer.println(response)
@@ -146,11 +176,21 @@ class P2PServer(
                         }
                     }
                     "RELAY_INDEX" -> {
+                        // FIX H3: Only TOFU-pinned peers may request relay index
+                        if (!isTrustedPeer(s)) {
+                            writer.println("ERROR: NOT_TRUSTED")
+                            return@use
+                        }
                         val currentTime = System.currentTimeMillis()
                         val response = ipcService.getRelayIndex(currentTime)
                         if (response.isNotEmpty()) writer.println(response) else writer.println("[]")
                     }
                     "GET_RELAY" -> {
+                        // FIX H3: Only TOFU-pinned peers may request relay packets
+                        if (!isTrustedPeer(s)) {
+                            writer.println("ERROR: NOT_TRUSTED")
+                            return@use
+                        }
                         if (parts.size > 1) {
                             val packetId = parts[1]
                             val currentTime = System.currentTimeMillis()
@@ -201,6 +241,32 @@ class P2PServer(
 }
 
 object P2PClient {
+    // Context needed for KeyManager (signature verification) and SecurityLogDao
+    private lateinit var appContext: Context
+
+    fun init(context: Context) {
+        appContext = context.applicationContext
+    }
+
+    // FIX L3: Write security events to SecurityLogDao instead of suppressing them
+    internal fun logSecurityEvent(eventType: String, detail: String) {
+        try {
+            val db = AetherDatabase.getSharedDatabase()
+            CoroutineScope(Dispatchers.IO).launch {
+                db.securityLogDao().insert(
+                    SecurityLogEntry(
+                        eventType = eventType,
+                        timestamp = System.currentTimeMillis(),
+                        detail = detail
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            // If DB is unavailable, fall back to logcat — never suppress security events silently
+            android.util.Log.e("AetherWorksSecurity", "$eventType: $detail")
+        }
+    }
+
     // Shared read bounded buffer logic (5 MB limit for large responses)
     private suspend fun readBoundedResponse(input: InputStream, maxLength: Int = 5_000_000): String? {
         val builder = java.lang.StringBuilder()
@@ -261,12 +327,20 @@ object P2PClient {
                     
                     if (computedHash == unit.contentHash && computedHash == hash) {
                         if (!org.example.aetherworks.reputation.ReputationAgent.verifyProofOfWork(unit.contentHash, unit.powNonce)) {
-                            System.err.println("PoW mismatch. Rejecting ContentUnit from peer.")
+                            // FIX L3: Log PoW rejection to SecurityLogDao
+                            logSecurityEvent("CONTENT_REJECTED_POW_MISMATCH", "peer=$ip hash=$hash")
+                            return@withContext null
+                        }
+                        // FIX C3: Verify Ed25519 authorship signature
+                        val keyManager = org.example.aetherworks.crypto.KeyManager(appContext)
+                        if (!org.example.aetherworks.crypto.ContentSigner.verify(unit, keyManager)) {
+                            logSecurityEvent("CONTENT_REJECTED_SIGNATURE_INVALID", "peer=$ip hash=$hash alias=${unit.authorAlias}")
                             return@withContext null
                         }
                         return@withContext unit
                     } else {
-                        System.err.println("Hash mismatch. Rejecting ContentUnit from peer.")
+                        // FIX L3: Log hash mismatch to SecurityLogDao
+                        logSecurityEvent("CONTENT_REJECTED_HASH_MISMATCH", "peer=$ip expected=$hash computed=$computedHash")
                     }
                 }
             }
@@ -275,6 +349,7 @@ object P2PClient {
         }
         return@withContext null
     }
+
 
     suspend fun fetchProfile(ip: String, port: Int): org.example.aetherworks.persona.Profile? = withContext(Dispatchers.IO) {
         try {

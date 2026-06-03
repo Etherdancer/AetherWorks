@@ -133,6 +133,8 @@ class DiscoveryForegroundService : Service() {
         val ipc = ipcService ?: return
 
         org.example.aetherworks.security.guard.SecureP2PManager.init(this)
+        // FIX C3 + L3: Initialize P2PClient with app context for signature verification and security logging
+        P2PClient.init(this)
         p2pServer = P2PServer(this, ipc)
         val serverPort = p2pServer?.start() ?: 0
 

@@ -33,7 +33,7 @@ import org.example.aetherworks.storage.db.entity.GroupMember
         TrustGroup::class,
         GroupMember::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 @androidx.room.TypeConverters(Converters::class)
@@ -134,6 +134,14 @@ abstract class AetherDatabase : RoomDatabase() {
             }
         }
 
+        // FIX C3: Add Ed25519 authorship signature fields to content_units
+        val MIGRATION_13_14 = object : Migration(13, 14) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE `content_units` ADD COLUMN `authorSignatureBase64` TEXT")
+                database.execSQL("ALTER TABLE `content_units` ADD COLUMN `authorPublicKeyBase64` TEXT")
+            }
+        }
+
         @Volatile
         private var INSTANCE_PRIVATE: AetherDatabase? = null
 
@@ -149,8 +157,13 @@ abstract class AetherDatabase : RoomDatabase() {
                     "aether_private.db"
                 )
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
-                .fallbackToDestructiveMigration()
+                .addMigrations(
+                    MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
+                    MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14
+                )
+                // FIX MC1: Removed fallbackToDestructiveMigration(). A failed migration now
+                // surfaces an exception that must be caught and shown to the user, rather than
+                // silently wiping the encrypted data vault.
                 .build()
                 INSTANCE_PRIVATE = instance
                 instance
@@ -166,8 +179,11 @@ abstract class AetherDatabase : RoomDatabase() {
                     "aether_shared.db"
                 )
                 .openHelperFactory(factory)
-                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
-                .fallbackToDestructiveMigration()
+                .addMigrations(
+                    MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
+                    MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14
+                )
+                // FIX MC1: Removed fallbackToDestructiveMigration(). Same reason as private DB.
                 .build()
                 INSTANCE_SHARED = instance
                 instance

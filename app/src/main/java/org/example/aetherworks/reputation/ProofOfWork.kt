@@ -5,20 +5,18 @@ import java.security.MessageDigest
 object ProofOfWork {
 
     /**
-     * Generates a nonce such that SHA-256(data + nonce) has at least `difficulty` leading zero hex characters.
+     * Generates a nonce such that SHA-256(data + nonce) has at least `difficulty` leading zero bytes.
      * To prevent battery drain on mobile, difficulty is usually kept very low (e.g. 1 or 2).
      */
     fun generate(data: String, difficulty: Int = 1): Long {
         val digest = MessageDigest.getInstance("SHA-256")
-        val prefix = "0".repeat(difficulty)
         var nonce = 0L
         
         while (true) {
             val input = "$data:$nonce"
             val hashBytes = digest.digest(input.toByteArray(Charsets.UTF_8))
-            val hexString = hashBytes.joinToString("") { "%02x".format(it) }
             
-            if (hexString.startsWith(prefix)) {
+            if (checkDifficulty(hashBytes, difficulty)) {
                 return nonce
             }
             nonce++
@@ -32,9 +30,14 @@ object ProofOfWork {
         val digest = MessageDigest.getInstance("SHA-256")
         val input = "$data:$nonce"
         val hashBytes = digest.digest(input.toByteArray(Charsets.UTF_8))
-        val hexString = hashBytes.joinToString("") { "%02x".format(it) }
-        val prefix = "0".repeat(difficulty)
         
-        return hexString.startsWith(prefix)
+        return checkDifficulty(hashBytes, difficulty)
+    }
+
+    private fun checkDifficulty(hash: ByteArray, difficulty: Int): Boolean {
+        for (i in 0 until difficulty) {
+            if (hash[i] != 0.toByte()) return false
+        }
+        return true
     }
 }

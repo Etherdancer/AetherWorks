@@ -33,9 +33,22 @@ class ContentRendererService : Service() {
             html = html.replace(Regex("\\*(.*?)\\*")) { "<i>${it.groupValues[1]}</i>" }
             html = html.replace(Regex("^# (.*?)$", RegexOption.MULTILINE)) { "<h1>${it.groupValues[1]}</h1>" }
             html = html.replace(Regex("^## (.*?)$", RegexOption.MULTILINE)) { "<h2>${it.groupValues[1]}</h2>" }
-            html = html.replace(Regex("\\[(.*?)\\]\\((.*?)\\)")) { "<a href=\"${it.groupValues[2]}\">${it.groupValues[1]}</a>" }
-            html = html.replace(Regex("\\[\\[(.*?)\\]\\]")) { "<a href=\"aetherworks://content?title=${it.groupValues[1]}\">${it.groupValues[1]}</a>" }
+            // FIX C1: Allowlist href schemes — only https:// and aetherworks:// are permitted.
+            // javascript:, intent:, file:, data: and all other schemes are replaced with "#"
+            html = html.replace(Regex("\\[(.*?)\\]\\((.*?)\\)")) {
+                val linkText = it.groupValues[1]
+                val rawUrl   = it.groupValues[2].trim()
+                val safeUrl  = if (rawUrl.startsWith("https://") || rawUrl.startsWith("aetherworks://")) rawUrl else "#"
+                "<a href=\"$safeUrl\">$linkText</a>"
+            }
+            // FIX C1: URL-encode wiki-link titles to prevent deep link parameter injection
+            html = html.replace(Regex("\\[\\[(.*?)\\]\\]")) {
+                val title   = it.groupValues[1]
+                val encoded = java.net.URLEncoder.encode(title, "UTF-8")
+                "<a href=\"aetherworks://content?title=$encoded\">$title</a>"
+            }
             html = html.replace("\n", "<br/>")
+
 
             // 3. Wrap in a basic stylesheet for WebView
             val style = "body { font-family: sans-serif; padding: 16px; font-size: 16px; color: #333333; background-color: #f9f9f9; }"

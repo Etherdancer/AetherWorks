@@ -23,6 +23,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import org.example.aetherworks.networking.SharingToggleViewModel
 import org.example.aetherworks.ui.components.GlobalSharingToggle
+import org.example.aetherworks.ui.components.TofuConfirmationHost
 import org.example.aetherworks.ui.feed.SharedBrowseScreen
 import org.example.aetherworks.ui.feed.SharedBrowseViewModel
 import org.example.aetherworks.ui.social.SocialScreen
@@ -89,6 +90,8 @@ fun MainNavigation(
           )
       }
   ) { paddingValues ->
+      // FIX C2: Show TOFU fingerprint confirmation dialog whenever a new peer connects
+      TofuConfirmationHost()
       NavDisplay(
         backStack = backStack,
         onBack = { backStack.removeLastOrNull() },

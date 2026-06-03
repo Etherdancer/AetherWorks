@@ -109,16 +109,36 @@ class TofuTrustManager(private val prefs: SharedPreferences) : X509ExtendedTrust
     private fun checkTrusted(chain: Array<out X509Certificate>?, socket: Socket?) {
         val cert = chain?.get(0) ?: throw CertificateException("No certificate provided")
         val ip = socket?.inetAddress?.hostAddress ?: return // Accept if no IP available for pinning
-        
+
         val md = MessageDigest.getInstance("SHA-256")
-        val fingerprint = Base64.encodeToString(md.digest(cert.encoded), Base64.NO_WRAP)
-        
+        val fingerprintBytes = md.digest(cert.encoded)
+        val fingerprint = Base64.encodeToString(fingerprintBytes, Base64.NO_WRAP)
+
         val knownFingerprint = prefs.getString("cert_$ip", null)
-        if (knownFingerprint == null) {
-            // Trust On First Use
-            prefs.edit().putString("cert_$ip", fingerprint).apply()
-        } else if (knownFingerprint != fingerprint) {
-            throw CertificateException("Certificate for $ip has changed! Possible MITM.")
+        when {
+            knownFingerprint == null -> {
+                // FIX C2: New peer — request explicit user confirmation before TOFU pinning.
+                // We runBlocking here because checkTrusted is called on a background IO thread
+                // (inside the TLS handshake), not on the main thread. The connection will hang
+                // until the user responds or the socket's soTimeout fires.
+                val deferred = TofuPendingManager.requestConfirmation(ip, fingerprint)
+                val accepted = kotlinx.coroutines.runBlocking { deferred.await() }
+                if (!accepted) {
+                    throw CertificateException("User rejected certificate for $ip")
+                }
+                prefs.edit().putString("cert_$ip", fingerprint).apply()
+            }
+            knownFingerprint != fingerprint -> {
+                // FIX C2: Certificate change after TOFU pin — always reject, never silently accept.
+                // This blocks MITM upgrades even after initial trust is established.
+                org.example.aetherworks.discovery.P2PClient.logSecurityEvent(
+                    "MITM_CERTIFICATE_CHANGE_DETECTED",
+                    "peer=$ip known_cert=$knownFingerprint new_cert=$fingerprint"
+                )
+                throw CertificateException("SECURITY ALERT: Certificate for $ip has changed! Possible MITM attack.")
+            }
+            // else: known fingerprint matches — allow silently
         }
     }
+
 }

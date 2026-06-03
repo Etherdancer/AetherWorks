@@ -12,6 +12,6 @@ data class PresencePacket(
     val hasProfile: Boolean,
     val categoryBitmask: Long, // 64-bit integer representing up to 64 selected categories
     val tcpPort: Int,
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long = (System.currentTimeMillis() / 300_000L) * 300_000L, // FIX L2: Rounded to 5-minute window
     var ip: String? = null
 )

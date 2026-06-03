@@ -59,12 +59,18 @@ class WifiDirectDiscovery(private val context: Context) : DiscoveryProtocol {
             wifiP2pManager.setDnsSdResponseListeners(channel, { instanceName, registrationType, srcDevice ->
                 // Service available
             }, { fullDomainName, recordMap, srcDevice ->
-                if (fullDomainName.contains("aetherworks")) {
+                // FIX MC3: Strict prefix check instead of loose contains(), and UUID validation
+                if (fullDomainName.startsWith(SERVICE_INSTANCE, ignoreCase = true) && recordMap.containsKey("peerId")) {
                     val peerId = recordMap["peerId"]
+                    
+                    // Validate UUID format
+                    val uuidRegex = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+                    if (peerId == null || !uuidRegex.matches(peerId)) return@setDnsSdResponseListeners
+
                     val hasProfile = recordMap["hasProfile"]?.toBoolean() ?: false
                     val port = recordMap["port"]?.toIntOrNull() ?: 0
 
-                    if (peerId != null) {
+                    if (true) { // peerId is checked above
                         val packet = PresencePacket(peerId, hasProfile, 0L, port)
                         val current = _discoveredPeers.value.toMutableList()
                         if (!current.any { it.peerId == packet.peerId }) {
