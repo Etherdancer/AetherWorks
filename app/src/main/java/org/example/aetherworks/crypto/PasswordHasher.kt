@@ -5,6 +5,7 @@ import org.bouncycastle.crypto.params.Argon2Parameters
 import java.nio.ByteBuffer
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Arrays
 
@@ -56,7 +57,7 @@ object PasswordHasher {
     fun verify(password: CharArray, expectedSalt: ByteArray, expectedHash: ByteArray, clearPassword: Boolean = true): Boolean {
         val (_, computedHash) = hash(password, expectedSalt, clearPassword)
         // Constant time comparison
-        return expectedHash.contentEquals(computedHash)
+        return MessageDigest.isEqual(expectedHash, computedHash)
     }
 
     private fun generateSalt(): ByteArray {
@@ -94,7 +95,7 @@ object PasswordHasher {
         val salt = storedSaltHash.copyOfRange(0, SALT_LENGTH)
         val expectedHash = storedSaltHash.copyOfRange(SALT_LENGTH, storedSaltHash.size)
         val (_, computedHash) = hash(password.toCharArray(), salt, clearPassword = true)
-        if (expectedHash.contentEquals(computedHash)) {
+        if (MessageDigest.isEqual(expectedHash, computedHash)) {
             return computedHash
         }
         return null

@@ -96,6 +96,7 @@ class DiscoveryForegroundService : Service() {
             return START_NOT_STICKY
         }
 
+        org.example.aetherworks.security.guard.SecureP2PManager.init(this)
         p2pServer = P2PServer(this, db)
         val serverPort = p2pServer?.start() ?: 0
 

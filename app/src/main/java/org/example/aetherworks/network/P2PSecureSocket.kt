@@ -27,20 +27,7 @@ object P2PSecureSocket {
     ): SSLContext {
         val context = SSLContext.getInstance("TLSv1.3")
         
-        val tm = trustManager ?: object : X509TrustManager {
-            override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
-                // In a real P2P mesh, we verify the client's public key matches an expected Persona ID
-                // For now, we accept self-signed certs for local discovery testing.
-                Log.d(TAG, "checkClientTrusted: ${chain?.get(0)?.subjectDN}")
-            }
-
-            override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {
-                // Pinning logic goes here: throw CertificateException if the public key is unknown/untrusted
-                Log.d(TAG, "checkServerTrusted: ${chain?.get(0)?.subjectDN}")
-            }
-
-            override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
-        }
+        val tm = trustManager ?: throw IllegalArgumentException("TrustManager must be explicitly provided to prevent Trust-All vulnerabilities.")
 
         val kmArray = if (keyManager != null) arrayOf(keyManager) else null
         context.init(kmArray, arrayOf(tm), SecureRandom())

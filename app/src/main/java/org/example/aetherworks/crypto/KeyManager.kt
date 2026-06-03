@@ -10,6 +10,7 @@ import org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
 import org.bouncycastle.crypto.params.Ed25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.Ed25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
+import org.bouncycastle.crypto.signers.Ed25519Signer
 import org.bouncycastle.crypto.generators.X25519KeyPairGenerator
 import org.bouncycastle.crypto.params.X25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
@@ -78,7 +79,7 @@ class KeyManager(context: Context) {
         return keyStore.getKey(MASTER_KEY_ALIAS, null) as SecretKey
     }
 
-    private fun encryptData(data: ByteArray): ByteArray {
+    fun encryptData(data: ByteArray): ByteArray {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, getMasterKey())
         val iv = cipher.iv
@@ -86,7 +87,7 @@ class KeyManager(context: Context) {
         return iv + encrypted
     }
 
-    private fun decryptData(data: ByteArray): ByteArray {
+    fun decryptData(data: ByteArray): ByteArray {
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         val iv = data.copyOfRange(0, GCM_IV_LENGTH)
         val encrypted = data.copyOfRange(GCM_IV_LENGTH, data.size)
@@ -202,5 +203,23 @@ class KeyManager(context: Context) {
             // Ignore
         }
         prefs.edit().clear().apply()
+    }
+
+    fun signData(data: ByteArray): ByteArray {
+        val privEncStr = prefs.getString(KEY_ED25519_PRIV, null) ?: throw IllegalStateException("No identity key found")
+        val privBytes = decryptData(Base64.decode(privEncStr, Base64.DEFAULT))
+        val signer = Ed25519Signer()
+        signer.init(true, Ed25519PrivateKeyParameters(privBytes, 0))
+        signer.update(data, 0, data.size)
+        val signature = signer.generateSignature()
+        java.util.Arrays.fill(privBytes, 0.toByte())
+        return signature
+    }
+
+    fun verifySignature(data: ByteArray, signature: ByteArray, pubKey: ByteArray): Boolean {
+        val signer = Ed25519Signer()
+        signer.init(false, Ed25519PublicKeyParameters(pubKey, 0))
+        signer.update(data, 0, data.size)
+        return signer.verifySignature(signature)
     }
 }

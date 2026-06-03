@@ -40,8 +40,8 @@ class WifiDirectDiscovery(private val context: Context) : DiscoveryProtocol {
                 "port" to presencePacket.tcpPort.toString()
             )
             val serviceInfo = WifiP2pDnsSdServiceInfo.newInstance(
-                "AetherWorks",
-                "_aetherworks._tcp",
+                SERVICE_INSTANCE,
+                SERVICE_REG_TYPE,
                 record
             )
 

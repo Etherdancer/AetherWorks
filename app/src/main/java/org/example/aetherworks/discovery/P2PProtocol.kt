@@ -98,7 +98,18 @@ class P2PServer(
 
                 val request = readBoundedLine(s.getInputStream(), 4096) ?: return@use
                 val parts = request.split(" ")
-                val command = parts[0]
+                var command = parts[0]
+
+                if (command.endsWith("_v1")) {
+                    command = command.removeSuffix("_v1")
+                }
+
+                val timestampStr = parts.lastOrNull()
+                val timestamp = timestampStr?.toLongOrNull()
+                if (timestamp == null || Math.abs(System.currentTimeMillis() - timestamp) > 300000) {
+                    writer.println("ERROR: INVALID_TIMESTAMP_OR_EXPIRED")
+                    return@use
+                }
 
                 when (command) {
                     "INDEX" -> {
@@ -225,7 +236,7 @@ object P2PClient {
             SecureP2PManager.getSocketFactory().createSocket(ip, port).use { socket ->
                 socket.soTimeout = 5000
                 val writer = PrintWriter(socket.getOutputStream(), true)
-                writer.println("INDEX")
+                writer.println("INDEX_v1 ${System.currentTimeMillis()}")
                 
                 val response = readBoundedResponse(socket.getInputStream())
                 if (response != null && response.startsWith("[")) {
@@ -243,7 +254,7 @@ object P2PClient {
             SecureP2PManager.getSocketFactory().createSocket(ip, port).use { socket ->
                 socket.soTimeout = 10000
                 val writer = PrintWriter(socket.getOutputStream(), true)
-                writer.println("GET $hash")
+                writer.println("GET_v1 $hash ${System.currentTimeMillis()}")
                 
                 val response = readBoundedResponse(socket.getInputStream())
                 if (response != null && response.startsWith("{")) {
@@ -277,7 +288,7 @@ object P2PClient {
             SecureP2PManager.getSocketFactory().createSocket(ip, port).use { socket ->
                 socket.soTimeout = 5000
                 val writer = PrintWriter(socket.getOutputStream(), true)
-                writer.println("PROFILE")
+                writer.println("PROFILE_v1 ${System.currentTimeMillis()}")
                 
                 val response = readBoundedResponse(socket.getInputStream(), 1024 * 500) // 500 KB limit for profile
                 if (response != null && response.startsWith("{")) {
@@ -295,7 +306,7 @@ object P2PClient {
             SecureP2PManager.getSocketFactory().createSocket(ip, port).use { socket ->
                 socket.soTimeout = 5000
                 val writer = PrintWriter(socket.getOutputStream(), true)
-                writer.println("RELAY_INDEX")
+                writer.println("RELAY_INDEX_v1 ${System.currentTimeMillis()}")
                 
                 val response = readBoundedResponse(socket.getInputStream(), 1024 * 1024)
                 if (response != null && response.startsWith("[")) {
@@ -313,7 +324,7 @@ object P2PClient {
             SecureP2PManager.getSocketFactory().createSocket(ip, port).use { socket ->
                 socket.soTimeout = 10000
                 val writer = PrintWriter(socket.getOutputStream(), true)
-                writer.println("GET_RELAY $packetId")
+                writer.println("GET_RELAY_v1 $packetId ${System.currentTimeMillis()}")
                 
                 val response = readBoundedResponse(socket.getInputStream(), 5_000_000)
                 if (response != null && response.startsWith("{")) {

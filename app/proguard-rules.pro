@@ -19,3 +19,23 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Custom Rules for AetherWorks Security
+-keep class net.sqlcipher.** { *; }
+-keep class net.sqlcipher.database.** { *; }
+-keep class org.bouncycastle.** { *; }
+-keep class org.whispersystems.** { *; }
+-keep class kotlinx.serialization.** { *; }
+
+-dontwarn javax.naming.**
+-dontwarn org.bouncycastle.**
+
+# Strip excessive logging in release builds (CVD-008)
+-assumenosideeffects class android.util.Log {
+    public static boolean isLoggable(java.lang.String, int);
+    public static int v(...);
+    public static int i(...);
+    public static int w(...);
+    public static int d(...);
+    public static int e(...);
+}

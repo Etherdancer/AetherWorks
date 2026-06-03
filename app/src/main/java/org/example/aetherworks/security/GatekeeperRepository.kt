@@ -28,14 +28,42 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
     }
 
     fun isLockedOut(): Boolean {
-        val lockoutUntil = prefs.getLong(PREF_LOCKOUT_UNTIL, 0L)
+        val lockoutUntil = getLockoutUntil()
         return System.currentTimeMillis() < lockoutUntil
     }
 
     fun getRemainingLockoutSeconds(): Long {
-        val lockoutUntil = prefs.getLong(PREF_LOCKOUT_UNTIL, 0L)
+        val lockoutUntil = getLockoutUntil()
         val remaining = lockoutUntil - System.currentTimeMillis()
         return if (remaining > 0) remaining / 1000 else 0
+    }
+
+    private fun getFailedAttempts(): Int {
+        val encStr = prefs.getString(PREF_FAILED_ATTEMPTS, null) ?: return 0
+        return try {
+            val bytes = keyManager.decryptData(android.util.Base64.decode(encStr, android.util.Base64.DEFAULT))
+            java.nio.ByteBuffer.wrap(bytes).int
+        } catch (e: Exception) { 0 }
+    }
+
+    private fun setFailedAttempts(attempts: Int, editor: SharedPreferences.Editor) {
+        val bytes = java.nio.ByteBuffer.allocate(4).putInt(attempts).array()
+        val enc = keyManager.encryptData(bytes)
+        editor.putString(PREF_FAILED_ATTEMPTS, android.util.Base64.encodeToString(enc, android.util.Base64.DEFAULT))
+    }
+
+    private fun getLockoutUntil(): Long {
+        val encStr = prefs.getString(PREF_LOCKOUT_UNTIL, null) ?: return 0L
+        return try {
+            val bytes = keyManager.decryptData(android.util.Base64.decode(encStr, android.util.Base64.DEFAULT))
+            java.nio.ByteBuffer.wrap(bytes).long
+        } catch (e: Exception) { 0L }
+    }
+
+    private fun setLockoutUntil(time: Long, editor: SharedPreferences.Editor) {
+        val bytes = java.nio.ByteBuffer.allocate(8).putLong(time).array()
+        val enc = keyManager.encryptData(bytes)
+        editor.putString(PREF_LOCKOUT_UNTIL, android.util.Base64.encodeToString(enc, android.util.Base64.DEFAULT))
     }
 
     fun authenticate(password: String): ByteArray? {
@@ -55,15 +83,15 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
     }
 
     private fun recordFailedAttempt() {
-        val attempts = prefs.getInt(PREF_FAILED_ATTEMPTS, 0) + 1
+        val attempts = getFailedAttempts() + 1
         val editor = prefs.edit()
-        editor.putInt(PREF_FAILED_ATTEMPTS, attempts)
+        setFailedAttempts(attempts, editor)
 
         if (attempts >= 20) {
             // Self-destruct condition: Wipe keys
             keyManager.wipeAllKeys()
             // In a real app we'd also clear the DB files here, but since the keys are gone, the DB is cryptographically shredded.
-            editor.putLong(PREF_LOCKOUT_UNTIL, Long.MAX_VALUE) // Permanent lockout
+            setLockoutUntil(Long.MAX_VALUE, editor) // Permanent lockout
         } else if (attempts >= 5) {
             val lockoutMinutes = when {
                 attempts >= 15 -> 15.0
@@ -72,16 +100,16 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
                 else -> 0.5 // 30 seconds
             }
             val lockoutUntil = System.currentTimeMillis() + (lockoutMinutes * 60.0 * 1000.0).toLong()
-            editor.putLong(PREF_LOCKOUT_UNTIL, lockoutUntil)
+            setLockoutUntil(lockoutUntil, editor)
         }
         editor.apply()
     }
 
     private fun resetFailedAttempts() {
-        prefs.edit()
-            .putInt(PREF_FAILED_ATTEMPTS, 0)
-            .putLong(PREF_LOCKOUT_UNTIL, 0L)
-            .apply()
+        val editor = prefs.edit()
+        setFailedAttempts(0, editor)
+        setLockoutUntil(0L, editor)
+        editor.apply()
     }
 
     companion object {

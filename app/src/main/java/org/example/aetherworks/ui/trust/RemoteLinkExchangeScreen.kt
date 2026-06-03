@@ -19,7 +19,12 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit) 
     val rendezvousToken = remember { java.util.UUID.randomUUID().toString() }
     val pubKeyFingerprint = remember { "fingerprint-placeholder" } // TODO: actual Ed25519 fingerprint
     
-    val shareLink = "aetherworks://rendezvous?pk=$pubKeyFingerprint&token=$rendezvousToken"
+    val sigBase64 = remember {
+        val sig = keyManager.signData(rendezvousToken.toByteArray(Charsets.UTF_8))
+        android.util.Base64.encodeToString(sig, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
+    }
+    
+    val shareLink = "aetherworks://rendezvous?pk=$pubKeyFingerprint&token=$rendezvousToken&sig=$sigBase64"
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
         Text("Remote Trust Verification", style = MaterialTheme.typography.headlineMedium)

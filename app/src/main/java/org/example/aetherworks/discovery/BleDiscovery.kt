@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.nio.ByteBuffer
 import java.util.UUID
 
-@SuppressLint("MissingPermission")
 class BleDiscovery(private val context: Context) : DiscoveryProtocol {
 
     companion object {
@@ -61,6 +60,7 @@ class BleDiscovery(private val context: Context) : DiscoveryProtocol {
         }
     }
 
+    @SuppressLint("MissingPermission")
     override fun startDiscovery(presencePacket: PresencePacket) {
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) return
 
@@ -72,6 +72,7 @@ class BleDiscovery(private val context: Context) : DiscoveryProtocol {
         }
     }
 
+    @SuppressLint("MissingPermission")
     override fun stopDiscovery() {
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) return
 
@@ -89,6 +90,7 @@ class BleDiscovery(private val context: Context) : DiscoveryProtocol {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun startAdvertising(packet: PresencePacket) {
         val settings = AdvertiseSettings.Builder()
             .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
@@ -105,6 +107,7 @@ class BleDiscovery(private val context: Context) : DiscoveryProtocol {
         isAdvertising = true
     }
 
+    @SuppressLint("MissingPermission")
     private fun startScanning() {
         val filter = ScanFilter.Builder()
             .setServiceUuid(SERVICE_UUID)

@@ -22,8 +22,8 @@ class NsdDiscovery(context: Context) : DiscoveryProtocol {
     private val serviceNameSuffix = UUID.randomUUID().toString().substring(0, 8)
 
     companion object {
-        const val SERVICE_TYPE = "_aetherworks._tcp."
-        const val BASE_SERVICE_NAME = "AetherWorksPeer"
+        private const val SERVICE_TYPE = "_p2psync._tcp."
+        private const val BASE_SERVICE_NAME = "AetherWorksPeer"
     }
 
     override fun startDiscovery(presencePacket: PresencePacket) {

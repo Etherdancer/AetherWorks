@@ -64,6 +64,14 @@ class GatekeeperViewModel(private val repository: GatekeeperRepository) : ViewMo
         val dbKey = repository.completeOnboarding(password)
         _uiState.value = GatekeeperUiState.Authenticated(dbKey)
     }
+
+    fun clearDbKey() {
+        val state = _uiState.value
+        if (state is GatekeeperUiState.Authenticated) {
+            java.util.Arrays.fill(state.dbKey, 0.toByte())
+            _uiState.value = GatekeeperUiState.Active
+        }
+    }
 }
 
 sealed class GatekeeperUiState {
@@ -73,4 +81,5 @@ sealed class GatekeeperUiState {
     object PasswordError : GatekeeperUiState()
     data class LockedOut(val remainingSeconds: Long) : GatekeeperUiState()
     data class Authenticated(val dbKey: ByteArray) : GatekeeperUiState()
+    object Active : GatekeeperUiState()
 }
