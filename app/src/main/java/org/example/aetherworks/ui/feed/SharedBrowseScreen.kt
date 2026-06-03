@@ -97,22 +97,26 @@ fun SharedBrowseScreen(
                         )
                         
                         val currentFilter by viewModel.sourceFilter.collectAsState()
-                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-                            SegmentedButton(
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            FilterChip(
                                 selected = currentFilter == SourceFilter.ALL,
                                 onClick = { viewModel.updateSourceFilter(SourceFilter.ALL) },
-                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
-                            ) { Text("All") }
-                            SegmentedButton(
+                                label = { Text("All") }
+                            )
+                            FilterChip(
                                 selected = currentFilter == SourceFilter.ACQUAINTANCES,
                                 onClick = { viewModel.updateSourceFilter(SourceFilter.ACQUAINTANCES) },
-                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
-                            ) { Text("Acquaintances") }
-                            SegmentedButton(
+                                label = { Text("Acquaintances") }
+                            )
+                            FilterChip(
                                 selected = currentFilter == SourceFilter.TRUSTED,
                                 onClick = { viewModel.updateSourceFilter(SourceFilter.TRUSTED) },
-                                shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
-                            ) { Text("Trusted") }
+                                label = { Text("Trusted") }
+                            )
                         }
                     }
 
@@ -259,7 +263,7 @@ fun ContentDetailOverlay(
             
             Spacer(modifier = Modifier.height(32.dp))
             
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+            FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { onVote(true) }) {
                     Text("👍 Like (${content.likeTokens.size})")
                 }

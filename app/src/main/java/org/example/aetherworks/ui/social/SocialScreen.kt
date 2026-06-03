@@ -29,14 +29,15 @@ fun SocialScreen(modifier: Modifier = Modifier, onNavigateToGroups: () -> Unit =
         contentPadding = PaddingValues(vertical = 16.dp)
     ) {
         item {
-            Row(
+            @OptIn(ExperimentalLayoutApi::class)
+            FlowRow(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text("Social Network", style = MaterialTheme.typography.headlineMedium)
-                Row {
-                    Button(onClick = onNavigateToTrust, modifier = Modifier.padding(end = 8.dp)) {
+                Text("Social Network", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.align(Alignment.CenterVertically))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = onNavigateToTrust) {
                         Text("Trust QR")
                     }
                     Button(onClick = onNavigateToGroups) {
@@ -44,10 +45,11 @@ fun SocialScreen(modifier: Modifier = Modifier, onNavigateToGroups: () -> Unit =
                     }
                 }
             }
-            Row(
+            @OptIn(ExperimentalLayoutApi::class)
+            FlowRow(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Show Profile", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end = 8.dp))

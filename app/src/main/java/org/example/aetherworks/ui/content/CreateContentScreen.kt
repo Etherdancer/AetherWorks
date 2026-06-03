@@ -142,7 +142,8 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
             Spacer(modifier = Modifier.height(16.dp))
             
             Text("Visibility")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            @OptIn(ExperimentalLayoutApi::class)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 FilterChip(
                     selected = visibility == Visibility.PRIVATE,
                     onClick = { visibility = Visibility.PRIVATE },
@@ -229,7 +230,8 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            @OptIn(ExperimentalLayoutApi::class)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Button(onClick = { 
                     isVideo = false
                     mediaPicker.launch("image/*") 
