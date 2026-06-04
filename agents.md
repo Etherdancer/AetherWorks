@@ -37,7 +37,7 @@
 6. **No Law Enforcement Backdoors.** The app uses end-to-end encryption for private messaging.
 7. **Moderated Public Square.** Content shared publicly propagates via P2P, but is subject to central moderation blacklists to prevent the spread of abusive material.
 8. **Default Private & Mandatory Confirmation.** Every single feature, setting, and piece of content must default to **Private**. Any action that changes visibility to Public or shares data must trigger a mandatory confirmation dialog.
-9. **User Satisfaction First.** The main objective is user satisfaction; monetization is secondary.
+9. **User Satisfaction First.** The sole objective of this platform is user privacy, security, and satisfaction. It is a strictly non-commercial project, and no design decisions will ever be made for the sake of monetization. The developer accepts voluntary donations (currently in cryptocurrency, with real currency potentially supported in the future), but core functionality will never be paywalled.
 
 ---
 
