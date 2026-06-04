@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /blacklisted_hashes/{document=**} {
+      // Allow read access to anyone (even unauthenticated, as the app is anonymous)
+      allow read: if true;
+      // Writing is strictly forbidden for clients, only allowed via Firebase Admin SDK
+      allow write: if false;
+    }
+  }
+}

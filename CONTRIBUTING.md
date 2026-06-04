@@ -1,11 +1,11 @@
-# Contributing to AetherWorks
+# Contributing to Clear Space
 
-Thank you for your interest in contributing to AetherWorks! AetherWorks is a zero-server, decentralized, privacy-first social platform.
+Thank you for your interest in contributing to Clear Space! Clear Space is a zero-server, decentralized, privacy-first social platform.
 
 ## F-Droid Compatibility is Mandatory
 Any code submitted **must** strictly adhere to the F-Droid Inclusion Policy.
 - **No Google Play Services.** No dependencies on `com.google.android.gms` or Firebase.
-- **No Proprietary Binary Blobs.** All code must be open-source and GPL-3.0 compatible.
+- **No Proprietary Binary Blobs.** All code must be open-source and AGPL-3.0 compatible.
 - **No Telemetry.** Do not introduce analytics, crash reporting, or tracking.
 
 ## Getting Started
@@ -24,3 +24,4 @@ Any code submitted **must** strictly adhere to the F-Droid Inclusion Policy.
 3. Write clear commit messages.
 4. Push to your branch and open a Pull Request against `core`.
 5. Ensure all GitHub checks pass.
+

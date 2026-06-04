@@ -1,4 +1,4 @@
-# Privacy Policy for AetherWorks
+﻿# Privacy Policy for Clear Space
 
 **Plain language:** This app does **not** collect any personal data about you. All data you create stays on your device unless you explicitly share it.
 
@@ -10,3 +10,4 @@
 - **Risk acknowledgment:** By using the app you acknowledge that you are doing so **entirely at your own risk**. The developer is not responsible for any loss of data, privacy breaches, or any other consequences.
 
 For any questions about how your data is handled, refer to the **Disclaimer** in `agents.md`.
+

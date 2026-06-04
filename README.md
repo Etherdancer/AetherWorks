@@ -1,6 +1,6 @@
-# AetherWorks
+# Clear Space
 
-**AetherWorks** is a decentralized, zero-server content-sharing platform and social network. All data lives strictly on-device. The user has absolute sovereignty over what is shared, what is kept private, and who they interact with.
+**Clear Space** is a decentralized, zero-server content-sharing platform and social network. All data lives strictly on-device. The user has absolute sovereignty over what is shared, what is kept private, and who they interact with.
 
 Privacy is not a feature — it is the foundation.
 
@@ -19,11 +19,11 @@ Privacy is not a feature — it is the foundation.
 
 ## F-Droid Compatibility & Build Requirements
 
-AetherWorks is built specifically with the [F-Droid Inclusion Policy](https://f-droid.org/en/docs/Inclusion_Policy/) in mind. 
+Clear Space is built specifically with the [F-Droid Inclusion Policy](https://f-droid.org/en/docs/Inclusion_Policy/) in mind. 
 - **No Google Play Services (GMS)**
 - **No Proprietary Dependencies**
 - **No Telemetry or Crashlytics**
-- **100% Free Software under GPL-3.0**
+- **100% Free Software under AGPL-3.0**
 
 ### How to Build
 
@@ -39,8 +39,7 @@ AetherWorks is built specifically with the [F-Droid Inclusion Policy](https://f-
 
 ## Contributing
 
-Because AetherWorks adheres to strict privacy and F-Droid guidelines, any pull requests introducing closed-source libraries, cloud analytics, or GMS dependencies will be automatically rejected. Please open an issue to discuss major architectural changes before submitting a PR.
+Because Clear Space adheres to strict privacy and F-Droid guidelines, any pull requests introducing closed-source libraries, cloud analytics, or GMS dependencies will be automatically rejected. Please open an issue to discuss major architectural changes before submitting a PR.
 
 ## License
-
-This project is licensed under the **GNU General Public License v3.0**. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the **GNU Affero General Public License v3.0**. See the [LICENSE](LICENSE) file for details.

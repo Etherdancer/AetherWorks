@@ -1,20 +1,39 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
+  alias(libs.plugins.google.services)
 }
 
 android {
-    namespace = "org.example.aetherworks"
+    namespace = "app.clearspace.network"
     compileSdk = 36
     defaultConfig {
-        applicationId = "org.example.aetherworks"
+        applicationId = "app.clearspace.network"
         minSdk = 26
         targetSdk = 36
         versionCode = 13
         versionName = "0.3.4.0_alpha"
+    }
+
+    val keystorePropertiesFile = rootProject.file("app/keystore.properties")
+    val keystoreProperties = Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    }
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+            storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
+            storePassword = keystoreProperties["storePassword"] as String?
+        }
     }
 
     buildTypes {
@@ -22,6 +41,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
     compileOptions {
@@ -110,4 +132,9 @@ dependencies {
   implementation(libs.androidx.camera.lifecycle)
   implementation(libs.androidx.camera.view)
   implementation(libs.zxing.core)
+
+  // Firebase (Google Play Hybrid Branch)
+  implementation(platform(libs.firebase.bom))
+  implementation(libs.firebase.messaging)
+  implementation(libs.firebase.firestore)
 }

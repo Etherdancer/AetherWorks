@@ -1,4 +1,4 @@
-pluginManagement {
+﻿pluginManagement {
     repositories {
         google {
             content {
@@ -29,5 +29,6 @@ dependencyResolutionManagement {
 plugins {
 }
 
-rootProject.name = "AetherWorks"
+rootProject.name = "Clear Space"
 include(":app")
+

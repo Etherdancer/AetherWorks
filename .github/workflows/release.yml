@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build_release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Decode Keystore
+      env:
+        ENCODED_STRING: ${{ secrets.KEYSTORE_FILE_BASE64 }}
+      run: |
+        echo $ENCODED_STRING | base64 -di > app/release.keystore
+        
+    - name: Create keystore.properties
+      run: |
+        echo "storeFile=release.keystore" > app/keystore.properties
+        echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> app/keystore.properties
+        echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> app/keystore.properties
+        echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> app/keystore.properties
+
+    - name: Build Release APK
+      run: ./gradlew assembleRelease
+
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: app/build/outputs/apk/release/app-release.apk
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

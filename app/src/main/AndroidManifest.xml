@@ -74,6 +74,15 @@
         <!-- Shopping List Alarm Receiver -->
         <receiver android:name=".ui.utilities.ShoppingAlarmReceiver" android:exported="false" />
 
+        <!-- Firebase Messaging Service -->
+        <service
+            android:name=".network.push.AetherMessagingService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <!-- All other components must have android:exported="false" -->
     </application>
 </manifest>

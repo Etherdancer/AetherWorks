@@ -1,19 +1,17 @@
-# AetherWorks — Agent Architecture & Behavioral Specification
+# Clear Space — Agent Architecture & Behavioral Specification
 
-**AetherWorks** is a decentralized content-sharing platform and social network with zero servers. All data lives on-device. The user has absolute sovereignty over what is shared, what is kept private, and who they interact with. Privacy is not a feature — it is the foundation.
+**Clear Space** is a decentralized content-sharing platform and social network with zero servers. All data lives on-device. The user has absolute sovereignty over what is shared, what is kept private, and who they interact with. Privacy is not a feature — it is the foundation.
 
-> **License:** This program is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License v3.0** as published by the Free Software Foundation. This program is distributed **WITHOUT ANY WARRANTY**; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [LICENSE](LICENSE) file for details.
+> **License:** This program is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero General Public License v3.0** as published by the Free Software Foundation. This program is distributed **WITHOUT ANY WARRANTY**; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [LICENSE](LICENSE) file for details.
 
-> **⚠️ DISTRIBUTION TARGETS: F-DROID AND GITHUB**
-> This application is designed for release on **F-Droid** and **GitHub Releases**. Even though GitHub is an allowed release platform, every architectural decision, dependency choice, permission declaration, and build configuration in this document MUST continue to strictly comply with the [F-Droid Inclusion Policy](https://f-droid.org/en/docs/Inclusion_Policy/) to ensure F-Droid compatibility is never broken. Specifically:
-> - **No Google Play Services.** No dependency on `com.google.android.gms` or any closed-source Google library. Ever.
-> - **No proprietary dependencies.** Every library must be free software under a GPL-3.0-compatible license (Apache-2.0, MIT, BSD, LGPL, or GPL).
-> - **No closed-source binaries.** No precompiled `.so` files, no obfuscated JARs, no proprietary native code.
-> - **No tracking, analytics, or advertising.** No crash reporters like Crashlytics or Bugsnag. No Firebase. No telemetry of any kind.
-> - **Reproducible builds.** The APK must be buildable from source on F-Droid's build server using only free toolchains (Gradle, Android SDK, NDK).
-> - **All assets under free licenses.** Icons, fonts, images, and sounds must be under Apache-2.0, CC-BY, CC0, or equivalent.
+> **⚠️ DISTRIBUTION TARGETS: GOOGLE PLAY AND GITHUB ("HYBRID" APPROACH)**
+> This application is designed for release on **Google Play** and **GitHub Releases**. While the core philosophy emphasizes on-device processing and peer-to-peer data sharing, it MUST comply with Google Play's Developer Policies. Specifically:
+> - **Google Play Services and Firebase ARE Allowed.** Firebase is used for battery-efficient push notifications (FCM) to wake up peers, and other Google services can be used if they significantly improve the user experience or comply with store policies.
+> - **User Generated Content (UGC) Moderation.** The app MUST include mechanisms to report and remove objectionable content (e.g., via hash-based blacklists managed on Firebase) to comply with Google Play's strict UGC rules. Absolute immutability ("Once Public, Always Public") is superseded by the ability to moderate illegal or abusive content.
+> - **Pragmatic Privacy.** While privacy remains a strong focus, it is not "at all costs." If a feature requires a lightweight server assist (like moderation or peer wake-ups) to function reliably on modern Android devices, it is permitted.
+> - **No tracking, analytics, or advertising** (unless explicitly approved by the user). We still aim for a clean, user-respecting experience.
 >
-> **If you are an agent working on this project and you are unsure whether a dependency, API, or design choice is F-Droid compatible, STOP and ask before proceeding.** Introducing a proprietary dependency will block the entire release pipeline.
+> **If you are an agent working on this project, ensure that your architectural decisions balance decentralization with Google Play compliance.**
 
 ---
 
@@ -31,14 +29,14 @@
 
 ## Core Principles
 
-1. **Zero Servers.** There are no servers. There is no cloud. There is no backend. Every device is sovereign.
-2. **Privacy by Default.** The safest choice is always the one that collects the least. The app never asks for personal data. Profiles are fictional personas — users are encouraged not to share real identities.
+1. **Hybrid Architecture (Absolute Minimal Servers).** While 99.9% of logic and data remains on-device and peer-to-peer, minimal server infrastructure (like Firebase) is used for essential "traffic cop" tasks (e.g., wake-up pings, moderation blacklists) to ensure battery efficiency and store compliance. **CRITICAL RULE: Server usage must be kept to an absolute minimum.** Do not offload computation, storage, or normal data exchange to the cloud. Always default to local processing and P2P exchange first.
+2. **Privacy by Default, but Pragmatic.** The safest choice is always the one that collects the least. The app never asks for personal data. Profiles are fictional personas.
 3. **Informed Consent at Every Step.** Every action that sends or receives data requires explicit user consent. The user is told exactly what will happen before it happens.
-4. **User-at-Own-Risk (Strict Liability).** The app developer is **not responsible** for any damage, inconvenience, data loss, or any other consequence resulting from using this app. Furthermore, the user explicitly assumes **all liability** for the distribution of pirated or illegal content. The user uses the app **entirely at their own risk.** This must be acknowledged during onboarding and re-presented before any sharing activity.
+4. **Community Guidelines & Moderation.** The app strictly adheres to Google Play UGC policies. Abusive, illegal, or policy-violating content will be moderated and purged from the network using hash-based remote blacklists.
 5. **Physical Devices Only.** The app runs exclusively on physical Android devices. Emulators and virtual devices are detected and blocked.
-6. **No Law Enforcement Backdoors.** The app operates on a zero-server, decentralized architecture using end-to-end encryption. It is mathematically and architecturally impossible to implement a backdoor exclusively for law enforcement. Any such mechanism would compromise the security of all users. Therefore, **absolutely no backdoors of any kind** will be implemented.
-7. **Once Public, Always Public.** Due to the decentralized and immutable nature of P2P networking, any content shared publicly cannot be permanently deleted or recalled from the network. The user must be explicitly warned of this reality.
-8. **Default Private & Mandatory Confirmation.** Every single feature, setting, and piece of content must default to **Private**. Any action that changes visibility to Public or shares data must trigger a mandatory, un-skippable confirmation dialog. There must be no "Don't ask again" checkbox for these critical actions.
+6. **No Law Enforcement Backdoors.** The app uses end-to-end encryption for private messaging.
+7. **Moderated Public Square.** Content shared publicly propagates via P2P, but is subject to central moderation blacklists to prevent the spread of abusive material.
+8. **Default Private & Mandatory Confirmation.** Every single feature, setting, and piece of content must default to **Private**. Any action that changes visibility to Public or shares data must trigger a mandatory confirmation dialog.
 
 ---
 
@@ -81,7 +79,7 @@ A persistent, always-visible toggle on every screen.
         2. Present the risk disclosure: *"This app communicates with nearby devices over your local network, Bluetooth, and Wi-Fi Direct. On public networks (coffee shops, airports), other people on the same network may detect that you are running this app. The developer is not responsible for any consequences. You use this feature at your own risk."*
         3. Only after explicit confirmation: start the Discovery Agent and P2P services.
     * **Disable Flow:** Immediately stops all discovery, closes all connections, unregisters all network services, and stops the background service. No lingering background activity.
-    * **Visual Indicator:** When sharing is ON, a persistent colored indicator (e.g., pulsing green dot) is visible across all screens. Because sharing continues in the background, Android requires a persistent system notification. This notification must clearly state "AetherWorks Sharing is Active" and provide a "Stop Sharing" button directly in the notification shade so the user always knows their sharing state.
+    * **Visual Indicator:** When sharing is ON, a persistent colored indicator (e.g., pulsing green dot) is visible across all screens. Because sharing continues in the background, Android requires a persistent system notification. This notification must clearly state "Clear Space Sharing is Active" and provide a "Stop Sharing" button directly in the notification shade so the user always knows their sharing state.
 
 ---
 
@@ -89,7 +87,7 @@ A persistent, always-visible toggle on every screen.
 
 A background service that operates **only** when the Sharing Toggle is ON.
 
-* **Role:** Find other AetherWorks instances on nearby devices using **all available Android proximity technologies.**
+* **Role:** Find other Clear Space instances on nearby devices using **all available Android proximity technologies.**
 * **Responsibilities:**
     * **Omni‑Transport Discovery & Connection:** The app uses only Android framework APIs (no Google Play Services) to discover peers across all supported proximity technologies. The implementation cycles through and upgrades connections using:
         1. **Bluetooth Low Energy (BLE)** – continuous low‑power background discovery.
@@ -121,7 +119,7 @@ All user data lives in an encrypted local database that never leaves the device 
             * **Password Vault:** Securely stores passwords and 2FA codes locally (Bitwarden style).
             * **Obsidian-Style Notes:** Robust offline Markdown editor supporting tags, bidirectional `[[linking]]`, and a local Graph View to connect private thoughts.
         2. **Trusted-Only Library** — Content shared exclusively with verified Trusted Users via encrypted channels.
-        3. **Public Library** — Content available to all nearby AetherWorks users when sharing is enabled.
+        3. **Public Library** — Content available to all nearby Clear Space users when sharing is enabled.
     * **Content Creation Flow:** When a user creates new content, they must choose one of three visibility levels before saving:
         * 🔒 **Private** — Stored locally, never shared.
         * 🤝 **Trusted Users Only** — Shared exclusively with verified trusted contacts.
@@ -246,7 +244,7 @@ Trusted Users can be verified **in person** (highest security) or **remotely via
     * **How It Works (Bramble Rendezvous Protocol):**
         1. User A taps "Add Trusted User → Remote" and the app generates a unique `aetherworks://` link. This link contains User A's **public key fingerprint** and a **one-time rendezvous token**.
         2. User A sends this link to User B through **any external channel** (e.g., Signal, email, SMS, a handwritten note — the app itself does not send it).
-        3. User B receives the link, opens it in AetherWorks, and the app generates User B's own `aetherworks://` link in return.
+        3. User B receives the link, opens it in Clear Space, and the app generates User B's own `aetherworks://` link in return.
         4. User B sends their link back to User A through the same or another external channel.
         5. Both devices now have each other's public key fingerprints. Each device connects to the other via **Tor hidden services** (using the rendezvous tokens) to complete the **Bramble Handshake Protocol** — deriving a shared secret and establishing the trust relationship.
         6. Upon successful handshake, both devices store each other's public key as a Trusted User.
@@ -314,7 +312,7 @@ The critical layer between the network and local storage, extended with comprehe
 * Validate and reject malformed JSON payloads.
 
 ### OWASP Top 10 Web (2017, 2021, 2025) Compliance
-*Since AetherWorks has no server, many web OWASP items don't apply directly, but the spirit of each is addressed:*
+*Since Clear Space has no server, many web OWASP items don't apply directly, but the spirit of each is addressed:*
 
 | OWASP Risk | Mitigation |
 |:---|:---|
@@ -436,7 +434,7 @@ Provides offline, ad-free basic utilities replacing the need for external Google
     * **Fossify Suite Integration:** 
         * **Calendar:** An offline event planner stored inside the encrypted Room database.
         * **Gallery:** A secure image viewer for media inside the Private Vault, preventing export to tracked Android gallery apps.
-        * **File Manager:** A simple interface to browse, import, and export files to/from the encrypted AetherWorks database.
+        * **File Manager:** A simple interface to browse, import, and export files to/from the encrypted Clear Space database.
     * **Habits & Tasks:** A Loop Habit Tracker / Tasks.org style checklist module that syncs automatically across devices via the Sync Agent (BEP).
 
 ---
@@ -569,4 +567,5 @@ Handles all media consumption and news aggregation privately.
 
 ---
 
-> **Disclaimer:** This application is provided "as is" without warranty of any kind. The developer is not responsible for any damage, data loss, privacy breach, legal consequence, emotional distress, or any other outcome resulting from the use of this application. By using AetherWorks, you acknowledge that you are doing so **entirely at your own risk.** The app does not ask for, store, or transmit your personal data. Profiles are fictional and do not represent real identities. The developer has no ability to access, recover, or control any data within the application.
+> **Disclaimer:** This application is provided "as is" without warranty of any kind. The developer is not responsible for any damage, data loss, privacy breach, legal consequence, emotional distress, or any other outcome resulting from the use of this application. By using Clear Space, you acknowledge that you are doing so **entirely at your own risk.** The app does not ask for, store, or transmit your personal data. Profiles are fictional and do not represent real identities. The developer has no ability to access, recover, or control any data within the application.
+
