@@ -29,7 +29,7 @@
 
 ## Core Principles
 
-1. **Hybrid Architecture (Absolute Minimal Servers).** While 99.9% of logic and data remains on-device and peer-to-peer, minimal server infrastructure (like Firebase) is used for essential "traffic cop" tasks (e.g., wake-up pings, moderation blacklists) to ensure battery efficiency and store compliance. **CRITICAL RULE: Server usage must be kept to an absolute minimum.** Do not offload computation, storage, or normal data exchange to the cloud. Always default to local processing and P2P exchange first.
+1. **Hybrid Architecture (Absolute Minimal Servers).** While 99.9% of logic and data remains on-device and peer-to-peer, minimal server infrastructure (like Firebase) is used for essential "traffic cop" tasks (e.g., wake-up pings, moderation blacklists) to ensure battery efficiency and store compliance. **CRITICAL RULE: Server usage must be kept to an absolute minimum.** Do not offload computation, storage, or normal data exchange to the cloud. Always default to local processing and P2P exchange first. It is crucial to keep the server as small as possible and to keep the network manageable and moderated by one single person, this is essential.
 2. **Privacy by Default, but Pragmatic.** The safest choice is always the one that collects the least. The app never asks for personal data. Profiles are fictional personas.
 3. **Informed Consent at Every Step.** Every action that sends or receives data requires explicit user consent. The user is told exactly what will happen before it happens.
 4. **Community Guidelines & Moderation.** The app strictly adheres to Google Play UGC policies. Abusive, illegal, or policy-violating content will be moderated and purged from the network using hash-based remote blacklists.
@@ -37,6 +37,7 @@
 6. **No Law Enforcement Backdoors.** The app uses end-to-end encryption for private messaging.
 7. **Moderated Public Square.** Content shared publicly propagates via P2P, but is subject to central moderation blacklists to prevent the spread of abusive material.
 8. **Default Private & Mandatory Confirmation.** Every single feature, setting, and piece of content must default to **Private**. Any action that changes visibility to Public or shares data must trigger a mandatory confirmation dialog.
+9. **User Satisfaction First.** The main objective is user satisfaction; monetization is secondary.
 
 ---
 
