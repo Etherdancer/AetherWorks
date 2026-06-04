@@ -92,6 +92,38 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
         }
     }
 
+    fun authenticateWithBiometric(cipher: javax.crypto.Cipher): ByteArray? {
+        if (isLockedOut()) return null
+        return try {
+            val hash = keyManager.getBiometricPayload(cipher)
+            resetFailedAttempts()
+            _authState.value = AuthState.Authenticated
+            keyManager.deriveSqlCipherKey(hash)
+        } catch (e: Exception) {
+            recordFailedAttempt()
+            null
+        }
+    }
+
+    fun canUseBiometric(): Boolean {
+        return keyManager.hasBiometricKey()
+    }
+
+    fun getBiometricCipher(mode: Int): javax.crypto.Cipher {
+        return keyManager.getBiometricCipher(mode)
+    }
+
+    fun enrollBiometric(cipher: javax.crypto.Cipher, password: String): Boolean {
+        val storedHash = keyManager.getStoredPasswordHash() ?: return false
+        val computedHash = PasswordHasher.computeHashForDbKey(password, storedHash) ?: return false
+        return try {
+            keyManager.storeBiometricPayload(cipher, computedHash)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     private fun recordFailedAttempt() {
         val attempts = getFailedAttempts() + 1
         val editor = prefs.edit()

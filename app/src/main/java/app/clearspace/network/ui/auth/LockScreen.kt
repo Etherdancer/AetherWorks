@@ -24,7 +24,10 @@ import app.clearspace.network.auth.SecureKeyboard
 @Composable
 fun LockScreen(
     uiState: GatekeeperUiState,
-    onSubmitPassword: (String) -> Unit
+    onSubmitPassword: (String) -> Unit,
+    onBiometricClick: () -> Unit = {},
+    onEnrollBiometric: (String) -> Unit = {},
+    canUseBiometric: Boolean = false
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var password by remember { mutableStateOf("") }
@@ -76,6 +79,28 @@ fun LockScreen(
                     }
                 }
             )
+
+            if (!isLocked) {
+                Spacer(modifier = Modifier.height(16.dp))
+                IconButton(
+                    onClick = {
+                        if (canUseBiometric) {
+                            onBiometricClick()
+                        } else if (password.isNotEmpty()) {
+                            onEnrollBiometric(password)
+                            password = ""
+                        }
+                    },
+                    modifier = Modifier.size(64.dp)
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.Fingerprint,
+                        contentDescription = if (canUseBiometric) "Unlock with Biometrics" else "Enable Biometric Unlock",
+                        tint = if (canUseBiometric) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 

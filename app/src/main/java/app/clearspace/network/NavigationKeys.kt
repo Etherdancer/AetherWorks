@@ -12,7 +12,10 @@ import kotlinx.serialization.Serializable
 @Serializable data class CreateContent(val prefillTitle: String? = null, val prefillBody: String? = null, val forceVisibilityGroup: Boolean = false) : NavKey
 @Serializable data object ProfileSettings : NavKey
 @Serializable data object AboutSettings : NavKey
+@Serializable data object MediaVault : NavKey
+@Serializable data object GraphView : NavKey
 @Serializable data object ManageGroups : NavKey
 
 @Serializable data object RemoteLinkExchange : NavKey
 @Serializable data object TrustVerification : NavKey
+@Serializable data class ChatRoute(val peerKey: String, val peerAlias: String) : NavKey

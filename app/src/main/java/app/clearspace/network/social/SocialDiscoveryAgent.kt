@@ -23,6 +23,34 @@ class SocialDiscoveryAgent(private val context: Context, private val keyManager:
     private val _nearbyProfiles = MutableStateFlow<List<DiscoveredProfile>>(emptyList())
     val nearbyProfiles: StateFlow<List<DiscoveredProfile>> = _nearbyProfiles.asStateFlow()
 
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val db = app.clearspace.network.storage.db.AetherDatabase.getSharedDatabase()
+                db.peerDao().getAllPeers().collect { peers ->
+                    val currentList = _nearbyProfiles.value.toMutableList()
+                    peers.forEach { peer ->
+                        val existing = currentList.find { it.peerId == peer.publicKeyBase64 }
+                        if (existing != null) {
+                            val index = currentList.indexOf(existing)
+                            currentList[index] = existing.copy(isAcquaintance = peer.trustLevel == app.clearspace.network.storage.db.entity.TrustLevel.ACQUAINTANCE)
+                        } else {
+                            currentList.add(DiscoveredProfile(
+                                peerId = peer.publicKeyBase64,
+                                alias = peer.alias,
+                                hasProfile = true,
+                                isAcquaintance = peer.trustLevel == app.clearspace.network.storage.db.entity.TrustLevel.ACQUAINTANCE
+                            ))
+                        }
+                    }
+                    _nearbyProfiles.value = currentList
+                }
+            } catch (e: Exception) {
+                // DB might not be ready
+            }
+        }
+    }
+
     fun updatePeers(peers: List<PresencePacket>) {
         val current = _nearbyProfiles.value.toMutableList()
         peers.forEach { packet ->
@@ -69,6 +97,35 @@ class SocialDiscoveryAgent(private val context: Context, private val keyManager:
         }
         _nearbyProfiles.value = current
         
-        // TODO: Save to database or SharedPreferences so it persists
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val db = app.clearspace.network.storage.db.AetherDatabase.getSharedDatabase()
+                val profile = current.find { it.peerId == peerId } ?: return@launch
+                val peer = app.clearspace.network.storage.db.entity.KnownPeer(
+                    publicKeyBase64 = peerId,
+                    alias = profile.alias,
+                    trustLevel = app.clearspace.network.storage.db.entity.TrustLevel.ACQUAINTANCE
+                )
+                db.peerDao().insert(peer)
+            } catch (e: Exception) {
+                // DB might not be ready
+            }
+        }
+    }
+
+    fun removeAcquaintance(peerId: String) {
+        val current = _nearbyProfiles.value.map { 
+            if (it.peerId == peerId) it.copy(isAcquaintance = false) else it 
+        }
+        _nearbyProfiles.value = current
+        
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val db = app.clearspace.network.storage.db.AetherDatabase.getSharedDatabase()
+                db.peerDao().delete(peerId)
+            } catch (e: Exception) {
+                // DB might not be ready
+            }
+        }
     }
 }

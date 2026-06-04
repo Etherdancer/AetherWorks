@@ -150,10 +150,62 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
             }
             
             item {
+                Text("App Settings", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                
+                var expandedTheme by remember { mutableStateOf(false) }
+                val themeManager = remember { app.clearspace.network.theme.ThemeManager(context) }
+                val currentTheme by themeManager.theme.collectAsState()
+
+                Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Button(onClick = { expandedTheme = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text("App Theme: ${currentTheme.name}")
+                    }
+                    DropdownMenu(
+                        expanded = expandedTheme,
+                        onDismissRequest = { expandedTheme = false }
+                    ) {
+                        app.clearspace.network.theme.AppTheme.values().forEach { theme ->
+                            DropdownMenuItem(
+                                text = { Text(theme.name) },
+                                onClick = {
+                                    themeManager.setTheme(theme)
+                                    expandedTheme = false
+                                }
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text("Network & Relay Settings", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                Text("Maximum local storage for relaying encrypted messages from other users.", style = MaterialTheme.typography.bodySmall)
                 
                 val prefs = context.getSharedPreferences("aether_settings", android.content.Context.MODE_PRIVATE)
+                
+                var showProfile by remember { mutableStateOf(prefs.getBoolean("show_profile_to_nearby", false)) }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+                        Text("Show Profile to Nearby Users", style = MaterialTheme.typography.bodyLarge)
+                        Text("When enabled, your persona and selected public fields will be visible to nearby devices in the Social tab.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Switch(
+                        checked = showProfile,
+                        onCheckedChange = { 
+                            showProfile = it
+                            prefs.edit().putBoolean("show_profile_to_nearby", it).apply()
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text("Maximum local storage for relaying encrypted messages from other users.", style = MaterialTheme.typography.bodySmall)
+                
                 var relayQuotaMb by remember { mutableStateOf(prefs.getInt("relay_quota_mb", 500)) }
                 
                 val options = listOf(50, 100, 500, 1024, 2048, 5120)
@@ -211,6 +263,52 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
                             )
                         }
                     }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+                Text("Storage Metrics", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                val privateDbPath = context.getDatabasePath("aether_private.db")
+                val sharedDbPath = context.getDatabasePath("aether_shared.db")
+                val privateSizeMb = if (privateDbPath.exists()) privateDbPath.length() / (1024 * 1024) else 0
+                val sharedSizeMb = if (sharedDbPath.exists()) sharedDbPath.length() / (1024 * 1024) else 0
+                
+                Text("Private Library Size: $privateSizeMb MB", style = MaterialTheme.typography.bodyMedium)
+                Text("Shared/Public Library Size: $sharedSizeMb MB", style = MaterialTheme.typography.bodyMedium)
+
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                var showWipeDialog by remember { mutableStateOf(false) }
+
+                Button(
+                    onClick = { showWipeDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                ) {
+                    Text("WIPE ALL DATA (Panic Button)")
+                }
+
+                if (showWipeDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showWipeDialog = false },
+                        title = { Text("Absolute Wipe?") },
+                        text = { Text("This will delete all databases, wipe your cryptographic keys from the hardware Keystore, and force close the app. Your data will be permanently unrecoverable.") },
+                        confirmButton = {
+                            Button(
+                                onClick = { 
+                                    app.clearspace.network.storage.db.AetherDatabase.wipeAll(context)
+                                    val km = app.clearspace.network.crypto.KeyManager(context)
+                                    km.wipeAllKeys()
+                                    android.os.Process.killProcess(android.os.Process.myPid())
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Text("WIPE NOW")
+                            }
+                        },
+                        dismissButton = {
+                            Button(onClick = { showWipeDialog = false }) { Text("Cancel") }
+                        }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))

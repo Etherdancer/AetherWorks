@@ -207,5 +207,16 @@ abstract class AetherDatabase : RoomDatabase() {
         fun getSharedDatabase(): AetherDatabase {
             return INSTANCE_SHARED ?: throw IllegalStateException("Shared database not initialized")
         }
+
+        fun wipeAll(context: Context) {
+            INSTANCE_PRIVATE?.close()
+            INSTANCE_SHARED?.close()
+            INSTANCE_PRIVATE = null
+            INSTANCE_SHARED = null
+            context.deleteDatabase("aether_private.db")
+            context.deleteDatabase("aether_shared.db")
+            val prefs = context.getSharedPreferences("aether_settings", android.content.Context.MODE_PRIVATE)
+            prefs.edit().clear().apply()
+        }
     }
 }

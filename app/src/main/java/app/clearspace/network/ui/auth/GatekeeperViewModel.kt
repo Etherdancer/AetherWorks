@@ -60,6 +60,22 @@ class GatekeeperViewModel(private val repository: GatekeeperRepository) : ViewMo
         }
     }
 
+    fun canUseBiometric(): Boolean = repository.canUseBiometric()
+    
+    fun getBiometricCipher(mode: Int): javax.crypto.Cipher = repository.getBiometricCipher(mode)
+
+    fun authenticateWithBiometric(cipher: javax.crypto.Cipher) {
+        val dbKey = repository.authenticateWithBiometric(cipher)
+        if (dbKey != null) {
+            _uiState.value = GatekeeperUiState.Authenticated(dbKey)
+        } else {
+            updateLockoutState()
+            if (_uiState.value == GatekeeperUiState.PromptPassword) {
+                _uiState.value = GatekeeperUiState.PasswordError
+            }
+        }
+    }
+
     fun completeOnboarding(password: String) {
         val dbKey = repository.completeOnboarding(password)
         _uiState.value = GatekeeperUiState.Authenticated(dbKey)
@@ -71,6 +87,10 @@ class GatekeeperViewModel(private val repository: GatekeeperRepository) : ViewMo
             java.util.Arrays.fill(state.dbKey, 0.toByte())
             _uiState.value = GatekeeperUiState.Active
         }
+    }
+
+    fun enrollBiometric(cipher: javax.crypto.Cipher, password: String): Boolean {
+        return repository.enrollBiometric(cipher, password)
     }
 }
 

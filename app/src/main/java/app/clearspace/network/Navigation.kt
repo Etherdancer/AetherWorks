@@ -13,6 +13,11 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -95,6 +100,10 @@ fun MainNavigation(
       NavDisplay(
         backStack = backStack,
         onBack = { backStack.removeLastOrNull() },
+        enterTransition = { slideInHorizontally(animationSpec = tween(300), initialOffsetX = { it }) + fadeIn(animationSpec = tween(300)) },
+        exitTransition = { slideOutHorizontally(animationSpec = tween(300), targetOffsetX = { -it }) + fadeOut(animationSpec = tween(300)) },
+        popEnterTransition = { slideInHorizontally(animationSpec = tween(300), initialOffsetX = { -it }) + fadeIn(animationSpec = tween(300)) },
+        popExitTransition = { slideOutHorizontally(animationSpec = tween(300), targetOffsetX = { it }) + fadeOut(animationSpec = tween(300)) },
         entryProvider =
           entryProvider {
             entry<FeedTab> {
@@ -118,7 +127,9 @@ fun MainNavigation(
                   modifier = Modifier.padding(paddingValues),
                   onNavigateToCreate = { backStack.add(CreateContent()) },
                   onNavigateToProfile = { backStack.add(ProfileSettings) },
-                  onNavigateToAbout = { backStack.add(AboutSettings) }
+                  onNavigateToAbout = { backStack.add(AboutSettings) },
+                  onNavigateToMediaVault = { backStack.add(MediaVault) },
+                  onNavigateToGraph = { backStack.add(GraphView) }
               )
             }
             entry<CreateContent> { key ->
@@ -138,6 +149,18 @@ fun MainNavigation(
             }
             entry<AboutSettings> {
               app.clearspace.network.ui.about.AboutScreen(
+                  modifier = Modifier.safeDrawingPadding(),
+                  onNavigateBack = { backStack.removeLastOrNull() }
+              )
+            }
+            entry<MediaVault> {
+              app.clearspace.network.ui.library.MediaVaultScreen(
+                  modifier = Modifier.safeDrawingPadding(),
+                  onNavigateBack = { backStack.removeLastOrNull() }
+              )
+            }
+            entry<GraphView> {
+              app.clearspace.network.ui.library.GraphViewScreen(
                   modifier = Modifier.safeDrawingPadding(),
                   onNavigateBack = { backStack.removeLastOrNull() }
               )
@@ -164,7 +187,7 @@ fun MainNavigation(
                       try {
                           val uri = android.net.Uri.parse(token)
                           val pkBase64 = uri.getQueryParameter("pk")
-                          val rToken = uri.getQueryParameter("token")
+                          val rToken = uri.getQueryParameter("rt")
                           val sigBase64 = uri.getQueryParameter("sig")
                           
                           if (pkBase64 != null && rToken != null && sigBase64 != null) {
@@ -199,6 +222,14 @@ fun MainNavigation(
                       backStack.removeLastOrNull() 
                   }
               )
+            }
+            entry<ChatRoute> { key ->
+                app.clearspace.network.ui.chat.ChatScreen(
+                    modifier = Modifier.safeDrawingPadding(),
+                    peerPublicKey = key.peerKey,
+                    peerAlias = key.peerAlias,
+                    onNavigateBack = { backStack.removeLastOrNull() }
+                )
             }
           },
       )

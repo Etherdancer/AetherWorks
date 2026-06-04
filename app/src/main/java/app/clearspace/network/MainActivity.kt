@@ -2,7 +2,7 @@ package app.clearspace.network
 
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +30,7 @@ import app.clearspace.network.networking.SharingStateManager
 import app.clearspace.network.networking.SharingToggleViewModel
 import app.clearspace.network.ui.feed.SharedBrowseViewModel
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
   private lateinit var gatekeeperRepo: GatekeeperRepository
   private lateinit var gatekeeperViewModel: GatekeeperViewModel
   private lateinit var sharingStateManager: SharingStateManager
@@ -74,15 +74,57 @@ class MainActivity : ComponentActivity() {
     sharingToggleViewModel = SharingToggleViewModel(sharingStateManager)
 
     setContent {
+      val themeManager = androidx.compose.runtime.remember { app.clearspace.network.theme.ThemeManager(this@MainActivity) }
+      val currentTheme by themeManager.theme.collectAsState()
       val uiState by gatekeeperViewModel.uiState.collectAsState()
 
-      AetherWorksTheme {
+      AetherWorksTheme(appTheme = currentTheme) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
           when (val state = uiState) {
             is GatekeeperUiState.Loading -> { } // Show empty or splash
             is GatekeeperUiState.Onboarding -> OnboardingScreen(onComplete = { gatekeeperViewModel.completeOnboarding(it) })
             is GatekeeperUiState.PromptPassword, is GatekeeperUiState.PasswordError, is GatekeeperUiState.LockedOut -> {
-              LockScreen(uiState = state, onSubmitPassword = { gatekeeperViewModel.submitPassword(it) })
+              LockScreen(
+                  uiState = state, 
+                  onSubmitPassword = { gatekeeperViewModel.submitPassword(it) },
+                  onBiometricClick = {
+                      if (gatekeeperViewModel.canUseBiometric()) {
+                          try {
+                              val cipher = gatekeeperViewModel.getBiometricCipher(javax.crypto.Cipher.DECRYPT_MODE)
+                              val helper = app.clearspace.network.security.BiometricHelper(this@MainActivity, keyManager)
+                              helper.showBiometricPrompt(
+                                  this@MainActivity,
+                                  "Unlock Clear Space",
+                                  "Confirm your identity to unlock",
+                                  onSuccess = { gatekeeperViewModel.authenticateWithBiometric(cipher) },
+                                  onError = { /* handle error */ }
+                              )
+                          } catch (e: Exception) {
+                              // Handle crypto init error
+                          }
+                      }
+                  },
+                  canUseBiometric = gatekeeperViewModel.canUseBiometric(),
+                  onEnrollBiometric = { pass ->
+                      try {
+                          val cipher = gatekeeperViewModel.getBiometricCipher(javax.crypto.Cipher.ENCRYPT_MODE)
+                          val helper = app.clearspace.network.security.BiometricHelper(this@MainActivity, keyManager)
+                          helper.showBiometricPrompt(
+                              this@MainActivity,
+                              "Enable Biometric Unlock",
+                              "Confirm your identity to enable biometric unlock",
+                              onSuccess = { 
+                                  if (gatekeeperViewModel.enrollBiometric(cipher, pass)) {
+                                      gatekeeperViewModel.submitPassword(pass)
+                                  } 
+                              },
+                              onError = { /* handle error */ }
+                          )
+                      } catch (e: Exception) {
+                          // Handle error
+                      }
+                  }
+              )
             }
             is GatekeeperUiState.Authenticated, GatekeeperUiState.Active -> {
                 if (state is GatekeeperUiState.Authenticated) {
@@ -90,6 +132,11 @@ class MainActivity : ComponentActivity() {
                     val privateDb = AetherDatabase.getPrivateDatabase(this@MainActivity, state.dbKey)
                     val sharedDb = AetherDatabase.getSharedDatabase(this@MainActivity, state.dbKey)
                     gatekeeperViewModel.clearDbKey()
+                    
+                    // UGC Compliance: Sync blacklist from Firebase
+                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                        app.clearspace.network.moderation.ModerationAgent(this@MainActivity).syncBlacklist()
+                    }
                 }
                 
                 val sharedBrowseViewModel = SharedBrowseViewModel(this@MainActivity.application)

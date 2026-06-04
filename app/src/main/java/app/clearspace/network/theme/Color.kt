@@ -2,44 +2,47 @@ package app.clearspace.network.theme
 
 import androidx.compose.ui.graphics.Color
 
-val PrimaryLight = Color(0xFF006C51)
-val OnPrimaryLight = Color(0xFFFFFFFF)
-val PrimaryContainerLight = Color(0xFF89F8D0)
-val OnPrimaryContainerLight = Color(0xFF002116)
-val SecondaryLight = Color(0xFF4C6359)
-val OnSecondaryLight = Color(0xFFFFFFFF)
-val SecondaryContainerLight = Color(0xFFCEE9DB)
-val OnSecondaryContainerLight = Color(0xFF092017)
-val TertiaryLight = Color(0xFF3F6375)
-val OnTertiaryLight = Color(0xFFFFFFFF)
-val TertiaryContainerLight = Color(0xFFC3E8FD)
-val OnTertiaryContainerLight = Color(0xFF001F2B)
-val ErrorLight = Color(0xFFBA1A1A)
-val OnErrorLight = Color(0xFFFFFFFF)
-val ErrorContainerLight = Color(0xFFFFDAD6)
-val OnErrorContainerLight = Color(0xFF410002)
-val BackgroundLight = Color(0xFFFBFDF9)
-val OnBackgroundLight = Color(0xFF191C1B)
-val SurfaceLight = Color(0xFFFBFDF9)
-val OnSurfaceLight = Color(0xFF191C1B)
+// 1. Clear Space Default (The Signature Look)
+// Vibe: Deep space, privacy-first, atmospheric, sleek.
+val CsBackground = Color(0xFF000000)
+val CsSurface = Color(0xFF0A0F0D)
+val CsPrimary = Color(0xFF00E5FF) // Neon Teal
+val CsOnPrimary = Color(0xFF000000)
+val CsPrimaryContainer = Color(0xFF005A64)
+val CsOnPrimaryContainer = Color(0xFFB0FBFF)
+val CsSecondary = Color(0xFFE1E3DF) // Ethereal Silver
+val CsOnSecondary = Color(0xFF000000)
+val CsSecondaryContainer = Color(0xFF2A2E2C)
+val CsOnSecondaryContainer = Color(0xFFE1E3DF)
 
-val PrimaryDark = Color(0xFF6CDBB5)
-val OnPrimaryDark = Color(0xFF003829)
-val PrimaryContainerDark = Color(0xFF00513C)
-val OnPrimaryContainerDark = Color(0xFF89F8D0)
-val SecondaryDark = Color(0xFFB2CCBF)
-val OnSecondaryDark = Color(0xFF1E352C)
-val SecondaryContainerDark = Color(0xFF354B42)
-val OnSecondaryContainerDark = Color(0xFFCEE9DB)
-val TertiaryDark = Color(0xFFA7CCE0)
-val OnTertiaryDark = Color(0xFF0A3445)
-val TertiaryContainerDark = Color(0xFF264B5C)
-val OnTertiaryContainerDark = Color(0xFFC3E8FD)
-val ErrorDark = Color(0xFFFFB4AB)
-val OnErrorDark = Color(0xFF690005)
-val ErrorContainerDark = Color(0xFF93000A)
-val OnErrorContainerDark = Color(0xFFFFDAD6)
-val BackgroundDark = Color(0xFF191C1B)
-val OnBackgroundDark = Color(0xFFE1E3DF)
-val SurfaceDark = Color(0xFF191C1B)
-val OnSurfaceDark = Color(0xFFE1E3DF)
+// 2. Light Theme (Airy & Clean)
+// Vibe: Open, transparent, uncluttered.
+val LightBackground = Color(0xFFFAFAFA)
+val LightSurface = Color(0xFFFFFFFF)
+val LightPrimary = Color(0xFF4DB6AC) // Soft Mint Green
+val LightOnPrimary = Color(0xFFFFFFFF)
+val LightPrimaryContainer = Color(0xFFE0F2F1)
+val LightOnPrimaryContainer = Color(0xFF003D33)
+val LightSecondary = Color(0xFF202124) // Crisp Slate text
+val LightOnSecondary = Color(0xFFFFFFFF)
+val LightSecondaryContainer = Color(0xFFF1F3F4)
+val LightOnSecondaryContainer = Color(0xFF202124)
+
+// 3. Dark Theme (Muted & Classic)
+// Vibe: Easy on the eyes, traditional dark mode.
+val DarkBackground = Color(0xFF121212)
+val DarkSurface = Color(0xFF1E1E1E)
+val DarkPrimary = Color(0xFF4DD0E1) // Muted Cyan
+val DarkOnPrimary = Color(0xFF00363D)
+val DarkPrimaryContainer = Color(0xFF004F58)
+val DarkOnPrimaryContainer = Color(0xFFB3EBF2)
+val DarkSecondary = Color(0xFFB0BEC5) // Slate Gray
+val DarkOnSecondary = Color(0xFF1C272C)
+val DarkSecondaryContainer = Color(0xFF37474F)
+val DarkOnSecondaryContainer = Color(0xFFCFD8DC)
+
+// Common Error Colors
+val ErrorColor = Color(0xFFFFB4AB)
+val OnErrorColor = Color(0xFF690005)
+val ErrorContainerColor = Color(0xFF93000A)
+val OnErrorContainerColor = Color(0xFFFFDAD6)

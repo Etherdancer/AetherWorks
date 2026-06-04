@@ -37,6 +37,8 @@ class KeyManager(context: Context) {
         private const val KEY_X25519_PRIV = "x25519_priv_encrypted"
         private const val KEY_X25519_PUB = "x25519_pub"
         private const val KEY_VOTER_SECRET = "voter_secret_encrypted"
+        private const val KEY_BIOMETRIC_PAYLOAD = "biometric_payload"
+        private const val BIOMETRIC_KEY_ALIAS = "aether_biometric_key"
         private const val GCM_IV_LENGTH = 12
         private const val GCM_TAG_LENGTH = 128
     }
@@ -221,5 +223,56 @@ class KeyManager(context: Context) {
         signer.init(false, Ed25519PublicKeyParameters(pubKey, 0))
         signer.update(data, 0, data.size)
         return signer.verifySignature(signature)
+    }
+
+    // --- Biometric Authentication Support ---
+
+    fun hasBiometricKey(): Boolean {
+        return prefs.contains(KEY_BIOMETRIC_PAYLOAD) && keyStore.containsAlias(BIOMETRIC_KEY_ALIAS)
+    }
+
+    fun getBiometricCipher(mode: Int): Cipher {
+        if (!keyStore.containsAlias(BIOMETRIC_KEY_ALIAS)) {
+            val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
+            val builder = KeyGenParameterSpec.Builder(
+                BIOMETRIC_KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .setKeySize(256)
+            .setUserAuthenticationRequired(true)
+
+            // Depending on API level, set StrongBox or other auth parameters if needed
+            keyGenerator.init(builder.build())
+            keyGenerator.generateKey()
+        }
+        val key = keyStore.getKey(BIOMETRIC_KEY_ALIAS, null) as SecretKey
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        
+        if (mode == Cipher.ENCRYPT_MODE) {
+            cipher.init(Cipher.ENCRYPT_MODE, key)
+        } else {
+            val payloadStr = prefs.getString(KEY_BIOMETRIC_PAYLOAD, null) ?: throw IllegalStateException("No biometric payload found")
+            val payload = Base64.decode(payloadStr, Base64.DEFAULT)
+            val iv = payload.copyOfRange(0, GCM_IV_LENGTH)
+            val spec = GCMParameterSpec(GCM_TAG_LENGTH, iv)
+            cipher.init(Cipher.DECRYPT_MODE, key, spec)
+        }
+        
+        return cipher
+    }
+
+    fun storeBiometricPayload(cipher: Cipher, hash: ByteArray) {
+        val encrypted = cipher.doFinal(hash)
+        val payload = cipher.iv + encrypted
+        prefs.edit().putString(KEY_BIOMETRIC_PAYLOAD, Base64.encodeToString(payload, Base64.DEFAULT)).apply()
+    }
+
+    fun getBiometricPayload(cipher: Cipher): ByteArray {
+        val payloadStr = prefs.getString(KEY_BIOMETRIC_PAYLOAD, null) ?: throw IllegalStateException("No biometric payload found")
+        val payload = Base64.decode(payloadStr, Base64.DEFAULT)
+        val encrypted = payload.copyOfRange(GCM_IV_LENGTH, payload.size)
+        return cipher.doFinal(encrypted)
     }
 }

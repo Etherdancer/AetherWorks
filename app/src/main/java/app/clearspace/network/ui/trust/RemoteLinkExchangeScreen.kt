@@ -31,7 +31,7 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit, 
         android.util.Base64.encodeToString(sig, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
     }
     
-    val shareLink = "aetherworks://rendezvous?pk=$pubKeyFingerprint&token=$rendezvousToken&sig=$sigBase64"
+    val shareLink = "aetherworks://trust?pk=$pubKeyFingerprint&rt=$rendezvousToken&sig=$sigBase64"
     val qrBitmap = remember(shareLink) { QrCodeGenerator.generate(shareLink) }
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {

@@ -85,7 +85,11 @@ fun SocialScreen(modifier: Modifier = Modifier, onNavigateToGroups: () -> Unit =
         
         if (nearby.isEmpty()) {
             item {
-                Text("No one nearby. Turn on the sharing toggle?", style = MaterialTheme.typography.bodyMedium)
+                Column(modifier = Modifier.fillMaxWidth().padding(top = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    app.clearspace.network.ui.components.RadarAnimation(modifier = Modifier.size(150.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Searching for nearby users...", style = MaterialTheme.typography.bodyMedium)
+                }
             }
         } else {
             items(nearby) { profile ->
@@ -105,9 +109,10 @@ fun ProfileCard(alias: String, peerId: String, isAcquaintance: Boolean, onAdd: (
     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                 Text(alias, style = MaterialTheme.typography.titleMedium)
                 Text("ID: $peerId", style = MaterialTheme.typography.labelSmall)
             }

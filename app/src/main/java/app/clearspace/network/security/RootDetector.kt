@@ -6,7 +6,35 @@ import java.io.File
 class RootDetector {
 
     fun isRootedOrCustomRom(): Boolean {
-        return checkTestKeys() || checkSuBinary() || checkDangerousProps()
+        return checkTestKeys() || checkSuBinary() || checkDangerousProps() || checkXposed()
+    }
+
+    private fun checkXposed(): Boolean {
+        try {
+            val xposedClass = Class.forName("de.robv.android.xposed.XposedBridge")
+            if (xposedClass != null) return true
+        } catch (e: Exception) {
+            // Class not found, good
+        }
+        try {
+            val stackTrace = Throwable().stackTrace
+            for (element in stackTrace) {
+                if (element.className.contains("xposed") || 
+                    element.className.contains("edxposed") || 
+                    element.className.contains("lsposed")) {
+                    return true
+                }
+            }
+        } catch (e: Exception) {
+            // Ignore
+        }
+        val xposedPaths = arrayOf(
+            "/system/framework/XposedBridge.jar",
+            "/data/data/de.robv.android.xposed.installer",
+            "/system/bin/app_process64_xposed",
+            "/system/bin/app_process32_xposed"
+        )
+        return xposedPaths.any { File(it).exists() }
     }
 
     private fun checkTestKeys(): Boolean {

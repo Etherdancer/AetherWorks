@@ -1,77 +1,90 @@
 package app.clearspace.network.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryDark,
-    onPrimary = OnPrimaryDark,
-    primaryContainer = PrimaryContainerDark,
-    onPrimaryContainer = OnPrimaryContainerDark,
-    secondary = SecondaryDark,
-    onSecondary = OnSecondaryDark,
-    secondaryContainer = SecondaryContainerDark,
-    onSecondaryContainer = OnSecondaryContainerDark,
-    tertiary = TertiaryDark,
-    onTertiary = OnTertiaryDark,
-    tertiaryContainer = TertiaryContainerDark,
-    onTertiaryContainer = OnTertiaryContainerDark,
-    error = ErrorDark,
-    onError = OnErrorDark,
-    errorContainer = ErrorContainerDark,
-    onErrorContainer = OnErrorContainerDark,
-    background = BackgroundDark,
-    onBackground = OnBackgroundDark,
-    surface = SurfaceDark,
-    onSurface = OnSurfaceDark
+enum class AppTheme {
+    DEFAULT,
+    LIGHT,
+    DARK
+}
+
+private val ClearSpaceDefaultScheme = darkColorScheme(
+    primary = CsPrimary,
+    onPrimary = CsOnPrimary,
+    primaryContainer = CsPrimaryContainer,
+    onPrimaryContainer = CsOnPrimaryContainer,
+    secondary = CsSecondary,
+    onSecondary = CsOnSecondary,
+    secondaryContainer = CsSecondaryContainer,
+    onSecondaryContainer = CsOnSecondaryContainer,
+    background = CsBackground,
+    onBackground = CsSecondary, // Silver text on black
+    surface = CsSurface,
+    onSurface = CsSecondary,
+    error = ErrorColor,
+    onError = OnErrorColor,
+    errorContainer = ErrorContainerColor,
+    onErrorContainer = OnErrorContainerColor
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = PrimaryLight,
-    onPrimary = OnPrimaryLight,
-    primaryContainer = PrimaryContainerLight,
-    onPrimaryContainer = OnPrimaryContainerLight,
-    secondary = SecondaryLight,
-    onSecondary = OnSecondaryLight,
-    secondaryContainer = SecondaryContainerLight,
-    onSecondaryContainer = OnSecondaryContainerLight,
-    tertiary = TertiaryLight,
-    onTertiary = OnTertiaryLight,
-    tertiaryContainer = TertiaryContainerLight,
-    onTertiaryContainer = OnTertiaryContainerLight,
-    error = ErrorLight,
-    onError = OnErrorLight,
-    errorContainer = ErrorContainerLight,
-    onErrorContainer = OnErrorContainerLight,
-    background = BackgroundLight,
-    onBackground = OnBackgroundLight,
-    surface = SurfaceLight,
-    onSurface = OnSurfaceLight
+private val LightScheme = lightColorScheme(
+    primary = LightPrimary,
+    onPrimary = LightOnPrimary,
+    primaryContainer = LightPrimaryContainer,
+    onPrimaryContainer = LightOnPrimaryContainer,
+    secondary = LightSecondary,
+    onSecondary = LightOnSecondary,
+    secondaryContainer = LightSecondaryContainer,
+    onSecondaryContainer = LightOnSecondaryContainer,
+    background = LightBackground,
+    onBackground = LightSecondary,
+    surface = LightSurface,
+    onSurface = LightSecondary,
+    error = ErrorColor,
+    onError = OnErrorColor,
+    errorContainer = ErrorContainerColor,
+    onErrorContainer = OnErrorContainerColor
+)
+
+private val DarkScheme = darkColorScheme(
+    primary = DarkPrimary,
+    onPrimary = DarkOnPrimary,
+    primaryContainer = DarkPrimaryContainer,
+    onPrimaryContainer = DarkOnPrimaryContainer,
+    secondary = DarkSecondary,
+    onSecondary = DarkOnSecondary,
+    secondaryContainer = DarkSecondaryContainer,
+    onSecondaryContainer = DarkOnSecondaryContainer,
+    background = DarkBackground,
+    onBackground = DarkSecondary,
+    surface = DarkSurface,
+    onSurface = DarkSecondary,
+    error = ErrorColor,
+    onError = OnErrorColor,
+    errorContainer = ErrorContainerColor,
+    onErrorContainer = OnErrorContainerColor
 )
 
 @Composable
 fun AetherWorksTheme(
-  darkTheme: Boolean = isSystemInDarkTheme(),
-  // Dynamic color is available on Android 12+
-  dynamicColor: Boolean = true,
-  content: @Composable () -> Unit,
+    appTheme: AppTheme = AppTheme.DEFAULT,
+    content: @Composable () -> Unit,
 ) {
-  val colorScheme =
-    when {
-      dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-        val context = LocalContext.current
-        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-      }
-      darkTheme -> DarkColorScheme
-      else -> LightColorScheme
+    val systemIsDark = isSystemInDarkTheme()
+    
+    val colorScheme = when (appTheme) {
+        AppTheme.DEFAULT -> ClearSpaceDefaultScheme
+        AppTheme.LIGHT -> LightScheme
+        AppTheme.DARK -> DarkScheme
     }
 
-  MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography, // Assume this exists in Typography.kt
+        content = content
+    )
 }

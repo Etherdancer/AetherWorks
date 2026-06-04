@@ -20,4 +20,8 @@ class SocialViewModel(application: Application) : AndroidViewModel(application) 
     fun addAcquaintance(peerId: String) {
         agent.addAcquaintance(peerId)
     }
+
+    fun removeAcquaintance(peerId: String) {
+        agent.removeAcquaintance(peerId)
+    }
 }

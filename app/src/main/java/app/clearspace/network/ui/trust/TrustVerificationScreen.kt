@@ -29,6 +29,25 @@ import java.util.concurrent.Executors
 fun TrustVerificationScreen(modifier: Modifier = Modifier, onBack: () -> Unit, onTokenScanned: (String) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val keyManager = remember { app.clearspace.network.crypto.KeyManager(context) }
+
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+
+    val pubKeyBase64 = remember {
+        val (_, pubBytes) = keyManager.getOrGenerateIdentity()
+        android.util.Base64.encodeToString(pubBytes, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
+    }
+    
+    val rToken = remember { java.util.UUID.randomUUID().toString() }
+    
+    val signatureBase64 = remember {
+        val dataToSign = rToken.toByteArray()
+        val sigBytes = keyManager.signData(dataToSign)
+        android.util.Base64.encodeToString(sigBytes, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
+    }
+
+    val qrContent = "aetherworks://trust?pk=$pubKeyBase64&rt=$rToken&sig=$signatureBase64"
+    val qrBitmap = remember(qrContent) { generateQrCode(qrContent) }
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -41,91 +60,111 @@ fun TrustVerificationScreen(modifier: Modifier = Modifier, onBack: () -> Unit, o
         onResult = { granted -> hasCameraPermission = granted }
     )
 
-    LaunchedEffect(Unit) {
-        if (!hasCameraPermission) {
+    LaunchedEffect(selectedTabIndex) {
+        if (selectedTabIndex == 1 && !hasCameraPermission) {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
-        Text("Scan Trust Code", style = MaterialTheme.typography.headlineMedium)
+        Text("Trust Verification", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
         
-        Text(
-            "Point your camera at the other user's AetherWorks QR code to establish a trusted connection.",
-            style = MaterialTheme.typography.bodyMedium
-        )
+        TabRow(selectedTabIndex = selectedTabIndex) {
+            Tab(selected = selectedTabIndex == 0, onClick = { selectedTabIndex = 0 }, text = { Text("My QR Code") })
+            Tab(selected = selectedTabIndex == 1, onClick = { selectedTabIndex = 1 }, text = { Text("Scan Code") })
+        }
         
         Spacer(modifier = Modifier.height(24.dp))
 
-        if (hasCameraPermission) {
-            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                AndroidView(
-                    factory = { ctx ->
-                        val previewView = PreviewView(ctx).apply {
-                            layoutParams = ViewGroup.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT
-                            )
-                        }
-                        val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
-                        cameraProviderFuture.addListener({
-                            val cameraProvider = cameraProviderFuture.get()
-                            val preview = Preview.Builder().build().also {
-                                it.setSurfaceProvider(previewView.surfaceProvider)
-                            }
-
-                            val imageAnalysis = ImageAnalysis.Builder()
-                                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                                .build()
-
-                            val executor = Executors.newSingleThreadExecutor()
-                            imageAnalysis.setAnalyzer(executor) { imageProxy ->
-                                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-                                val buffer = imageProxy.planes[0].buffer
-                                val data = ByteArray(buffer.remaining())
-                                buffer.get(data)
-                                
-                                val source = PlanarYUVLuminanceSource(
-                                    data, imageProxy.width, imageProxy.height, 0, 0,
-                                    imageProxy.width, imageProxy.height, false
-                                )
-                                val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
-                                try {
-                                    val result = MultiFormatReader().decode(binaryBitmap)
-                                    val text = result.text
-                                    if (text.startsWith("aetherworks://rendezvous")) {
-                                        onTokenScanned(text)
-                                    }
-                                } catch (e: Exception) {
-                                    // Not found
-                                } finally {
-                                    imageProxy.close()
-                                }
-                            }
-
-                            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-                            try {
-                                cameraProvider.unbindAll()
-                                cameraProvider.bindToLifecycle(
-                                    lifecycleOwner,
-                                    cameraSelector,
-                                    preview,
-                                    imageAnalysis
-                                )
-                            } catch (exc: Exception) {
-                                Log.e("TrustVerification", "Use case binding failed", exc)
-                            }
-                        }, ContextCompat.getMainExecutor(ctx))
-                        
-                        previewView
-                    },
-                    modifier = Modifier.fillMaxSize()
+        if (selectedTabIndex == 0) {
+            Column(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    "Have the other person scan this code to establish a trusted connection.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 24.dp)
                 )
+                if (qrBitmap != null) {
+                    androidx.compose.foundation.Image(
+                        bitmap = qrBitmap.asImageBitmap(),
+                        contentDescription = "QR Code",
+                        modifier = Modifier.size(250.dp)
+                    )
+                }
             }
         } else {
-            Box(modifier = Modifier.weight(1f), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                Text("Camera permission is required to scan QR codes.")
+            if (hasCameraPermission) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    AndroidView(
+                        factory = { ctx ->
+                            val previewView = PreviewView(ctx).apply {
+                                layoutParams = ViewGroup.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                                )
+                            }
+                            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+                            cameraProviderFuture.addListener({
+                                val cameraProvider = cameraProviderFuture.get()
+                                val preview = Preview.Builder().build().also {
+                                    it.setSurfaceProvider(previewView.surfaceProvider)
+                                }
+
+                                val imageAnalysis = ImageAnalysis.Builder()
+                                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                    .build()
+
+                                val executor = Executors.newSingleThreadExecutor()
+                                imageAnalysis.setAnalyzer(executor) { imageProxy ->
+                                    val buffer = imageProxy.planes[0].buffer
+                                    val data = ByteArray(buffer.remaining())
+                                    buffer.get(data)
+                                    
+                                    val source = PlanarYUVLuminanceSource(
+                                        data, imageProxy.width, imageProxy.height, 0, 0,
+                                        imageProxy.width, imageProxy.height, false
+                                    )
+                                    val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
+                                    try {
+                                        val result = MultiFormatReader().decode(binaryBitmap)
+                                        val text = result.text
+                                        if (text.startsWith("aetherworks://trust")) {
+                                            onTokenScanned(text)
+                                        }
+                                    } catch (e: Exception) {
+                                        // Not found
+                                    } finally {
+                                        imageProxy.close()
+                                    }
+                                }
+
+                                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                                try {
+                                    cameraProvider.unbindAll()
+                                    cameraProvider.bindToLifecycle(
+                                        lifecycleOwner,
+                                        cameraSelector,
+                                        preview,
+                                        imageAnalysis
+                                    )
+                                } catch (exc: Exception) {
+                                    Log.e("TrustVerification", "Use case binding failed", exc)
+                                }
+                            }, ContextCompat.getMainExecutor(ctx))
+                            
+                            previewView
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            } else {
+                Box(modifier = Modifier.weight(1f), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    Text("Camera permission is required to scan QR codes.")
+                }
             }
         }
         
@@ -134,4 +173,23 @@ fun TrustVerificationScreen(modifier: Modifier = Modifier, onBack: () -> Unit, o
             Text("Cancel")
         }
     }
+}
+
+private fun generateQrCode(content: String): android.graphics.Bitmap? {
+    try {
+        val writer = com.google.zxing.qrcode.QRCodeWriter()
+        val bitMatrix = writer.encode(content, com.google.zxing.BarcodeFormat.QR_CODE, 512, 512)
+        val width = bitMatrix.width
+        val height = bitMatrix.height
+        val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.RGB_565)
+        for (x in 0 until width) {
+            for (y in 0 until height) {
+                bitmap.setPixel(x, y, if (bitMatrix.get(x, y)) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+            }
+        }
+        return bitmap
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+    return null
 }
