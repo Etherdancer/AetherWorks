@@ -117,7 +117,7 @@ dependencies {
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
-  // AetherWorks Strict Whitelist Dependencies
+  // ClearSpace Strict Whitelist Dependencies
   implementation(libs.room.runtime)
   implementation(libs.room.ktx)
   ksp(libs.room.compiler)
@@ -139,3 +139,4 @@ dependencies {
   implementation(libs.firebase.messaging)
   implementation(libs.firebase.firestore)
 }
+

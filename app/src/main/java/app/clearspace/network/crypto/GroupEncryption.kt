@@ -55,7 +55,7 @@ object GroupEncryption {
         return mac.doFinal().copyOf(length)
     }
 
-    private val HKDF_INFO = "AetherWorks-GroupKWK".toByteArray(Charsets.UTF_8)
+    private val HKDF_INFO = "ClearSpace-GroupKWK".toByteArray(Charsets.UTF_8)
 
     /**
      * Wraps the given [aesKey] for multiple recipients using their X25519 public keys.
@@ -153,3 +153,4 @@ object GroupEncryption {
         }
     }
 }
+

@@ -21,7 +21,7 @@ import java.util.UUID
 class BleDiscovery(private val context: Context) : DiscoveryProtocol {
 
     companion object {
-        // A unique Service UUID for AetherWorks BLE Discovery
+        // A unique Service UUID for ClearSpace BLE Discovery
         val SERVICE_UUID: ParcelUuid = ParcelUuid(UUID.fromString("0000A1B2-0000-1000-8000-00805F9B34FB"))
     }
 
@@ -169,3 +169,4 @@ class BleDiscovery(private val context: Context) : DiscoveryProtocol {
         }
     }
 }
+

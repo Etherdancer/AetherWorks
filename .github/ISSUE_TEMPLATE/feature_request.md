@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for AetherWorks
+about: Suggest an idea for ClearSpace
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''
@@ -11,10 +11,11 @@ assignees: ''
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
 **Describe the solution you'd like**
-A clear and concise description of what you want to happen. Keep in mind the zero-server, offline-first philosophy of AetherWorks.
+A clear and concise description of what you want to happen. Keep in mind the zero-server, offline-first philosophy of ClearSpace.
 
 **Describe alternatives you've considered**
 A clear and concise description of any alternative solutions or features you've considered.
 
 **Additional context**
 Add any other context or screenshots about the feature request here.
+

@@ -3,11 +3,11 @@ Categories:
   - Connectivity
   - Security
 License: AGPL-3.0-or-later
-AuthorName: AetherWorks Contributors
+AuthorName: ClearSpace Contributors
 AuthorEmail: etherdancer.zero553@aleeas.com
-SourceCode: https://gitlab.com/example/aetherworks
-IssueTracker: https://github.com/Etherdancer/AetherWorks/issues
-Donate: https://github.com/Etherdancer/AetherWorks
+SourceCode: https://gitlab.com/example/ClearSpace
+IssueTracker: https://github.com/Etherdancer/ClearSpace/issues
+Donate: https://github.com/Etherdancer/ClearSpace
 
 AutoUpdateMode: None
 UpdateCheckMode: None
@@ -16,7 +16,7 @@ CurrentVersion: 0.3.2.1_alpha
 CurrentVersionCode: 9
 
 RepoType: git
-Repo: https://github.com/Etherdancer/AetherWorks
+Repo: https://github.com/Etherdancer/ClearSpace
 
 Builds:
   - versionName: '0.3.2.1_alpha'
@@ -25,3 +25,4 @@ Builds:
     subdir: app
     gradle:
       - 'yes'
+

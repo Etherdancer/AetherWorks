@@ -8,12 +8,12 @@ import android.util.Log
 /**
  * P2PDiscoveryService
  * Manages local network discovery using Android NSD (mDNS).
- * Broadcasts this device's presence and listens for other AetherWorks nodes.
+ * Broadcasts this device's presence and listens for other ClearSpace nodes.
  */
 class P2PDiscoveryService(private val context: Context) {
 
     private val nsdManager: NsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
-    private val SERVICE_TYPE = "_aetherworks._tcp."
+    private val SERVICE_TYPE = "_ClearSpace._tcp."
     private var serviceName = "AetherNode_${(1000..9999).random()}"
 
     private var registrationListener: NsdManager.RegistrationListener? = null
@@ -53,7 +53,7 @@ class P2PDiscoveryService(private val context: Context) {
     }
 
     /**
-     * Starts discovering other AetherWorks nodes on the network.
+     * Starts discovering other ClearSpace nodes on the network.
      */
     fun discoverServices(onServiceFound: (NsdServiceInfo) -> Unit) {
         discoveryListener = object : NsdManager.DiscoveryListener {
@@ -122,3 +122,4 @@ class P2PDiscoveryService(private val context: Context) {
         }
     }
 }
+

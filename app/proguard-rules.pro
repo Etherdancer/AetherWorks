@@ -20,7 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# Custom Rules for AetherWorks Security
+# Custom Rules for ClearSpace Security
 -keep class net.sqlcipher.** { *; }
 -keep class net.sqlcipher.database.** { *; }
 -keep class org.bouncycastle.** { *; }
@@ -39,3 +39,4 @@
     public static int d(...);
     public static int e(...);
 }
+

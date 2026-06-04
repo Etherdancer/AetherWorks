@@ -31,7 +31,7 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit, 
         android.util.Base64.encodeToString(sig, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
     }
     
-    val shareLink = "aetherworks://trust?pk=$pubKeyFingerprint&rt=$rendezvousToken&sig=$sigBase64"
+    val shareLink = "ClearSpace://trust?pk=$pubKeyFingerprint&rt=$rendezvousToken&sig=$sigBase64"
     val qrBitmap = remember(shareLink) { QrCodeGenerator.generate(shareLink) }
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
@@ -49,7 +49,7 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit, 
         Spacer(modifier = Modifier.height(24.dp))
         
         Text("Step 1: Scan or Send Link", style = MaterialTheme.typography.titleMedium)
-        Text("Send this link to the person you want to trust. They must open it in AetherWorks.", modifier = Modifier.padding(top = 4.dp))
+        Text("Send this link to the person you want to trust. They must open it in ClearSpace.", modifier = Modifier.padding(top = 4.dp))
         
         OutlinedTextField(
             value = shareLink,
@@ -89,7 +89,7 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit, 
         Spacer(modifier = Modifier.height(32.dp))
         
         Text("Step 2: Wait for Connection", style = MaterialTheme.typography.titleMedium)
-        Text("Once they open your link, AetherWorks will establish a secure connection using Tor hidden services to complete the handshake.", modifier = Modifier.padding(top = 4.dp))
+        Text("Once they open your link, ClearSpace will establish a secure connection using Tor hidden services to complete the handshake.", modifier = Modifier.padding(top = 4.dp))
         
         CircularProgressIndicator(modifier = Modifier.padding(top = 16.dp))
         
@@ -104,3 +104,4 @@ fun RemoteLinkExchangeScreen(modifier: Modifier = Modifier, onBack: () -> Unit, 
         }
     }
 }
+

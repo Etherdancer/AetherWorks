@@ -20,7 +20,7 @@ class GatekeeperAgent {
 
     companion object {
         private const val KEYSTORE_PROVIDER = "AndroidKeyStore"
-        private const val MASTER_KEY_ALIAS = "AetherWorksMasterKey"
+        private const val MASTER_KEY_ALIAS = "ClearSpaceMasterKey"
         
         // Argon2id parameters (OWASP recommended baseline for mobile)
         private const val ARGON2_ITERATIONS = 3
@@ -120,3 +120,4 @@ class GatekeeperAgent {
         return cipher.doFinal(encryptedData)
     }
 }
+

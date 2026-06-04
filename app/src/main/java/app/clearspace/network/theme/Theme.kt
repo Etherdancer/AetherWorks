@@ -70,7 +70,7 @@ private val DarkScheme = darkColorScheme(
 )
 
 @Composable
-fun AetherWorksTheme(
+fun ClearSpaceTheme(
     appTheme: AppTheme = AppTheme.DEFAULT,
     content: @Composable () -> Unit,
 ) {
@@ -88,3 +88,4 @@ fun AetherWorksTheme(
         content = content
     )
 }
+

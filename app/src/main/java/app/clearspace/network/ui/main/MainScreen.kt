@@ -10,7 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavKey
 import app.clearspace.network.data.DefaultDataRepository
-import app.clearspace.network.theme.AetherWorksTheme
+import app.clearspace.network.theme.ClearSpaceTheme
 import app.clearspace.network.ui.social.SocialScreen
 
 @Composable
@@ -49,12 +49,13 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
-  AetherWorksTheme { MainScreen(listOf("Android")) }
+  ClearSpaceTheme { MainScreen(listOf("Android")) }
 }
 
 @Preview(showBackground = true, widthDp = 340)
 @Composable
 fun MainScreenPortraitPreview() {
-  AetherWorksTheme { MainScreen(listOf("Android")) }
+  ClearSpaceTheme { MainScreen(listOf("Android")) }
 }
+
 

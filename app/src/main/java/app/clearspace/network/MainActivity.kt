@@ -21,7 +21,7 @@ import app.clearspace.network.security.EmulatorDetector
 import app.clearspace.network.security.GatekeeperRepository
 import app.clearspace.network.security.RootDetector
 import app.clearspace.network.storage.db.AetherDatabase
-import app.clearspace.network.theme.AetherWorksTheme
+import app.clearspace.network.theme.ClearSpaceTheme
 import app.clearspace.network.ui.auth.GatekeeperUiState
 import app.clearspace.network.ui.auth.GatekeeperViewModel
 import app.clearspace.network.ui.auth.LockScreen
@@ -46,7 +46,7 @@ class MainActivity : FragmentActivity() {
     val emulatorDetector = EmulatorDetector(this)
     if (emulatorDetector.isEmulator()) {
       setContent {
-        AetherWorksTheme {
+        ClearSpaceTheme {
           Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.errorContainer) {
             Box(contentAlignment = Alignment.Center) {
               Text(
@@ -78,7 +78,7 @@ class MainActivity : FragmentActivity() {
       val currentTheme by themeManager.theme.collectAsState()
       val uiState by gatekeeperViewModel.uiState.collectAsState()
 
-      AetherWorksTheme(appTheme = currentTheme) {
+      ClearSpaceTheme(appTheme = currentTheme) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
           when (val state = uiState) {
             is GatekeeperUiState.Loading -> { } // Show empty or splash
@@ -141,7 +141,7 @@ class MainActivity : FragmentActivity() {
                 
                 val sharedBrowseViewModel = SharedBrowseViewModel(this@MainActivity.application)
                 
-                val deepLinkTitle = if (intent?.action == android.content.Intent.ACTION_VIEW && intent?.data?.scheme == "aetherworks") {
+                val deepLinkTitle = if (intent?.action == android.content.Intent.ACTION_VIEW && intent?.data?.scheme == "ClearSpace") {
                     intent?.data?.getQueryParameter("title")
                 } else null
 
@@ -157,3 +157,4 @@ class MainActivity : FragmentActivity() {
     }
   }
 }
+

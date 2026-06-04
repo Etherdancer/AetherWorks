@@ -243,9 +243,9 @@ Trusted Users can be verified **in person** (highest security) or **remotely via
 
     ### Method B: Remote Link Exchange (Briar-Style "Add Contact at a Distance")
     * **How It Works (Bramble Rendezvous Protocol):**
-        1. User A taps "Add Trusted User → Remote" and the app generates a unique `aetherworks://` link. This link contains User A's **public key fingerprint** and a **one-time rendezvous token**.
+        1. User A taps "Add Trusted User → Remote" and the app generates a unique `ClearSpace://` link. This link contains User A's **public key fingerprint** and a **one-time rendezvous token**.
         2. User A sends this link to User B through **any external channel** (e.g., Signal, email, SMS, a handwritten note — the app itself does not send it).
-        3. User B receives the link, opens it in Clear Space, and the app generates User B's own `aetherworks://` link in return.
+        3. User B receives the link, opens it in Clear Space, and the app generates User B's own `ClearSpace://` link in return.
         4. User B sends their link back to User A through the same or another external channel.
         5. Both devices now have each other's public key fingerprints. Each device connects to the other via **Tor hidden services** (using the rendezvous tokens) to complete the **Bramble Handshake Protocol** — deriving a shared secret and establishing the trust relationship.
         6. Upon successful handshake, both devices store each other's public key as a Trusted User.
@@ -473,7 +473,7 @@ Handles all media consumption and news aggregation privately.
 3. [Social Discovery] → User adds a nearby profile as Acquaintance (stores public key + alias).
 4. [Trust Verification] → Users meet in person → mutual QR code scan → Trusted User established.
    OR
-4b. [Trust Verification] → Users exchange aetherworks:// links remotely → Tor handshake → Safety Number verification → Trusted User established.
+4b. [Trust Verification] → Users exchange ClearSpace:// links remotely → Tor handshake → Safety Number verification → Trusted User established.
 5. [Content Vault] → Trusted-only content becomes visible between trusted users.
 6. [Messenger Agent] → Private messages can now be exchanged via direct / Tor / relay.
 ```
@@ -569,4 +569,5 @@ Handles all media consumption and news aggregation privately.
 ---
 
 > **Disclaimer:** This application is provided "as is" without warranty of any kind. The developer is not responsible for any damage, data loss, privacy breach, legal consequence, emotional distress, or any other outcome resulting from the use of this application. By using Clear Space, you acknowledge that you are doing so **entirely at your own risk.** The app does not ask for, store, or transmit your personal data. Profiles are fictional and do not represent real identities. The developer has no ability to access, recover, or control any data within the application.
+
 

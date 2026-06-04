@@ -1,7 +1,7 @@
 # Security Policy
 
 ## Supported Versions
-Security updates are provided for the latest stable release of AetherWorks. Please ensure you are running the newest version available via F-Droid or GitHub Releases.
+Security updates are provided for the latest stable release of ClearSpace. Please ensure you are running the newest version available via F-Droid or GitHub Releases.
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -10,11 +10,11 @@ Security updates are provided for the latest stable release of AetherWorks. Plea
 
 ## Reporting a Vulnerability
 
-AetherWorks takes security and privacy very seriously because it is the core foundation of our application. If you have discovered a vulnerability, we appreciate your help in disclosing it to us in a responsible manner.
+ClearSpace takes security and privacy very seriously because it is the core foundation of our application. If you have discovered a vulnerability, we appreciate your help in disclosing it to us in a responsible manner.
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-Instead, please send an email to `security@aetherworks.org` (placeholder, contact the developer directly if this is a personal repo).
+Instead, please send an email to `security@ClearSpace.org` (placeholder, contact the developer directly if this is a personal repo).
 
 Please include:
 * A description of the vulnerability.
@@ -22,8 +22,9 @@ Please include:
 * What versions you found it in.
 
 ## Security Principles
-* **Zero Servers:** AetherWorks has no backend servers. All data lives on your device.
+* **Zero Servers:** ClearSpace has no backend servers. All data lives on your device.
 * **Encryption:** All local storage is encrypted using SQLCipher. 
 * **Zero Telemetry:** The app collects zero usage data or crash reports.
 
 We will review your report and aim to address confirmed vulnerabilities immediately.
+

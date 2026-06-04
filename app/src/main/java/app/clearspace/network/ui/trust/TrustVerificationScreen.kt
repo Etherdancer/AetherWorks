@@ -46,7 +46,7 @@ fun TrustVerificationScreen(modifier: Modifier = Modifier, onBack: () -> Unit, o
         android.util.Base64.encodeToString(sigBytes, android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
     }
 
-    val qrContent = "aetherworks://trust?pk=$pubKeyBase64&rt=$rToken&sig=$signatureBase64"
+    val qrContent = "ClearSpace://trust?pk=$pubKeyBase64&rt=$rToken&sig=$signatureBase64"
     val qrBitmap = remember(qrContent) { generateQrCode(qrContent) }
 
     var hasCameraPermission by remember {
@@ -132,7 +132,7 @@ fun TrustVerificationScreen(modifier: Modifier = Modifier, onBack: () -> Unit, o
                                     try {
                                         val result = MultiFormatReader().decode(binaryBitmap)
                                         val text = result.text
-                                        if (text.startsWith("aetherworks://trust")) {
+                                        if (text.startsWith("ClearSpace://trust")) {
                                             onTokenScanned(text)
                                         }
                                     } catch (e: Exception) {
@@ -193,3 +193,4 @@ private fun generateQrCode(content: String): android.graphics.Bitmap? {
     }
     return null
 }
+

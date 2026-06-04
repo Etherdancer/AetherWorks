@@ -263,7 +263,7 @@ object P2PClient {
             }
         } catch (e: Exception) {
             // If DB is unavailable, fall back to logcat — never suppress security events silently
-            android.util.Log.e("AetherWorksSecurity", "$eventType: $detail")
+            android.util.Log.e("ClearSpaceSecurity", "$eventType: $detail")
         }
     }
 
@@ -405,3 +405,4 @@ object P2PClient {
         return@withContext null
     }
 }
+

@@ -23,7 +23,7 @@ class NsdDiscovery(context: Context) : DiscoveryProtocol {
 
     companion object {
         private const val SERVICE_TYPE = "_p2psync._tcp."
-        private const val BASE_SERVICE_NAME = "AetherWorksPeer"
+        private const val BASE_SERVICE_NAME = "ClearSpacePeer"
     }
 
     override fun startDiscovery(presencePacket: PresencePacket) {
@@ -118,3 +118,4 @@ class NsdDiscovery(context: Context) : DiscoveryProtocol {
         _discoveredPeers.value = emptyList()
     }
 }
+

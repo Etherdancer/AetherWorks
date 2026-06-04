@@ -25,7 +25,7 @@ import kotlinx.serialization.json.Json
 class DiscoveryForegroundService : Service() {
 
     companion object {
-        private const val CHANNEL_ID = "aetherworks_sharing_channel"
+        private const val CHANNEL_ID = "ClearSpace_sharing_channel"
         private const val NOTIFICATION_ID = 101
         const val ACTION_STOP_SHARING = "app.clearspace.network.ACTION_STOP_SHARING"
     }
@@ -209,7 +209,7 @@ class DiscoveryForegroundService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "AetherWorks Sharing"
+            val name = "ClearSpace Sharing"
             val descriptionText = "Persistent notification when sharing is active"
             val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
@@ -238,7 +238,7 @@ class DiscoveryForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("AetherWorks Sharing is Active")
+            .setContentTitle("ClearSpace Sharing is Active")
             .setContentText("Your device is discoverable and participating in the network.")
             .setSmallIcon(android.R.drawable.ic_menu_share)
             .setContentIntent(pendingIntent)
@@ -248,3 +248,4 @@ class DiscoveryForegroundService : Service() {
             .build()
     }
 }
+

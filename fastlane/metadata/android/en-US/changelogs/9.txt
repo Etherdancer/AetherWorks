@@ -1,5 +1,6 @@
-Initial F-Droid Release of AetherWorks.
+Initial F-Droid Release of ClearSpace.
 - Full offline-first capabilities.
 - Peer-to-Peer encrypted sharing via Bluetooth, Wi-Fi Direct, and Local Network.
 - Anonymous reputation system.
 - Zero tracking, telemetry, or backend servers.
+
