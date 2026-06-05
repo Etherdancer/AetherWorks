@@ -47,7 +47,7 @@ class GatekeeperViewModel(private val repository: GatekeeperRepository) : ViewMo
         }
     }
 
-    fun submitPassword(password: String) {
+    fun submitPassword(password: CharArray) {
         val dbKey = repository.authenticate(password)
         if (dbKey != null) {
             _uiState.value = GatekeeperUiState.Authenticated(dbKey)
@@ -76,7 +76,7 @@ class GatekeeperViewModel(private val repository: GatekeeperRepository) : ViewMo
         }
     }
 
-    fun completeOnboarding(password: String) {
+    fun completeOnboarding(password: CharArray) {
         val dbKey = repository.completeOnboarding(password)
         _uiState.value = GatekeeperUiState.Authenticated(dbKey)
     }
@@ -89,7 +89,7 @@ class GatekeeperViewModel(private val repository: GatekeeperRepository) : ViewMo
         }
     }
 
-    fun enrollBiometric(cipher: javax.crypto.Cipher, password: String): Boolean {
+    fun enrollBiometric(cipher: javax.crypto.Cipher, password: CharArray): Boolean {
         return repository.enrollBiometric(cipher, password)
     }
 }

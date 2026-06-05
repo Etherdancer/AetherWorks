@@ -5,6 +5,10 @@ import android.content.SharedPreferences
 import java.security.MessageDigest
 import app.clearspace.network.crypto.KeyManager
 import app.clearspace.network.storage.db.entity.ContentUnit
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class ReputationAgent(context: Context, private val keyManager: KeyManager) {
 
@@ -111,16 +115,27 @@ class ReputationAgent(context: Context, private val keyManager: KeyManager) {
      * The server (Cloud Function) is responsible for evaluating the threshold.
      */
     fun submitReport(contentHash: String) {
-        try {
-            val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-            val reportToken = generateReportToken(contentHash)
-            db.collection("global_blacklist").document(contentHash)
-              .set(
-                  hashMapOf("hash" to contentHash, "reportToken" to reportToken), 
-                  com.google.firebase.firestore.SetOptions.merge()
-              )
-        } catch (e: Exception) {
-            // Fail silently
+        val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+        val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        val reportToken = generateReportToken(contentHash)
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                if (auth.currentUser == null) {
+                    auth.signInAnonymously().await()
+                }
+                db.collection("global_blacklist").document(contentHash)
+                  .set(
+                      hashMapOf(
+                          "hash" to contentHash, 
+                          "reportToken" to reportToken,
+                          "timestamp" to System.currentTimeMillis()
+                      ), 
+                      com.google.firebase.firestore.SetOptions.merge()
+                  ).await()
+            } catch (e: Exception) {
+                // Fail silently
+            }
         }
     }
 

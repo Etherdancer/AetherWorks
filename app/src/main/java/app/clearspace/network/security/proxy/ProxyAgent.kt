@@ -5,6 +5,7 @@ import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.concurrent.thread
 
 /**
  * ProxyAgent (Tor Routing & Anonymity)
@@ -21,17 +22,75 @@ class ProxyAgent(private val context: Context) {
     private val _onionAddress = MutableStateFlow<String?>(null)
     val onionAddress: StateFlow<String?> = _onionAddress.asStateFlow()
 
+    private var torProcess: Process? = null
+
     fun startTor() {
+        if (_torState.value == TorState.RUNNING || _torState.value == TorState.STARTING) return
+
         Log.d(TAG, "Starting Tor Daemon...")
         _torState.value = TorState.STARTING
         
-        // TODO: Initialize real tor-android library integration here.
-        // For now, simulate startup.
         try {
-            // Simulated success
-            _torState.value = TorState.RUNNING
-            _onionAddress.value = "simulatedonionaddress123456789.onion"
-            Log.d(TAG, "Tor Daemon Started. Onion: ${_onionAddress.value}")
+            val appFilesDir = context.filesDir
+            val torDataDir = java.io.File(appFilesDir, "tordata").apply { if (!exists()) mkdirs() }
+            val torrcFile = java.io.File(appFilesDir, "torrc")
+            
+            // Write basic SOCKS proxy torrc config
+            torrcFile.writeText("""
+                SocksPort 9050
+                DataDirectory ${torDataDir.absolutePath}
+                AvoidDiskWrites 1
+            """.trimIndent())
+            
+            val nativeLibDir = context.applicationInfo.nativeLibraryDir
+            val torBinary = java.io.File(nativeLibDir, "libtor.so")
+            
+            if (!torBinary.exists()) {
+                throw java.io.FileNotFoundException("Tor binary not found at ${torBinary.absolutePath}")
+            }
+            
+            val pb = ProcessBuilder(
+                torBinary.absolutePath,
+                "-f", torrcFile.absolutePath
+            )
+            .directory(appFilesDir)
+            .redirectErrorStream(true)
+            
+            val proc = pb.start()
+            torProcess = proc
+            
+            thread(start = true, name = "Tor-Reader-Thread") {
+                try {
+                    val reader = proc.inputStream.bufferedReader()
+                    var line: String?
+                    while (proc.isAlive) {
+                        line = reader.readLine() ?: break
+                        Log.d("TorBinary", line)
+                        if (line.contains("Bootstrapped 100%")) {
+                            _torState.value = TorState.RUNNING
+                            _onionAddress.value = "127.0.0.1:9050"
+                            Log.d(TAG, "Tor Daemon Started and Bootstrapped.")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error reading Tor output", e)
+                }
+            }
+            
+            thread(start = true, name = "Tor-Monitor-Thread") {
+                Thread.sleep(15000)
+                if (_torState.value == TorState.STARTING) {
+                    if (proc.isAlive) {
+                        _torState.value = TorState.RUNNING
+                        _onionAddress.value = "127.0.0.1:9050"
+                        Log.w(TAG, "Tor startup monitor timeout; assuming running.")
+                    } else {
+                        _torState.value = TorState.ERROR
+                        Log.e(TAG, "Tor process terminated during startup.")
+                    }
+                }
+            }
+            
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start Tor Daemon", e)
             _torState.value = TorState.ERROR
@@ -40,7 +99,8 @@ class ProxyAgent(private val context: Context) {
 
     fun stopTor() {
         Log.d(TAG, "Stopping Tor Daemon...")
-        // TODO: Actually stop the tor-android daemon.
+        torProcess?.destroy()
+        torProcess = null
         _torState.value = TorState.STOPPED
         _onionAddress.value = null
     }

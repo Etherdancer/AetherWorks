@@ -13,6 +13,8 @@ import app.clearspace.network.storage.db.entity.Visibility
 import app.clearspace.network.crypto.GroupEncryption
 import app.clearspace.network.storage.db.AetherDatabase
 import app.clearspace.network.storage.db.entity.TrustLevel
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.tasks.await
 
 /**
  * Service responsible for acting as the "Dead Drop" for TRUSTED and GROUP content.
@@ -87,10 +89,22 @@ class FirestoreDeadDropService : Service() {
                 recipientPublicKeys = recipientMap
             )
 
+            val auth = FirebaseAuth.getInstance()
+            if (auth.currentUser == null) {
+                try {
+                    auth.signInAnonymously().await()
+                } catch (e: Exception) {
+                    Log.e("FirestoreDeadDrop", "Failed anonymous sign-in, aborting upload.", e)
+                    return
+                }
+            }
+            val uid = auth.currentUser?.uid ?: ""
+
             val documentData = hashMapOf(
                 "hash" to contentUnit.contentHash,
                 "payload" to encryptedPayload,
-                "timestamp" to System.currentTimeMillis()
+                "timestamp" to System.currentTimeMillis(),
+                "senderUid" to uid
             )
 
             val targetCollection = if (contentUnit.visibility == Visibility.GROUP) "group_drops" else "trusted_drops"

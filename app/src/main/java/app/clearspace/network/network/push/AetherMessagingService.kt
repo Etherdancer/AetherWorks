@@ -25,9 +25,12 @@ class AetherMessagingService : FirebaseMessagingService() {
         startIntent.action = "WAKE_UP_PING"
         
         try {
-            startService(startIntent)
-        } catch (e: IllegalStateException) {
-            // Android 8+ background service restriction fallback
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(startIntent)
+            } else {
+                startService(startIntent)
+            }
+        } catch (e: Exception) {
             Log.e("AetherMessagingService", "Could not start service from background: ${e.message}")
         }
     }

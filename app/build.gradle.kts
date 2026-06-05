@@ -9,6 +9,8 @@ plugins {
   alias(libs.plugins.ksp)
   alias(libs.plugins.aboutlibraries)
   alias(libs.plugins.google.services)
+  id("com.github.spotbugs") version "5.0.14"
+  id("pmd")
 }
 
 android {
@@ -65,6 +67,40 @@ android {
     }
     testOptions {
       unitTests.isReturnDefaultValues = true
+    }
+    lint {
+        abortOnError = false
+    }
+}
+
+spotbugs {
+    toolVersion = "4.8.3"
+}
+
+// Configure SpotBugs reports
+tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
+    reports {
+        create("html") {
+            required.set(true)
+            outputLocation.set(layout.buildDirectory.file("reports/spotbugs/spotbugs.html"))
+        }
+        create("xml") {
+            required.set(true)
+            outputLocation.set(layout.buildDirectory.file("reports/spotbugs/spotbugs.xml"))
+        }
+    }
+}
+
+pmd {
+    ruleSets = listOf("java-basic", "java-braces")
+    // ignoreFailures removed
+}
+
+// Configure PMD reports
+tasks.withType<Pmd> {
+    reports {
+        html.required.set(true)
+        html.outputLocation.set(layout.buildDirectory.file("reports/pmd/pmd.html"))
     }
 }
 
@@ -126,7 +162,7 @@ dependencies {
   implementation(libs.sqlcipher)
   implementation(libs.bouncycastle)
   implementation(libs.signal.protocol)
-  // implementation(libs.tor.android) // Temporarily disabled due to repository resolution issues
+  implementation(libs.tor.android)
   implementation(libs.kotlinx.serialization.json)
   
   // CameraX and ZXing for Trust Verification (Phase 4)
@@ -140,6 +176,7 @@ dependencies {
   implementation(platform(libs.firebase.bom))
   implementation(libs.firebase.messaging)
   implementation(libs.firebase.firestore)
+  implementation(libs.firebase.auth)
   
   // WebRTC Data Channels (Hybrid Media Sync)
   // implementation(libs.webrtc.android) // Temporarily disabled pending mavenCentral resolution

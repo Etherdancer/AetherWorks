@@ -5,7 +5,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import com.google.firebase.firestore.FirebaseFirestore
-import app.clearspace.network.storage.db.entity.ContentUnit
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.tasks.await
 
 class ContentReporter(private val context: Context) {
     private val db = FirebaseFirestore.getInstance()
@@ -13,6 +14,10 @@ class ContentReporter(private val context: Context) {
     suspend fun reportContent(contentHash: String, reason: String) {
         withContext(Dispatchers.IO) {
             try {
+                val auth = FirebaseAuth.getInstance()
+                if (auth.currentUser == null) {
+                    auth.signInAnonymously().await()
+                }
                 // Add the report to a "reports" collection for review
                 val report = hashMapOf(
                     "contentHash" to contentHash,

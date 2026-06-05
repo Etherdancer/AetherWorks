@@ -87,11 +87,19 @@ class MainActivity : FragmentActivity() {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
           when (val state = uiState) {
             is GatekeeperUiState.Loading -> { } // Show empty or splash
-            is GatekeeperUiState.Onboarding -> OnboardingScreen(onComplete = { gatekeeperViewModel.completeOnboarding(it) })
+            is GatekeeperUiState.Onboarding -> OnboardingScreen(onComplete = {
+                val chars = it.toCharArray()
+                gatekeeperViewModel.completeOnboarding(chars)
+                java.util.Arrays.fill(chars, '\u0000')
+            })
             is GatekeeperUiState.PromptPassword, is GatekeeperUiState.PasswordError, is GatekeeperUiState.LockedOut -> {
               LockScreen(
                   uiState = state, 
-                  onSubmitPassword = { gatekeeperViewModel.submitPassword(it) },
+                  onSubmitPassword = {
+                      val chars = it.toCharArray()
+                      gatekeeperViewModel.submitPassword(chars)
+                      java.util.Arrays.fill(chars, '\u0000')
+                  },
                   onBiometricClick = {
                       if (gatekeeperViewModel.canUseBiometric()) {
                           try {
@@ -119,9 +127,13 @@ class MainActivity : FragmentActivity() {
                               "Enable Biometric Unlock",
                               "Confirm your identity to enable biometric unlock",
                               onSuccess = { 
-                                  if (gatekeeperViewModel.enrollBiometric(cipher, pass)) {
-                                      gatekeeperViewModel.submitPassword(pass)
+                                  val passChars = pass.toCharArray()
+                                  val passCharsCopy = pass.toCharArray()
+                                  if (gatekeeperViewModel.enrollBiometric(cipher, passChars)) {
+                                      gatekeeperViewModel.submitPassword(passCharsCopy)
                                   } 
+                                  java.util.Arrays.fill(passChars, '\u0000')
+                                  java.util.Arrays.fill(passCharsCopy, '\u0000')
                               },
                               onError = { /* handle error */ }
                           )

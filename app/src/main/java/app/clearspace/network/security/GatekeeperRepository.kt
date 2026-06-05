@@ -19,8 +19,8 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
         return prefs.getBoolean(PREF_ONBOARDING_COMPLETE, false)
     }
 
-    fun completeOnboarding(password: String): ByteArray {
-        val (salt, hash) = PasswordHasher.hash(password.toCharArray(), clearPassword = false)
+    fun completeOnboarding(password: CharArray): ByteArray {
+        val (salt, hash) = PasswordHasher.hash(password, clearPassword = false)
         val fullHash = salt + hash
         keyManager.storePasswordHash(fullHash)
         prefs.edit().putBoolean(PREF_ONBOARDING_COMPLETE, true).apply()
@@ -76,7 +76,7 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
         editor.putString(PREF_LOCKOUT_UNTIL, android.util.Base64.encodeToString(enc, android.util.Base64.DEFAULT))
     }
 
-    fun authenticate(password: String): ByteArray? {
+    fun authenticate(password: CharArray): ByteArray? {
         if (isLockedOut()) return null
 
         val storedHash = keyManager.getStoredPasswordHash() ?: return null
@@ -113,7 +113,7 @@ class GatekeeperRepository(private val context: Context, private val keyManager:
         return keyManager.getBiometricCipher(mode)
     }
 
-    fun enrollBiometric(cipher: javax.crypto.Cipher, password: String): Boolean {
+    fun enrollBiometric(cipher: javax.crypto.Cipher, password: CharArray): Boolean {
         val storedHash = keyManager.getStoredPasswordHash() ?: return false
         val computedHash = PasswordHasher.computeHashForDbKey(password, storedHash) ?: return false
         return try {

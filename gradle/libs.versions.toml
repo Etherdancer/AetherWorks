@@ -20,7 +20,7 @@ room = "2.6.1"
 sqlcipher = "4.5.4"
 bouncycastle = "1.77"
 signalProtocol = "2.8.1"
-torAndroid = "0.4.8.9" # Standard Guardian Project release
+torAndroid = "0.4.8.22" # Standard Guardian Project release
 serialization = "1.6.3"
 camerax = "1.4.0"
 zxing = "3.5.3"
@@ -85,6 +85,7 @@ osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "os
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version = "32.7.0" }
 firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 mlkit-custom = { module = "com.google.mlkit:image-labeling-custom", version = "17.0.2" }
 
 [plugins]

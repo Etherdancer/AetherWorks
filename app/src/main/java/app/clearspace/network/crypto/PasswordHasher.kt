@@ -78,23 +78,23 @@ object PasswordHasher {
         return bytes
     }
 
-    fun hashPassword(password: String): ByteArray {
-        val (salt, hash) = hash(password.toCharArray(), clearPassword = true)
+    fun hashPassword(password: CharArray): ByteArray {
+        val (salt, hash) = hash(password, clearPassword = true)
         return salt + hash
     }
 
-    fun verifyPassword(password: String, storedSaltHash: ByteArray): Boolean {
+    fun verifyPassword(password: CharArray, storedSaltHash: ByteArray): Boolean {
         if (storedSaltHash.size != SALT_LENGTH + HASH_LENGTH) return false
         val salt = storedSaltHash.copyOfRange(0, SALT_LENGTH)
         val expectedHash = storedSaltHash.copyOfRange(SALT_LENGTH, storedSaltHash.size)
-        return verify(password.toCharArray(), salt, expectedHash, clearPassword = true)
+        return verify(password, salt, expectedHash, clearPassword = true)
     }
 
-    fun computeHashForDbKey(password: String, storedSaltHash: ByteArray): ByteArray? {
+    fun computeHashForDbKey(password: CharArray, storedSaltHash: ByteArray): ByteArray? {
         if (storedSaltHash.size != SALT_LENGTH + HASH_LENGTH) return null
         val salt = storedSaltHash.copyOfRange(0, SALT_LENGTH)
         val expectedHash = storedSaltHash.copyOfRange(SALT_LENGTH, storedSaltHash.size)
-        val (_, computedHash) = hash(password.toCharArray(), salt, clearPassword = true)
+        val (_, computedHash) = hash(password, salt, clearPassword = true)
         if (MessageDigest.isEqual(expectedHash, computedHash)) {
             return computedHash
         }

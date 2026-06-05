@@ -81,34 +81,37 @@ object SecureP2PManager {
 
 class TofuTrustManager(private val prefs: SharedPreferences) : X509ExtendedTrustManager() {
     override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
-        checkTrusted(chain, null)
+        throw CertificateException("Connection blocked: checkClientTrusted without socket or engine is not permitted.")
     }
 
     override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {
-        checkTrusted(chain, null)
+        throw CertificateException("Connection blocked: checkServerTrusted without socket or engine is not permitted.")
     }
 
     override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?, socket: Socket?) {
-        checkTrusted(chain, socket)
+        val ip = socket?.inetAddress?.hostAddress ?: throw CertificateException("Connection blocked: socket has no address.")
+        checkTrusted(chain, ip)
     }
 
     override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?, socket: Socket?) {
-        checkTrusted(chain, socket)
+        val ip = socket?.inetAddress?.hostAddress ?: throw CertificateException("Connection blocked: socket has no address.")
+        checkTrusted(chain, ip)
     }
 
     override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?, engine: SSLEngine?) {
-        checkTrusted(chain, null)
+        val ip = engine?.peerHost ?: throw CertificateException("Connection blocked: engine has no peer host.")
+        checkTrusted(chain, ip)
     }
 
     override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?, engine: SSLEngine?) {
-        checkTrusted(chain, null)
+        val ip = engine?.peerHost ?: throw CertificateException("Connection blocked: engine has no peer host.")
+        checkTrusted(chain, ip)
     }
 
     override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
 
-    private fun checkTrusted(chain: Array<out X509Certificate>?, socket: Socket?) {
+    private fun checkTrusted(chain: Array<out X509Certificate>?, ip: String) {
         val cert = chain?.get(0) ?: throw CertificateException("No certificate provided")
-        val ip = socket?.inetAddress?.hostAddress ?: return // Accept if no IP available for pinning
 
         val md = MessageDigest.getInstance("SHA-256")
         val fingerprintBytes = md.digest(cert.encoded)
