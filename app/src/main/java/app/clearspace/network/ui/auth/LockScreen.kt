@@ -94,7 +94,7 @@ fun LockScreen(
                     modifier = Modifier.size(64.dp)
                 ) {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Fingerprint,
+                        imageVector = androidx.compose.material.icons.Icons.Default.Lock,
                         contentDescription = if (canUseBiometric) "Unlock with Biometrics" else "Enable Biometric Unlock",
                         tint = if (canUseBiometric) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxSize()

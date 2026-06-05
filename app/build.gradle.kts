@@ -7,6 +7,7 @@ plugins {
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.ksp)
+  alias(libs.plugins.aboutlibraries)
   alias(libs.plugins.google.services)
 }
 
@@ -17,8 +18,8 @@ android {
         applicationId = "app.clearspace.network"
         minSdk = 26
         targetSdk = 36
-        versionCode = 13
-        versionName = "0.3.4.0_alpha"
+        versionCode = 21
+        versionName = "0.4.2.0_beta"
     }
 
     val keystorePropertiesFile = rootProject.file("app/keystore.properties")
@@ -83,6 +84,7 @@ dependencies {
   // Core Android dependencies
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.lifecycle.runtime.ktx)
+  implementation(libs.androidx.fragment.ktx)
   implementation(libs.androidx.activity.compose)
 
   // Arch Components
@@ -138,5 +140,18 @@ dependencies {
   implementation(platform(libs.firebase.bom))
   implementation(libs.firebase.messaging)
   implementation(libs.firebase.firestore)
+  
+  // WebRTC Data Channels (Hybrid Media Sync)
+  // implementation(libs.webrtc.android) // Temporarily disabled pending mavenCentral resolution
+  
+  // ML Kit / TFLite (On-Device Filtering)
+  implementation(libs.mlkit.custom)
+  
+  // Media / ExoPlayer (Media3)
+  implementation(libs.media3.exoplayer)
+  implementation(libs.media3.ui)
+  
+  // Open Source Licenses UI
+  implementation(libs.aboutlibraries.compose)
 }
 

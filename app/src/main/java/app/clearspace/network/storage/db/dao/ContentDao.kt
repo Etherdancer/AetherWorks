@@ -12,6 +12,9 @@ interface ContentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(content: ContentUnit): Long
 
+    @Query("SELECT * FROM content_units ORDER BY timestamp DESC")
+    suspend fun getAll(): List<ContentUnit>
+
     @Query("SELECT * FROM content_units WHERE visibility IN ('PUBLIC', 'GROUP') ORDER BY timestamp DESC")
     fun getSharedContentFlow(): kotlinx.coroutines.flow.Flow<List<ContentUnit>>
 

@@ -13,6 +13,7 @@ import app.clearspace.network.storage.db.entity.ContentUnit
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @Composable
 fun PublicFeedScreen(modifier: Modifier = Modifier, viewModel: PublicFeedViewModel = viewModel()) {
@@ -100,7 +101,7 @@ fun ContentCard(unit: ContentUnit) {
                         confirmButton = {
                             TextButton(
                                 onClick = { 
-                                    coroutineScope.kotlinx.coroutines.launch {
+                                    coroutineScope.launch {
                                         app.clearspace.network.moderation.ContentReporter(context).reportContent(unit.contentHash, "User Reported via UI")
                                     }
                                     showReportDialog = false 

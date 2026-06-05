@@ -73,6 +73,7 @@ class ReputationAgent(context: Context, private val keyManager: KeyManager) {
     fun mergeReputation(local: ContentUnit, received: ContentUnit): ContentUnit {
         val mergedLikes = (local.likeTokens + received.likeTokens).toMutableSet()
         val mergedDislikes = (local.dislikeTokens + received.dislikeTokens).toMutableSet()
+        val mergedReports = (local.reportTokens + received.reportTokens).toMutableSet()
         
         // Cap cardinality at 10,000 to prevent memory exhaustion attacks
         if (mergedLikes.size > 10000) {
@@ -83,13 +84,44 @@ class ReputationAgent(context: Context, private val keyManager: KeyManager) {
             val toDrop = mergedDislikes.size - 10000
             mergedDislikes.removeAll(mergedDislikes.take(toDrop).toSet())
         }
+        if (mergedReports.size > 10000) {
+            val toDrop = mergedReports.size - 10000
+            mergedReports.removeAll(mergedReports.take(toDrop).toSet())
+        }
 
         return local.copy(
             likeTokens = mergedLikes,
             dislikeTokens = mergedDislikes,
+            reportTokens = mergedReports,
             categoryTokens = (local.categoryTokens + received.categoryTokens).toMutableMap(),
             emotionTokens = (local.emotionTokens + received.emotionTokens).toMutableMap()
         )
+    }
+
+    /**
+     * Generates a cryptographic report token to mark a post for moderation.
+     */
+    fun generateReportToken(contentHash: String): String {
+        val voterSecret = keyManager.getOrGenerateVoterSecret()
+        return sha256Hex(contentHash.toByteArray() + "REPORT".toByteArray() + voterSecret)
+    }
+
+    /**
+     * Submits a report token to Firebase's global blacklist.
+     * The server (Cloud Function) is responsible for evaluating the threshold.
+     */
+    fun submitReport(contentHash: String) {
+        try {
+            val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            val reportToken = generateReportToken(contentHash)
+            db.collection("global_blacklist").document(contentHash)
+              .set(
+                  hashMapOf("hash" to contentHash, "reportToken" to reportToken), 
+                  com.google.firebase.firestore.SetOptions.merge()
+              )
+        } catch (e: Exception) {
+            // Fail silently
+        }
     }
 
     private fun sha256Hex(data: ByteArray): String {

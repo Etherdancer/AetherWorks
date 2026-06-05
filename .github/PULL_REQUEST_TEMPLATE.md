@@ -8,9 +8,9 @@ Fixes # (issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 
-## F-Droid Compliance Checklist
-- [ ] My code introduces **no** proprietary dependencies (e.g., Google Play Services).
-- [ ] My code introduces **no** telemetry, crashlytics, or tracking.
+## Google Play & Hybrid Architecture Checklist
+- [ ] My code minimizes tracking and cloud dependencies, using Firebase ONLY where essential for app functionality or Google Play moderation compliance.
+- [ ] My code respects the default P2P privacy isolation and introduces NO telemetry, crashlytics, or marketing analytics.
 - [ ] All new assets are under free licenses (Apache 2.0, CC-BY, etc.).
 
 ## Testing

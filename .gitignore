@@ -17,3 +17,6 @@ local.properties
 
 
 firebase.exe
+
+# Firebase / Google Services
+app/google-services.json

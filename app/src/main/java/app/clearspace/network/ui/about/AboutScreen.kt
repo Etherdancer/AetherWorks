@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AboutScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
+fun AboutScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit, onNavigateToLicenses: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -52,6 +52,17 @@ fun AboutScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
             ) {
                 Text("Copy Bitcoin Donation Address")
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text("Legal & Compliance", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            
+            OutlinedButton(
+                onClick = onNavigateToLicenses,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            ) {
+                Text("View Open Source Licenses")
             }
         }
     }

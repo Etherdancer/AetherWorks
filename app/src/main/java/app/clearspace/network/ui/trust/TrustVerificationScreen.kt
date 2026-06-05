@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.core.content.ContextCompat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.MultiFormatReader
@@ -47,7 +48,7 @@ fun TrustVerificationScreen(modifier: Modifier = Modifier, onBack: () -> Unit, o
     }
 
     val qrContent = "ClearSpace://trust?pk=$pubKeyBase64&rt=$rToken&sig=$signatureBase64"
-    val qrBitmap = remember(qrContent) { generateQrCode(qrContent) }
+    val qrBitmap = remember(qrContent) { generateTrustQrCode(qrContent) }
 
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -68,7 +69,12 @@ fun TrustVerificationScreen(modifier: Modifier = Modifier, onBack: () -> Unit, o
 
     Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
         Text("Trust Verification", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            "Scanning a trust code establishes a secure, end-to-end encrypted connection between you and another person. Once trusted, you can securely sync content with them over the global internet.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+        )
         
         TabRow(selectedTabIndex = selectedTabIndex) {
             Tab(selected = selectedTabIndex == 0, onClick = { selectedTabIndex = 0 }, text = { Text("My QR Code") })
@@ -175,7 +181,7 @@ fun TrustVerificationScreen(modifier: Modifier = Modifier, onBack: () -> Unit, o
     }
 }
 
-private fun generateQrCode(content: String): android.graphics.Bitmap? {
+private fun generateTrustQrCode(content: String): android.graphics.Bitmap? {
     try {
         val writer = com.google.zxing.qrcode.QRCodeWriter()
         val bitMatrix = writer.encode(content, com.google.zxing.BarcodeFormat.QR_CODE, 512, 512)

@@ -1,7 +1,20 @@
 package app.clearspace.network.ui.feed
 
 import android.net.Uri
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -95,6 +108,12 @@ fun SharedBrowseScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     item {
+                        Text(
+                            "This feed shows 'Public' content broadcast locally from people physically near you, and 'Trusted/Group' content synced globally over the internet.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { viewModel.updateSearchQuery(it) },
@@ -192,7 +211,11 @@ fun ContentDetailOverlay(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onSave) {
+                    val context = LocalContext.current
+                    IconButton(onClick = {
+                        onSave()
+                        android.widget.Toast.makeText(context, "Saved to Private Library", android.widget.Toast.LENGTH_SHORT).show()
+                    }) {
                         Icon(Icons.Default.Download, contentDescription = "Save to Private Library")
                     }
                 }
@@ -236,6 +259,119 @@ fun ContentDetailOverlay(
                 }
             }
             
+            if (content.videoPath != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                var isFullScreen by remember { mutableStateOf(false) }
+                
+                val exoPlayer = remember {
+                    androidx.media3.exoplayer.ExoPlayer.Builder(context).build().apply {
+                        setMediaItem(androidx.media3.common.MediaItem.fromUri(android.net.Uri.parse(content.videoPath)))
+                        prepare()
+                    }
+                }
+                
+                DisposableEffect(Unit) {
+                    onDispose {
+                        exoPlayer.release()
+                    }
+                }
+
+                if (isFullScreen) {
+                    androidx.compose.ui.window.Dialog(
+                        onDismissRequest = { isFullScreen = false },
+                        properties = androidx.compose.ui.window.DialogProperties(
+                            usePlatformDefaultWidth = false,
+                            dismissOnBackPress = true,
+                            decorFitsSystemWindows = false
+                        )
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+                            AndroidView(
+                                factory = { ctx ->
+                                    androidx.media3.ui.PlayerView(ctx).apply {
+                                        player = exoPlayer
+                                        useController = true
+                                        resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+                                    }
+                                },
+                                update = { view ->
+                                    if (view.player != exoPlayer) view.player = exoPlayer
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                            IconButton(
+                                onClick = { isFullScreen = false },
+                                modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                            ) {
+                                Icon(Icons.Default.FullscreenExit, contentDescription = "Exit Fullscreen", tint = Color.White)
+                            }
+                        }
+                    }
+                }
+
+                Box(modifier = Modifier.fillMaxWidth().height(400.dp)) {
+                    AndroidView(
+                        factory = { ctx ->
+                            androidx.media3.ui.PlayerView(ctx).apply {
+                                player = exoPlayer
+                                useController = true
+                                resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
+                            }
+                        },
+                        update = { view ->
+                            if (view.player != exoPlayer && !isFullScreen) {
+                                view.player = exoPlayer
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    IconButton(
+                        onClick = { isFullScreen = true },
+                        modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                    ) {
+                        Icon(Icons.Default.Fullscreen, contentDescription = "Enter Fullscreen", tint = Color.White)
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            } else if (!content.thumbnailBase64.isNullOrEmpty()) {
+                val bitmap = remember(content.thumbnailBase64) {
+                    try {
+                        val bytes = Base64.decode(content.thumbnailBase64, Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                
+                if (bitmap != null) {
+                    var scale by remember { mutableStateOf(1f) }
+                    var offset by remember { mutableStateOf(Offset.Zero) }
+
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = "Content Image",
+                        contentScale = ContentScale.FillWidth,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .pointerInput(Unit) {
+                                detectTransformGestures { _, pan, zoom, _ ->
+                                    scale = (scale * zoom).coerceIn(1f, 5f)
+                                    val newOffset = offset + pan
+                                    offset = newOffset
+                                }
+                            }
+                            .graphicsLayer(
+                                scaleX = scale,
+                                scaleY = scale,
+                                translationX = offset.x,
+                                translationY = offset.y
+                            )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+            
             if (htmlContent == null) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
@@ -244,6 +380,7 @@ fun ContentDetailOverlay(
                         WebView(ctx).apply {
                             settings.javaScriptEnabled = false // Critical: No JS allowed
                             settings.domStorageEnabled = false
+                            setBackgroundColor(0) // Transparent background
                             
                             webViewClient = object : android.webkit.WebViewClient() {
                                 override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
@@ -264,10 +401,7 @@ fun ContentDetailOverlay(
                 )
             }
             
-            if (content.videoPath != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Video content available at: ${content.videoPath}", style = MaterialTheme.typography.bodyMedium)
-            }
+
             
             Spacer(modifier = Modifier.height(32.dp))
             

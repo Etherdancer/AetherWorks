@@ -100,10 +100,6 @@ fun MainNavigation(
       NavDisplay(
         backStack = backStack,
         onBack = { backStack.removeLastOrNull() },
-        enterTransition = { slideInHorizontally(animationSpec = tween(300), initialOffsetX = { it }) + fadeIn(animationSpec = tween(300)) },
-        exitTransition = { slideOutHorizontally(animationSpec = tween(300), targetOffsetX = { -it }) + fadeOut(animationSpec = tween(300)) },
-        popEnterTransition = { slideInHorizontally(animationSpec = tween(300), initialOffsetX = { -it }) + fadeIn(animationSpec = tween(300)) },
-        popExitTransition = { slideOutHorizontally(animationSpec = tween(300), targetOffsetX = { it }) + fadeOut(animationSpec = tween(300)) },
         entryProvider =
           entryProvider {
             entry<FeedTab> {
@@ -119,7 +115,8 @@ fun MainNavigation(
               SocialScreen(
                   modifier = Modifier.padding(paddingValues),
                   onNavigateToGroups = { backStack.add(ManageGroups) },
-                  onNavigateToTrust = { backStack.add(RemoteLinkExchange) }
+                  onNavigateToTrust = { backStack.add(RemoteLinkExchange) },
+                  onNavigateToSearch = { backStack.add(GlobalSearch) }
               )
             }
             entry<LibraryTab> {
@@ -149,6 +146,13 @@ fun MainNavigation(
             }
             entry<AboutSettings> {
               app.clearspace.network.ui.about.AboutScreen(
+                  modifier = Modifier.safeDrawingPadding(),
+                  onNavigateBack = { backStack.removeLastOrNull() },
+                  onNavigateToLicenses = { backStack.add(LicensesSettings) }
+              )
+            }
+            entry<LicensesSettings> {
+              app.clearspace.network.ui.about.OpenSourceLicensesScreen(
                   modifier = Modifier.safeDrawingPadding(),
                   onNavigateBack = { backStack.removeLastOrNull() }
               )
@@ -228,6 +232,12 @@ fun MainNavigation(
                     modifier = Modifier.safeDrawingPadding(),
                     peerPublicKey = key.peerKey,
                     peerAlias = key.peerAlias,
+                    onNavigateBack = { backStack.removeLastOrNull() }
+                )
+            }
+            entry<GlobalSearch> {
+                app.clearspace.network.ui.social.SearchScreen(
+                    modifier = Modifier.safeDrawingPadding(),
                     onNavigateBack = { backStack.removeLastOrNull() }
                 )
             }

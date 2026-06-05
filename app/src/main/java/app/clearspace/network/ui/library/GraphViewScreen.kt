@@ -1,5 +1,7 @@
 package app.clearspace.network.ui.library
 
+import androidx.compose.ui.graphics.nativeCanvas
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*

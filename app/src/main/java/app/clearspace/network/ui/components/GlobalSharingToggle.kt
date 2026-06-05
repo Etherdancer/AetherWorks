@@ -2,7 +2,7 @@ package app.clearspace.network.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -49,8 +49,8 @@ fun GlobalSharingToggle(
     if (showConsentDialog) {
         AlertDialog(
             onDismissRequest = { showConsentDialog = false },
-            title = { Text("Enable Data Sharing?") },
-            text = { Text("You are about to enable data sharing with nearby devices. Other users of this app on the same network or in Bluetooth/Wi-Fi Direct range will be able to see content you have marked as 'Public'.\n\nWARNING: ONCE PUBLIC, ALWAYS PUBLIC. Content cannot be recalled. Do you want to continue?\n\nThis app connects to Google Firebase to receive background wake-up pings. Content is cross-referenced with a centralized server blacklist and will be hidden if it violates the Terms of Service.\n\nTip: To save battery, keep this toggle OFF when you are at home, and only turn it ON when you are in public spaces.") },
+            title = { Text("Start Sharing Data?") },
+            text = { Text("You are about to enable data sharing with nearby devices. Other users of this app on the same network or in Bluetooth/Wi-Fi Direct range will be able to see content you have marked as 'Public'.\n\nNote: Once public, content propagates to others and cannot be recalled.\n\nWe use Firebase to receive background wake-up pings, and cross-reference content with a centralized blacklist. This minimum tracking is strictly necessary for remote content moderation to comply with Google Play Store policies and GDPR.\n\nTip: To save battery, keep this toggle OFF when you are at home, and only turn it ON when you are in public spaces.") },
             confirmButton = {
                 TextButton(onClick = {
                     showConsentDialog = false
@@ -70,9 +70,9 @@ fun GlobalSharingToggle(
     if (showRiskDialog) {
         AlertDialog(
             onDismissRequest = { showRiskDialog = false },
-            icon = { Icon(Icons.Default.Warning, contentDescription = null) },
-            title = { Text("Risk Disclosure") },
-            text = { Text("This app communicates with nearby devices over your local network, Bluetooth, and Wi-Fi Direct. On public networks (coffee shops, airports), other people on the same network may detect that you are running this app.\n\nBecause we use Firebase Cloud Messaging, Google servers will know your device is running this app.\n\nThe developer is not responsible for any consequences. You are solely liable for the content you share. You use this feature at your own risk.") },
+            icon = { Icon(Icons.Default.Info, contentDescription = null) },
+            title = { Text("Privacy Overview") },
+            text = { Text("This app communicates with nearby devices over your local network, Bluetooth, and Wi-Fi Direct. On public networks, other people on the same network may detect that you are running this app.\n\nBecause we use Firebase for essential background connectivity and moderation, Google servers will know your device is running this app.\n\nYou are responsible for the content you share. By continuing, you acknowledge these conditions.") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -99,9 +99,9 @@ fun GlobalSharingToggle(
                             permissionLauncher.launch(ungranted.toTypedArray())
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("I Accept All Risk")
+                    Text("Acknowledge & Continue")
                 }
             },
             dismissButton = {

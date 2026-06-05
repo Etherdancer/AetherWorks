@@ -15,7 +15,7 @@ import kotlin.math.max
 
 object MediaUtils {
 
-    fun compressAndSaveImage(context: Context, uri: Uri, maxSize: Int = 800): Pair<String, String>? {
+    fun compressAndSaveImage(context: Context, uri: Uri, maxSize: Int = 2048): Pair<String, String>? {
         return try {
             val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
             val originalBitmap = BitmapFactory.decodeStream(inputStream)
@@ -33,7 +33,7 @@ object MediaUtils {
             val fileName = "img_${UUID.randomUUID()}.jpg"
             val file = File(context.filesDir, fileName)
             val outputStream = FileOutputStream(file)
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 95, outputStream)
             outputStream.flush()
             outputStream.close()
 
@@ -103,7 +103,7 @@ object MediaUtils {
             val originalBitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close() ?: return null
             
-            val ratio = max(originalBitmap.width.toFloat() / 256, originalBitmap.height.toFloat() / 256)
+            val ratio = max(originalBitmap.width.toFloat() / 512, originalBitmap.height.toFloat() / 512)
             val scaledBitmap = if (ratio > 1) {
                 Bitmap.createScaledBitmap(originalBitmap, (originalBitmap.width / ratio).toInt(), (originalBitmap.height / ratio).toInt(), true)
             } else {
@@ -113,7 +113,7 @@ object MediaUtils {
             val fileName = "avatar_${UUID.randomUUID()}.jpg"
             val file = File(context.filesDir, fileName)
             val outputStream = FileOutputStream(file)
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
             outputStream.flush()
             outputStream.close()
 

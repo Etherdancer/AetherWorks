@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.scale
+import androidx.compose.material3.ripple
 
 @Composable
 fun PinKeypad(
@@ -123,12 +125,12 @@ private fun NumpadButton(
         contentAlignment = Alignment.Center,
         modifier = modifier
             .size(72.dp)
-            .androidx.compose.ui.draw.scale(scale)
+            .scale(scale)
             .clip(CircleShape)
             .background(containerColor)
             .clickable(
                 interactionSource = interactionSource,
-                indication = androidx.compose.material.ripple.rememberRipple(bounded = true, color = contentColor),
+                indication = ripple(bounded = true, color = contentColor),
                 onClick = onClick
             )
     ) {

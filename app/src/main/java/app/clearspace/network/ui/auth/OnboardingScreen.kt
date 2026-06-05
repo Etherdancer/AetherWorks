@@ -8,7 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +25,7 @@ fun OnboardingScreen(
 ) {
     var acceptedRisk by remember { mutableStateOf(false) }
     var acceptedLiability by remember { mutableStateOf(false) }
-    var acceptedPermanence by remember { mutableStateOf(false) }
+    var acceptedModeration by remember { mutableStateOf(false) }
     var acceptedAge by remember { mutableStateOf(false) }
     var acceptedEULA by remember { mutableStateOf(false) }
     var acceptedFirebase by remember { mutableStateOf(false) }
@@ -57,31 +57,31 @@ fun OnboardingScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.Warning,
+                imageVector = Icons.Default.Info,
                 contentDescription = null,
                 modifier = Modifier.size(48.dp).align(Alignment.CenterHorizontally),
-                tint = MaterialTheme.colorScheme.error
+                tint = MaterialTheme.colorScheme.primary
             )
             
             Text(
-                text = "Important Disclaimer",
+                text = "Welcome & Privacy Overview",
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
             Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("• This app does not collect any personal data.")
                     Text("• Profiles are entirely fictional — do not use your real name or personal identity.")
-                    Text("• The developer is not responsible for any consequences, data loss, or interactions resulting from using this app.")
-                    Text("• You are explicitly and solely liable for any pirated or illegal content you choose to distribute.")
-                    Text("• Due to the decentralized P2P network, content made public CANNOT be permanently deleted. Once public, always public.")
+                    Text("• You are in control of your own data and interactions.")
+                    Text("• Please be responsible. You are accountable for the content you choose to share.")
+                    Text("• Public content is subject to community moderation and may be removed from the network if it violates safety guidelines.")
                     Text("• This app runs on physical devices only.")
                     Text("• You must be at least 18 years old to use this app.")
                     Text("• You agree to not upload abusive, illegal, or objectional content, as outlined in the Terms of Service.")
-                    Text("• This app uses Google Firebase for background wake-up pings. Google servers will know you are running this app.")
+                    Text("• This app utilizes the absolute minimum tracking necessary (via Firebase) because remote content moderation is mandatory to comply with Google Play Store policies and GDPR.")
                 }
             }
 
@@ -98,14 +98,14 @@ fun OnboardingScreen(
                         checked = acceptedLiability,
                         onCheckedChange = { acceptedLiability = it }
                     )
-                    Text("I accept direct, sole liability for sharing pirated or illegal content.", style = MaterialTheme.typography.bodyMedium)
+                    Text("I accept responsibility for the content I share.", style = MaterialTheme.typography.bodyMedium)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
-                        checked = acceptedPermanence,
-                        onCheckedChange = { acceptedPermanence = it }
+                        checked = acceptedModeration,
+                        onCheckedChange = { acceptedModeration = it }
                     )
-                    Text("I understand that public content is permanently public.", style = MaterialTheme.typography.bodyMedium)
+                    Text("I understand that public content is subject to moderation and removal.", style = MaterialTheme.typography.bodyMedium)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
@@ -126,12 +126,12 @@ fun OnboardingScreen(
                         checked = acceptedFirebase,
                         onCheckedChange = { acceptedFirebase = it }
                     )
-                    Text("I understand that Google Firebase is used for background wake-up pings.", style = MaterialTheme.typography.bodyMedium)
+                    Text("I understand that Firebase uses minimal tracking for mandatory content moderation and compliance.", style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
             AnimatedVisibility(
-                visible = acceptedRisk && acceptedLiability && acceptedPermanence && acceptedAge && acceptedEULA && acceptedFirebase,
+                visible = acceptedRisk && acceptedLiability && acceptedModeration && acceptedAge && acceptedEULA && acceptedFirebase,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
@@ -149,9 +149,9 @@ fun OnboardingScreen(
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
                         Text(
-                            text = "WARNING: There is no 'forgot password'. If you lose this password, you will permanently lose access to all your private data.",
+                            text = "Note: For your privacy, there is no 'forgot password' feature. Please keep your password safe to avoid losing access to your data.",
                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.error,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
                         )
                     }

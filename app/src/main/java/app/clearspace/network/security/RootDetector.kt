@@ -66,13 +66,15 @@ class RootDetector {
             "ro.build.selinux" to "0"
         )
         return try {
+            val systemProperties = Class.forName("android.os.SystemProperties")
+            val getMethod = systemProperties.getMethod("get", String::class.java, String::class.java)
+            
             dangerousProps.any { (prop, dangerousValue) ->
-                val process = Runtime.getRuntime().exec(arrayOf("getprop", prop))
-                val result = process.inputStream.bufferedReader().readLine()?.trim() ?: ""
+                val result = getMethod.invoke(null, prop, "") as String
                 result == dangerousValue
             }
         } catch (e: Exception) {
-            false // If we can't execute getprop, don't block the app
+            false
         }
     }
 }

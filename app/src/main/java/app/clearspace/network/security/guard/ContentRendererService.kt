@@ -38,7 +38,7 @@ class ContentRendererService : Service() {
             html = html.replace(Regex("\\[(.*?)\\]\\((.*?)\\)")) {
                 val linkText = it.groupValues[1]
                 val rawUrl   = it.groupValues[2].trim()
-                val safeUrl  = if (rawUrl.startsWith("https://") || rawUrl.startsWith("ClearSpace://")) rawUrl else "#"
+                val safeUrl  = (if (rawUrl.startsWith("https://") || rawUrl.startsWith("ClearSpace://")) rawUrl else "#").replace("\"", "%22")
                 "<a href=\"$safeUrl\">$linkText</a>"
             }
             // FIX C1: URL-encode wiki-link titles to prevent deep link parameter injection
@@ -51,7 +51,7 @@ class ContentRendererService : Service() {
 
 
             // 3. Wrap in a basic stylesheet for WebView
-            val style = "body { font-family: sans-serif; padding: 16px; font-size: 16px; color: #333333; background-color: #f9f9f9; }"
+            val style = "body { font-family: sans-serif; padding: 16px; font-size: 16px; color: #E5E7EB; background-color: transparent; }"
             return "<html><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><style>$style</style></head><body>$html</body></html>"
         }
     }

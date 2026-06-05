@@ -25,6 +25,13 @@ data class WrappedKey(
     val hkdfSaltBase64: String? = null
 )
 
+@Serializable
+data class WrappedMessage(
+    val wrappedKeysJson: String,
+    val ivBase64: String,
+    val ciphertextBase64: String
+)
+
 object GroupEncryption {
 
     /**
@@ -151,6 +158,30 @@ object GroupEncryption {
         } catch (e: Exception) {
             null
         }
+    }
+
+    /**
+     * Encrypts a payload for multiple recipients and returns a JSON serialized WrappedMessage.
+     */
+    fun encryptPayloadForRecipients(
+        plaintextBytes: ByteArray,
+        recipientPublicKeys: Map<String, String> // Map<Ed25519 Base64, X25519 Base64>
+    ): String {
+        val aesKey = ByteArray(32).apply { SecureRandom().nextBytes(this) }
+        val wrappedKeysJson = wrapKeyForRecipients(aesKey, recipientPublicKeys)
+
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        val keySpec = SecretKeySpec(aesKey, "AES")
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec)
+        val iv = cipher.iv
+        val ciphertext = cipher.doFinal(plaintextBytes)
+
+        val wrappedMessage = WrappedMessage(
+            wrappedKeysJson = wrappedKeysJson,
+            ivBase64 = Base64.encodeToString(iv, Base64.NO_WRAP),
+            ciphertextBase64 = Base64.encodeToString(ciphertext, Base64.NO_WRAP)
+        )
+        return Json.encodeToString(wrappedMessage)
     }
 }
 

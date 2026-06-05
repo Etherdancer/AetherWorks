@@ -5,7 +5,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import app.clearspace.network.storage.db.AetherDatabase
+import app.clearspace.network.storage.db.entity.BlacklistEntry
 import com.google.firebase.firestore.FirebaseFirestore
+import androidx.room.withTransaction
 
 class ModerationAgent(private val context: Context) {
     private val db = FirebaseFirestore.getInstance()
@@ -18,11 +20,23 @@ class ModerationAgent(private val context: Context) {
                 val bannedHashes = result.documents.mapNotNull { it.id }
                 
                 if (bannedHashes.isNotEmpty()) {
+                    // Persist to local cache
+                    val privateDb = AetherDatabase.getPrivateDatabase()
+                    privateDb.withTransaction {
+                        privateDb.blacklistDao().clear()
+                        privateDb.blacklistDao().insertAll(bannedHashes.map { BlacklistEntry(it, System.currentTimeMillis()) })
+                    }
                     applyBlacklist(bannedHashes)
                 }
             } catch (e: Exception) {
-                // Ignore network errors, fail open for a decentralized app
-                e.printStackTrace()
+                // Fail CLOSED: apply cached blacklist even without network
+                try {
+                    val privateDb = AetherDatabase.getPrivateDatabase()
+                    val cached = privateDb.blacklistDao().getAll().map { it.hash }
+                    if (cached.isNotEmpty()) applyBlacklist(cached)
+                } catch (dbEx: Exception) {
+                    dbEx.printStackTrace()
+                }
             }
         }
     }

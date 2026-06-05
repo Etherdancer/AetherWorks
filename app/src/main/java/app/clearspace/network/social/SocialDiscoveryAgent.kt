@@ -104,7 +104,9 @@ class SocialDiscoveryAgent(private val context: Context, private val keyManager:
                 val peer = app.clearspace.network.storage.db.entity.KnownPeer(
                     publicKeyBase64 = peerId,
                     alias = profile.alias,
-                    trustLevel = app.clearspace.network.storage.db.entity.TrustLevel.ACQUAINTANCE
+                    trustLevel = app.clearspace.network.storage.db.entity.TrustLevel.ACQUAINTANCE,
+                    avatarIndex = 0,
+                    onionAddress = null
                 )
                 db.peerDao().insert(peer)
             } catch (e: Exception) {

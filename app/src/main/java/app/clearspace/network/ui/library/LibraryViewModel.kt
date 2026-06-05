@@ -24,14 +24,15 @@ class LibraryViewModel : ViewModel() {
                 val db = AetherDatabase.getPrivateDatabase()
                 
                 val results = if (query.isBlank()) {
-                    val privateContent = db.contentDao().getByVisibility(Visibility.PRIVATE)
-                    val trustedContent = db.contentDao().getByVisibility(Visibility.TRUSTED)
-                    privateContent + trustedContent
+                    db.contentDao().getAll()
                 } else {
-                    // Smart Scan: query formatting (e.g. adding * for prefix matching)
-                    val ftsQuery = query.trim().split(" ").joinToString(" ") { "$it*" }
-                    db.contentDao().searchSmartScan(ftsQuery).filter { 
-                        it.visibility == Visibility.PRIVATE || it.visibility == Visibility.TRUSTED 
+                    // Smart Scan: sanitize and format query to prevent FTS injection
+                    val safeQuery = query.replace(Regex("[\"'\\\\*\\\\^\\\\(\\\\)\\\\[\\\\]\\\\{\\\\}:]"), "")
+                    val ftsQuery = safeQuery.trim().split(Regex("\\\\s+")).filter { it.isNotBlank() }.joinToString(" ") { "$it*" }
+                    if (ftsQuery.isNotBlank()) {
+                        db.contentDao().searchSmartScan(ftsQuery)
+                    } else {
+                        emptyList()
                     }
                 }
                 

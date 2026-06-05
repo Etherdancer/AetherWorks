@@ -1,7 +1,7 @@
 # Security Policy
 
 ## Supported Versions
-Security updates are provided for the latest stable release of ClearSpace. Please ensure you are running the newest version available via F-Droid or GitHub Releases.
+Security updates are provided for the latest stable release of ClearSpace. Please ensure you are running the newest version available via Google Play or GitHub Releases.
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -22,7 +22,7 @@ Please include:
 * What versions you found it in.
 
 ## Security Principles
-* **Zero Servers:** ClearSpace has no backend servers. All data lives on your device.
+* **Hybrid Architecture:** Clear Space operates primarily P2P with minimal E2E encrypted Google Play/Firebase traffic for notifications and public moderation.
 * **Encryption:** All local storage is encrypted using SQLCipher. 
 * **Zero Telemetry:** The app collects zero usage data or crash reports.
 

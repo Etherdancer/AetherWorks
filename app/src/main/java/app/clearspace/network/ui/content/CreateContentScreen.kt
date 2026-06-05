@@ -273,14 +273,33 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            var isError by remember { mutableStateOf(false) }
+            var errorMessage by remember { mutableStateOf("") }
             
+            if (isError) {
+                Text(errorMessage, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 8.dp))
+            }
+
             Button(
                 onClick = {
+                    if (title.isBlank()) {
+                        isError = true
+                        errorMessage = "Title cannot be empty"
+                        return@Button
+                    }
+
                     coroutineScope.launch {
+                        if (selectedMediaUri != null && (visibility == Visibility.PUBLIC || visibility == Visibility.TRUSTED)) {
+                            val filterAgent = app.clearspace.network.security.guard.ContentFilterAgent(context)
+                            val isSafe = filterAgent.isImageSafe(selectedMediaUri!!)
+                            if (!isSafe) {
+                                isError = true
+                                errorMessage = "This image was flagged by the on-device safety filter and cannot be broadcast."
+                                return@launch
+                            }
+                        }
+
                         // Save to database using AetherDatabase
-                        val db = AetherDatabase.getPrivateDatabase() // We can use either, they are the same room instance technically, but logically we should just use Shared for all content except Private. Wait, AetherDatabase separates them.
-                        // For simplicity, let's just get the shared DB.
                         val sharedDb = AetherDatabase.getSharedDatabase()
                         
                         var imgPath: String? = null
@@ -306,7 +325,6 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                                     val outFile = File(context.filesDir, "encrypted_${System.currentTimeMillis()}.aether")
                                     val outputStream = FileOutputStream(outFile)
                                     FileEncryptionUtil.encrypt(inputStream, outputStream, fileEncryptionPassphrase.toCharArray())
-                                    // Optionally store the file path somewhere, like in the body
                                     body += "\n\n[Encrypted File Attached: ${outFile.name}]"
                                 }
                             }
@@ -319,7 +337,6 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                         
                         withContext(Dispatchers.IO) {
                             val repAgent = ReputationAgent(context, KeyManager(context))
-                            // PoW expects the data to be the hashString
                             val nonce = ReputationAgent.generateProofOfWork(hashString)
                             
                             var bodyToSave = body
@@ -327,7 +344,6 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                             
                             if (visibility == Visibility.GROUP && selectedGroupId != null) {
                                 val members = groupDao.getGroupMembersSync(selectedGroupId!!)
-                                // Convert Ed25519 -> X25519 base64 via known_peers
                                 val recipientPublicKeys = members.mapNotNull {
                                     if (it.encryptionPublicKeyBase64 != null) {
                                         it.publicKeyBase64 to it.encryptionPublicKeyBase64
@@ -360,6 +376,7 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                                 powNonce = nonce,
                                 likeTokens = emptySet(),
                                 dislikeTokens = emptySet(),
+                                reportTokens = emptySet(),
                                 categoryTokens = emptyMap(),
                                 emotionTokens = emptyMap(),
                                 imagePath = imgPath,
@@ -368,11 +385,21 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                                 recipientKeyMapJson = recipientKeyMapJsonToSave
                             )
                             
-                            if (visibility == Visibility.PRIVATE) {
-                                AetherDatabase.getPrivateDatabase().contentDao().insert(unit)
-                            } else {
+                            val unitJson = kotlinx.serialization.json.Json.encodeToString(app.clearspace.network.storage.db.entity.ContentUnit.serializer(), unit)
+                            
+                            AetherDatabase.getPrivateDatabase().contentDao().insert(unit)
+                            
+                            if (visibility != Visibility.PRIVATE) {
                                 sharedDb.contentDao().insert(unit)
                                 app.clearspace.network.storage.StorageQuotaManager.enforcePublicQuota(context)
+                                
+                                if (visibility == Visibility.TRUSTED || visibility == Visibility.GROUP) {
+                                    val serviceIntent = android.content.Intent(context, app.clearspace.network.network.FirestoreDeadDropService::class.java).apply {
+                                        action = app.clearspace.network.network.FirestoreDeadDropService.ACTION_UPLOAD
+                                        putExtra(app.clearspace.network.network.FirestoreDeadDropService.EXTRA_CONTENT_JSON, unitJson)
+                                    }
+                                    context.startService(serviceIntent)
+                                }
                             }
                         }
                         onNavigateBack()

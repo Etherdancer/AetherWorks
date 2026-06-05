@@ -3,11 +3,14 @@ package app.clearspace.network.storage.db.entity
 import androidx.room.Entity
 import androidx.room.Fts4
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class Visibility {
     PRIVATE, TRUSTED, PUBLIC, GROUP
 }
 
+@Serializable
 @Entity(tableName = "content_units")
 data class ContentUnit(
     @PrimaryKey val contentHash: String,
@@ -22,6 +25,7 @@ data class ContentUnit(
     val powNonce: Long,
     val likeTokens: Set<String>,
     val dislikeTokens: Set<String>,
+    val reportTokens: Set<String> = emptySet(),
     val categoryTokens: Map<String, Set<String>> = emptyMap(),
     val emotionTokens: Map<String, Set<String>> = emptyMap(),
     val imagePath: String? = null,

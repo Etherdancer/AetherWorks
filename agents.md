@@ -1,6 +1,6 @@
 # Clear Space — Agent Architecture & Behavioral Specification
 
-**Clear Space** is a decentralized content-sharing platform and social network with zero servers. All data lives on-device. The user has absolute sovereignty over what is shared, what is kept private, and who they interact with. Privacy is not a feature — it is the foundation.
+**Clear Space** is a decentralized content-sharing platform and social network utilizing a "Hybrid Architecture." While the vast majority of data and logic lives on-device and relies on peer-to-peer connections, the application employs minimal server infrastructure (such as Firebase) for essential tasks like battery-efficient background wake-ups and community moderation to comply with Google Play policies. The user retains vast sovereignty over their private data. Privacy is deeply foundational, but balanced with pragmatism and store compliance.
 
 > **License:** This program is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero General Public License v3.0** as published by the Free Software Foundation. This program is distributed **WITHOUT ANY WARRANTY**; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [LICENSE](LICENSE) file for details.
 
@@ -90,7 +90,7 @@ A background service that operates **only** when the Sharing Toggle is ON.
 
 * **Role:** Find other Clear Space instances on nearby devices using **all available Android proximity technologies.**
 * **Responsibilities:**
-    * **Omni‑Transport Discovery & Connection:** The app uses only Android framework APIs (no Google Play Services) to discover peers across all supported proximity technologies. The implementation cycles through and upgrades connections using:
+    * **Omni‑Transport Discovery & Connection:** The app relies on Android framework APIs and Firebase Cloud Messaging (FCM) to discover and wake up peers. The implementation cycles through and upgrades connections using:
         1. **Bluetooth Low Energy (BLE)** – continuous low‑power background discovery.
         2. **Bluetooth Classic** – medium‑range fallback data transfer.
         3. **Wi‑Fi Direct (Wi‑Fi P2P)** – high‑bandwidth direct connections.
@@ -326,7 +326,7 @@ The critical layer between the network and local storage, extended with comprehe
 | **A07: Auth Failures** | Mandatory password on every launch. Brute-force lockout. Hardware-backed key storage. No "remember me." |
 | **A08: Data Integrity Failures** | SHA-256 content hashing. PoW for anti-spam. Signature verification for trusted user content. Reject units with mismatched hashes. |
 | **A09: Logging & Monitoring** | No sensitive data in logs. Structured local audit log for security events (failed auth, rejected content, trust changes). Logs encrypted. |
-| **A10: SSRF** | No server, no SSRF. The app makes NO outbound HTTP requests except through Tor (and only for trusted messaging). |
+| **A10: SSRF** | Minimal server usage limits SSRF risk. Outbound HTTP requests are restricted to Firebase (wake-ups/moderation) and Tor (trusted messaging). |
 
 ### OWASP Mobile Top 10 (2024) Compliance
 
@@ -409,7 +409,7 @@ Synchronizes the Private Library across multiple physical devices owned by the s
 
 * **Role:** Keep passwords, offline notes, and private content identical across phones/tablets/desktops.
 * **Responsibilities:**
-    * **Zero-Server Sync:** Uses the Syncthing Block Exchange Protocol (BEP). Devices connect directly via local network or Tor.
+    * **P2P Sync:** Uses the Syncthing Block Exchange Protocol (BEP). Devices connect directly via local network or Tor.
     * **Automated Background Task:** Syncs automatically when devices see each other, ensuring the Password Vault and Obsidian-style notes are always up to date without ever touching Google Drive or Dropbox.
 
 ---
@@ -421,7 +421,7 @@ Provides network anonymity and anonymized external routing.
 * **Role:** Prevent IP leakage and allow safe external access.
 * **Responsibilities:**
     * **Tor Daemon Integration:** Embeds the Orbot Tor backend.
-    * **Tor Proxy Mode (VPN Alternative):** Routes all app traffic through the Onion network, mimicking the privacy of commercial VPNs (like Mullvad/Proton) but entirely server-free.
+    * **Tor Proxy Mode (VPN Alternative):** Routes all app traffic through the Onion network, mimicking the privacy of commercial VPNs (like Mullvad/Proton) but via decentralized relays.
     * **Anonymized Link Routing (LibreTube Style):** If a user clicks a YouTube/external link in a post, the Proxy Agent intercepts it, rewrites it to a random Invidious/Piped instance, and routes the request exclusively over Tor. This allows media consumption without Google tracking.
 
 ---
@@ -494,21 +494,22 @@ Handles all media consumption and news aggregation privately.
 * **Min SDK:** 26 (Android 8.0) — required for proper Keystore, SQLCipher, BLE, and Wi-Fi Direct support.
 * **Target SDK:** 36 (Android 16 "Baklava").
 * **Database:** Room + SQLCipher. DataStore for non-sensitive preferences only.
-* **Networking:** Android framework P2P APIs only (BLE, Bluetooth Classic, Wi-Fi Direct, Wi-Fi Aware, NSD/mDNS) + TLS Sockets, Tor (messaging + remote trust verification), Syncthing BEP, and WebRTC. **No Google Play Services.**
+* **Networking:** Android framework P2P APIs (BLE, Bluetooth Classic, Wi-Fi Direct, Wi-Fi Aware, NSD/mDNS) + TLS Sockets, Firebase/Google Play Services (for FCM wake-ups and moderation), Tor (messaging + remote trust verification), Syncthing BEP, and WebRTC.
 * **Cryptography:** Android Keystore (StrongBox preferred), AES-256-GCM, SHA-256, Ed25519, Argon2id, Signal Protocol (Double Ratchet + X3DH).
 * **Build System:** Gradle 9.x+ / AGP 9.x+.
 * **Source Standard:** All agent logic must reside within `src/main/kotlin` with strict package separation per agent.
 * **Obfuscation:** R8 (ProGuard replacement) enabled for release builds with full obfuscation and optimization.
-* **Strict Dependency Whitelist (F-Droid Compliance):** To ensure reproducible builds and complete F-Droid compatibility, ONLY the following third-party dependencies (or equivalent FOSS forks) may be pulled during development. Adding any unlisted dependency requires explicit architectural review:
+* **Hybrid Dependency Whitelist (Google Play Compliance):** To ensure maximum privacy while supporting necessary moderation, ONLY the following third-party dependencies may be pulled during development. Adding any unlisted dependency requires explicit architectural review:
     1. **AndroidX / Jetpack Compose** (Apache-2.0) — UI and core framework.
     2. **Room** (Apache-2.0) — Database ORM.
     3. **SQLCipher for Android** (Zetetic Community Edition, BSD) — Encrypted SQLite.
     4. **Signal Protocol** (e.g., `signal-protocol-java` GPLv3 or a modern FOSS Kotlin port) — Messaging E2EE.
     5. **Tor-Android** (Guardian Project, Apache-2.0/BSD) — Onion routing.
     6. **BouncyCastle** (`bcprov-jdk18on`, MIT/Apache-2.0) — Supplemental cryptography only. Do **NOT** use Google Tink.
-    7. **Kotlinx Coroutines & Serialization** (Apache-2.0).
-    8. **WebRTC Android SDK** (Apache-2.0) - For video calls.
-    9. **Syncthing-Android (Core)** (MPLv2.0) - For file synchronization.
+    7. **Firebase & Google Play Services** — Exclusively for FCM wake-ups and moderation.
+    8. **Kotlinx Coroutines & Serialization** (Apache-2.0).
+    9. **WebRTC Android SDK** (Apache-2.0) - For video calls.
+    10. **Syncthing-Android (Core)** (MPLv2.0) - For file synchronization.
     
     *The following open-source projects are being logically incorporated or heavily referenced for Phase 3 utilities. All integrated code MUST strictly comply with their respective copyleft licenses:*
     10. **Aegis Authenticator** (GPLv3) - For 2FA/OTP token generation logic.
@@ -521,7 +522,7 @@ Handles all media consumption and news aggregation privately.
     17. **Scrambled Exif / ImagePipe** (GPLv3) - For the image metadata stripping logic.
 * **Permissions Required:**
     * `FOREGROUND_SERVICE` — Required to run the Discovery Agent as a foreground service when sharing is enabled.
-    * `INTERNET` — Local P2P communication and Tor only. No HTTP to external servers.
+    * `INTERNET` — Required for local P2P, Tor, Firebase Cloud Messaging, and moderation checks.
     * `NEARBY_WIFI_DEVICES` — Required for Wi-Fi Aware and Wi-Fi Direct peer discovery on Android 13+.
     * `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN` (with `android:usesPermissionFlags="neverForLocation"` — this flag is **mandatory** to avoid requiring `ACCESS_FINE_LOCATION`), `BLUETOOTH_ADVERTISE` — For BLE/Bluetooth P2P.
     * `ACCESS_WIFI_STATE`, `CHANGE_WIFI_MULTICAST_STATE` — For NSD fallback.

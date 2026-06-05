@@ -45,5 +45,20 @@ or harmful.
 
 ## Scope
 
-This Code of Conduct applies within all community spaces, and also applies when
-an individual is officially representing the community in public spaces.
+This Code of Conduct applies within all project community spaces, such as GitHub and project communication channels.
+
+## In-App Content Standards (User Generated Content)
+
+While Clear Space values privacy and sovereignty, we strictly adhere to Google Play's User Generated Content (UGC) policies. The following content is strictly prohibited on the Clear Space network, whether shared publicly or in trusted groups:
+
+*   Child Sexual Abuse Material (CSAM) or any content that exploits or endangers children.
+*   Terrorist content or content that incites violence.
+*   Hate speech, harassment, or bullying.
+*   Illegal content, including the promotion of illegal acts or the sale of illegal goods.
+
+### In-App Moderation Enforcement
+Because Clear Space is decentralized, moderation relies on a combination of user reports and remote blacklists.
+*   Users can report abusive content directly within the app.
+*   Reported content hashes may be added to a remote Firebase blacklist.
+*   When the app detects a blacklisted hash, that content is immediately purged from the local device and will no longer propagate on the network.
+*   Repeated violations may result in the author's cryptographic identity being blacklisted across the network.

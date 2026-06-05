@@ -23,7 +23,8 @@ class NsdDiscovery(context: Context) : DiscoveryProtocol {
 
     companion object {
         private const val SERVICE_TYPE = "_p2psync._tcp."
-        private const val BASE_SERVICE_NAME = "ClearSpacePeer"
+        // Use a generic name to prevent fingerprinting
+        private const val BASE_SERVICE_NAME = "SyncService"
     }
 
     override fun startDiscovery(presencePacket: PresencePacket) {

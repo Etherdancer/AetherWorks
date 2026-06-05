@@ -12,14 +12,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import android.content.pm.PackageManager
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import java.security.MessageDigest
 import app.clearspace.network.crypto.KeyManager
 import app.clearspace.network.security.EmulatorDetector
 import app.clearspace.network.security.GatekeeperRepository
 import app.clearspace.network.security.RootDetector
+import app.clearspace.network.security.IntegrityChecker
 import app.clearspace.network.storage.db.AetherDatabase
 import app.clearspace.network.theme.ClearSpaceTheme
 import app.clearspace.network.ui.auth.GatekeeperUiState
@@ -63,8 +69,7 @@ class MainActivity : FragmentActivity() {
 
     val rootDetector = RootDetector()
     val isRootedOrCustom = rootDetector.isRootedOrCustomRom()
-    // A warning banner should ideally be presented if isRootedOrCustom is true.
-    // For now, we will let it pass as per F-Droid architecture specification.
+    val isIntegrityValid = IntegrityChecker.verifySignature(this)
 
     val keyManager = KeyManager(this)
     gatekeeperRepo = GatekeeperRepository(this, keyManager)
@@ -141,15 +146,39 @@ class MainActivity : FragmentActivity() {
                 
                 val sharedBrowseViewModel = SharedBrowseViewModel(this@MainActivity.application)
                 
-                val deepLinkTitle = if (intent?.action == android.content.Intent.ACTION_VIEW && intent?.data?.scheme == "ClearSpace") {
+                val deepLinkTitleRaw = if (intent?.action == android.content.Intent.ACTION_VIEW && intent?.data?.scheme == "ClearSpace") {
                     intent?.data?.getQueryParameter("title")
                 } else null
+                // Sanitise to prevent injection
+                val deepLinkTitle = deepLinkTitleRaw?.replace(Regex("<[^>]*>"), "")?.take(100)
 
-                MainNavigation(
-                    sharingToggleViewModel = sharingToggleViewModel,
-                    sharedBrowseViewModel = sharedBrowseViewModel,
-                    initialDeepLinkTitle = deepLinkTitle
-                )
+                androidx.compose.foundation.layout.Column(modifier = Modifier.fillMaxSize()) {
+                    if (isRootedOrCustom || !isIntegrityValid) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            val warningText = if (!isIntegrityValid) {
+                                "Security Warning: App integrity check failed. The app may have been modified."
+                            } else {
+                                "Security Warning: Root or Custom ROM detected. Security cannot be guaranteed."
+                            }
+                            Text(
+                                warningText,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.padding(8.dp),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                    Box(modifier = Modifier.weight(1f)) {
+                        MainNavigation(
+                            sharingToggleViewModel = sharingToggleViewModel,
+                            sharedBrowseViewModel = sharedBrowseViewModel,
+                            initialDeepLinkTitle = deepLinkTitle
+                        )
+                    }
+                }
             }
           }
         }

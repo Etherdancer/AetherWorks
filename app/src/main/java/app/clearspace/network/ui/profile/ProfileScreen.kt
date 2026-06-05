@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -118,6 +119,12 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
                     label = { Text("Display Alias (Required)") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Text(
+                    "Your profile is a fictional persona. Do not use your real name or personal information. Your cryptographic keys act as your secure identity under the hood.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+                )
             }
             
             item {
@@ -198,6 +205,27 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
                         onCheckedChange = { 
                             showProfile = it
                             prefs.edit().putBoolean("show_profile_to_nearby", it).apply()
+                        }
+                    )
+                }
+                
+                var globalDiscoverable by remember { mutableStateOf(prefs.getBoolean("global_discoverable", false)) }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+                        Text("Make Alias Globally Discoverable", style = MaterialTheme.typography.bodyLarge)
+                        Text("When enabled, your Alias and FCM Push Token will be securely registered on our minimal server so people anywhere can search for you. Requires Restart.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Switch(
+                        checked = globalDiscoverable,
+                        onCheckedChange = { 
+                            globalDiscoverable = it
+                            prefs.edit().putBoolean("global_discoverable", it).apply()
+                            // Note: Actual Firebase registration is handled by the GlobalDiscoveryAgent on startup or toggle change
                         }
                     )
                 }

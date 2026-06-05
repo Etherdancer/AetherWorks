@@ -10,6 +10,13 @@ class SharingStateManager(private val context: Context) {
     private val _isSharingEnabled = MutableStateFlow(false)
     val isSharingEnabled: StateFlow<Boolean> = _isSharingEnabled.asStateFlow()
 
+    private val _isRootWarningActive = MutableStateFlow(false)
+    val isRootWarningActive: StateFlow<Boolean> = _isRootWarningActive.asStateFlow()
+
+    fun setRootWarningActive(active: Boolean) {
+        _isRootWarningActive.value = active
+    }
+
     fun enableSharing() {
         if (_isSharingEnabled.value) return
         _isSharingEnabled.value = true

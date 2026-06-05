@@ -129,13 +129,18 @@ class TofuTrustManager(private val prefs: SharedPreferences) : X509ExtendedTrust
                 prefs.edit().putString("cert_$ip", fingerprint).apply()
             }
             knownFingerprint != fingerprint -> {
-                // FIX C2: Certificate change after TOFU pin — always reject, never silently accept.
-                // This blocks MITM upgrades even after initial trust is established.
+                // FIX C2: Certificate change after TOFU pin — re-prompt to handle dynamic IPs
+                // but never silently accept.
                 app.clearspace.network.discovery.P2PClient.logSecurityEvent(
                     "MITM_CERTIFICATE_CHANGE_DETECTED",
                     "peer=$ip known_cert=$knownFingerprint new_cert=$fingerprint"
                 )
-                throw CertificateException("SECURITY ALERT: Certificate for $ip has changed! Possible MITM attack.")
+                val deferred = TofuPendingManager.requestConfirmation(ip, fingerprint)
+                val accepted = kotlinx.coroutines.runBlocking { deferred.await() }
+                if (!accepted) {
+                    throw CertificateException("SECURITY ALERT: Certificate for $ip has changed! Possible MITM attack.")
+                }
+                prefs.edit().putString("cert_$ip", fingerprint).apply()
             }
             // else: known fingerprint matches — allow silently
         }

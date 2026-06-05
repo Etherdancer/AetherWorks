@@ -20,7 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Box
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,6 +45,11 @@ fun LibraryScreen(
 ) {
     val libraryContent by viewModel.libraryContent.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
+    var selectedTag by remember { mutableStateOf<String?>(null) }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.loadContent(searchQuery)
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -92,6 +97,15 @@ fun LibraryScreen(
         }
         
         item {
+            Text(
+                "This is your local vault. 'Private' content is encrypted and never leaves your device. 'Trusted' and 'Group' content is E2E encrypted and synced with authorized contacts globally. 'Public' content is broadcasted locally to anyone nearby.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+        
+        item {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { 
@@ -114,8 +128,6 @@ fun LibraryScreen(
                 .toSet()
                 .toList()
                 .sorted()
-                
-            var selectedTag by remember { mutableStateOf<String?>(null) }
             
             if (allTags.isNotEmpty()) {
                 item {

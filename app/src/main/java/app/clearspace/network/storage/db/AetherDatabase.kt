@@ -23,6 +23,8 @@ import app.clearspace.network.storage.db.entity.TrustGroup
 import app.clearspace.network.storage.db.entity.GroupMember
 import app.clearspace.network.storage.db.entity.BlockedAuthor
 import app.clearspace.network.storage.db.dao.BlockedAuthorDao
+import app.clearspace.network.storage.db.dao.BlacklistDao
+import app.clearspace.network.storage.db.entity.BlacklistEntry
 
 @Database(
     entities = [
@@ -34,9 +36,10 @@ import app.clearspace.network.storage.db.dao.BlockedAuthorDao
         RelayPacket::class,
         TrustGroup::class,
         GroupMember::class,
-        BlockedAuthor::class
+        BlockedAuthor::class,
+        BlacklistEntry::class
     ],
-    version = 15,
+    version = 17,
     exportSchema = false
 )
 @androidx.room.TypeConverters(Converters::class)
@@ -48,6 +51,7 @@ abstract class AetherDatabase : RoomDatabase() {
     abstract fun relayPacketDao(): RelayPacketDao
     abstract fun groupDao(): GroupDao
     abstract fun blockedAuthorDao(): BlockedAuthorDao
+    abstract fun blacklistDao(): BlacklistDao
 
     companion object {
         val MIGRATION_6_7 = object : Migration(6, 7) {
@@ -151,6 +155,18 @@ abstract class AetherDatabase : RoomDatabase() {
                 database.execSQL("CREATE TABLE IF NOT EXISTS `blocked_authors` (`authorId` TEXT NOT NULL, `blockedAt` INTEGER NOT NULL, PRIMARY KEY(`authorId`))")
             }
         }
+        
+        val MIGRATION_15_16 = object : Migration(15, 16) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE `content_units` ADD COLUMN `reportTokens` TEXT NOT NULL DEFAULT '[]'")
+            }
+        }
+
+        val MIGRATION_16_17 = object : Migration(16, 17) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("CREATE TABLE IF NOT EXISTS `cached_blacklist` (`hash` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, PRIMARY KEY(`hash`))")
+            }
+        }
 
         @Volatile
         private var INSTANCE_PRIVATE: AetherDatabase? = null
@@ -169,7 +185,7 @@ abstract class AetherDatabase : RoomDatabase() {
                 .openHelperFactory(factory)
                 .addMigrations(
                     MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
-                    MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15
+                    MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17
                 )
                 // FIX MC1: Removed fallbackToDestructiveMigration(). A failed migration now
                 // surfaces an exception that must be caught and shown to the user, rather than
@@ -191,7 +207,7 @@ abstract class AetherDatabase : RoomDatabase() {
                 .openHelperFactory(factory)
                 .addMigrations(
                     MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
-                    MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15
+                    MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17
                 )
                 // FIX MC1: Removed fallbackToDestructiveMigration(). Same reason as private DB.
                 .build()

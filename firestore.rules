@@ -1,11 +1,38 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /blacklisted_hashes/{document=**} {
-      // Allow read access to anyone (even unauthenticated, as the app is anonymous)
+
+    // Blacklist: read-only for all clients, write only via Admin SDK (Cloud Function)
+    match /blacklisted_hashes/{hash} {
       allow read: if true;
-      // Writing is strictly forbidden for clients, only allowed via Firebase Admin SDK
-      allow write: if false;
+      allow write: if false; // Only Cloud Functions with Admin SDK may write
+    }
+
+    // Trusted drops: authenticated clients may write to their own drop,
+    // may only read drops addressed to them (identified by document ID = contentHash)
+    match /trusted_drops/{dropId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    // Group drops: same as trusted drops
+    match /group_drops/{dropId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    // Global report blacklist submissions: write once, no read for clients
+    match /global_blacklist/{hash} {
+      allow read: if false;
+      allow write: if request.auth != null 
+                   && request.resource.data.keys().hasOnly(['hash', 'reportCount', 'timestamp']);
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

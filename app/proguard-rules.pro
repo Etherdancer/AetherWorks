@@ -40,3 +40,7 @@
     public static int e(...);
 }
 
+# Room Database ProGuard Rules
+-keep class app.clearspace.network.storage.db.AetherDatabase { *; }
+-keep class app.clearspace.network.storage.db.AetherDatabase_Impl { *; }
+-keep class * extends androidx.room.RoomDatabase
