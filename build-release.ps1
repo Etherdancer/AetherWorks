@@ -1,4 +1,4 @@
-# build-release.ps1 — Build release AAB with automatic Git versioning
+# build-release.ps1 — Build release AAB & APK with automatic Git versioning
 # Usage: .\build-release.ps1
 # Usage with custom message: .\build-release.ps1 -Message "fix: resolved crash on startup"
 
@@ -23,7 +23,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Stage all changes
-Write-Host "[1/3] Committing changes to Git..." -ForegroundColor Yellow
+Write-Host "[1/5] Committing changes to Git..." -ForegroundColor Yellow
 git add -A
 
 # Check if there are changes to commit
@@ -38,10 +38,10 @@ if ($status) {
     Write-Host "  No changes to commit, skipping." -ForegroundColor DarkGray
 }
 
-# Build the AAB
+# Build the AAB & APK
 Write-Host ""
-Write-Host "[2/3] Building release AAB..." -ForegroundColor Yellow
-.\gradlew.bat bundleRelease
+Write-Host "[2/5] Building release AAB and APK..." -ForegroundColor Yellow
+.\gradlew.bat bundleRelease assembleRelease
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host ""
@@ -49,9 +49,49 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Archive the AAB and APK
+Write-Host ""
+Write-Host "[3/5] Archiving AAB and APK..." -ForegroundColor Yellow
+$aabSource = "app\build\outputs\bundle\release\app-release.aab"
+$apkSource = (Get-ChildItem "app\build\outputs\apk\release\*.apk" | Select-Object -First 1).FullName
+$releasesDir = "releases"
+if (-not (Test-Path $releasesDir)) {
+    New-Item -ItemType Directory -Path $releasesDir | Out-Null
+}
+
+$timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+$aabArchiveName = "clearspace-v${versionName}-code${versionCode}-${timestamp}.aab"
+$apkArchiveName = "clearspace-v${versionName}-code${versionCode}-${timestamp}.apk"
+$aabArchivePath = Join-Path $releasesDir $aabArchiveName
+$apkArchivePath = Join-Path $releasesDir $apkArchiveName
+
+Copy-Item $aabSource $aabArchivePath
+Copy-Item $apkSource $apkArchivePath
+
+$aabSize = [math]::Round((Get-Item $aabArchivePath).Length / 1MB, 1)
+$apkSize = [math]::Round((Get-Item $apkArchivePath).Length / 1MB, 1)
+
+Write-Host "  Saved AAB: $aabArchivePath ($aabSize MB)" -ForegroundColor Green
+Write-Host "  Saved APK: $apkArchivePath ($apkSize MB)" -ForegroundColor Green
+
+# Log to HISTORY.md
+Write-Host ""
+Write-Host "[4/5] Updating Release History..." -ForegroundColor Yellow
+$historyFile = Join-Path $releasesDir "HISTORY.md"
+if (-not (Test-Path $historyFile)) {
+    Set-Content -Path $historyFile -Value "# ClearSpace Release History`n"
+}
+$historyEntry = "- **v${versionName}** (Code: \`${versionCode}\`) — Built on $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`n  - AAB: \`$aabArchiveName\` ($aabSize MB)`n  - APK: \`$apkArchiveName\` ($apkSize MB)"
+Add-Content -Path $historyFile -Value $historyEntry
+Write-Host "  Logged release to $historyFile" -ForegroundColor Green
+
+# Count total archived releases
+$totalAab = (Get-ChildItem $releasesDir -Filter "*.aab").Count
+$totalApk = (Get-ChildItem $releasesDir -Filter "*.apk").Count
+
 # Tag the release
 Write-Host ""
-Write-Host "[3/3] Tagging release..." -ForegroundColor Yellow
+Write-Host "[5/5] Tagging release..." -ForegroundColor Yellow
 $tag = "v$versionName-$versionCode"
 $existingTag = git tag -l $tag
 if (-not $existingTag) {
@@ -62,13 +102,13 @@ if (-not $existingTag) {
 }
 
 # Output result
-$aabPath = "app\build\outputs\bundle\release\app-release.aab"
-$aabSize = [math]::Round((Get-Item $aabPath).Length / 1MB, 1)
-
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "  BUILD SUCCESSFUL" -ForegroundColor Green
-Write-Host "  AAB: $aabPath ($aabSize MB)" -ForegroundColor Green
 Write-Host "  Version: $versionName (code: $versionCode)" -ForegroundColor Green
 Write-Host "  Git tag: $tag" -ForegroundColor Green
+Write-Host "  Releases dir: $releasesDir/" -ForegroundColor Green
+Write-Host "    - $totalAab AAB files" -ForegroundColor Green
+Write-Host "    - $totalApk APK files" -ForegroundColor Green
+Write-Host "  History log: $historyFile" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
