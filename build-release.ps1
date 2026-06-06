@@ -86,8 +86,8 @@ Add-Content -Path $historyFile -Value $historyEntry
 Write-Host "  Logged release to $historyFile" -ForegroundColor Green
 
 # Count total archived releases
-$totalAab = (Get-ChildItem $releasesDir -Filter "*.aab").Count
-$totalApk = (Get-ChildItem $releasesDir -Filter "*.apk").Count
+$totalAab = @(Get-ChildItem $releasesDir -Filter "*.aab").Count
+$totalApk = @(Get-ChildItem $releasesDir -Filter "*.apk").Count
 
 # Tag the release
 Write-Host ""
