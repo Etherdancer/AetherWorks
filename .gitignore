@@ -13,6 +13,21 @@
 .externalNativeBuild
 .cxx
 local.properties
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
 .kotlin/
 
 
@@ -20,3 +35,6 @@ firebase.exe
 
 # Firebase / Google Services
 app/google-services.json
+
+# AAB release archives (stored locally, too large for Git)
+/releases/

@@ -81,7 +81,7 @@ $historyFile = Join-Path $releasesDir "HISTORY.md"
 if (-not (Test-Path $historyFile)) {
     Set-Content -Path $historyFile -Value "# ClearSpace Release History`n"
 }
-$historyEntry = "- **v${versionName}** (Code: \`${versionCode}\`) — Built on $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`n  - AAB: \`$aabArchiveName\` ($aabSize MB)`n  - APK: \`$apkArchiveName\` ($apkSize MB)"
+$historyEntry = "- **v${versionName}** (Code: ${versionCode}) - Built on $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`n  - AAB: ${aabArchiveName} (${aabSize} MB)`n  - APK: ${apkArchiveName} (${apkSize} MB)"
 Add-Content -Path $historyFile -Value $historyEntry
 Write-Host "  Logged release to $historyFile" -ForegroundColor Green
 
