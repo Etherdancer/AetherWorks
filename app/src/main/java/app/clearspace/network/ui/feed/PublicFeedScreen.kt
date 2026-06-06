@@ -7,6 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.clickable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.clearspace.network.discovery.SortMode
 import app.clearspace.network.storage.db.entity.ContentUnit
@@ -62,7 +64,7 @@ fun PublicFeedScreen(modifier: Modifier = Modifier, viewModel: PublicFeedViewMod
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(feedContent) { unit ->
-                    ContentCard(unit)
+                    ContentCard(unit, onReportContent = { u, reason -> viewModel.reportContent(u, reason) })
                 }
             }
         }
@@ -70,7 +72,7 @@ fun PublicFeedScreen(modifier: Modifier = Modifier, viewModel: PublicFeedViewMod
 }
 
 @Composable
-fun ContentCard(unit: ContentUnit) {
+fun ContentCard(unit: ContentUnit, onReportContent: (ContentUnit, String) -> Unit = { _, _ -> }) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(unit.title, style = MaterialTheme.typography.titleLarge)
@@ -86,8 +88,7 @@ fun ContentCard(unit: ContentUnit) {
                 Text("Reputation: ${unit.likeTokens.size - unit.dislikeTokens.size}", style = MaterialTheme.typography.labelSmall)
                 
                 var showReportDialog by remember { mutableStateOf(false) }
-                val context = androidx.compose.ui.platform.LocalContext.current
-                val coroutineScope = rememberCoroutineScope()
+                var selectedReason by remember { mutableStateOf("Child Safety / CSAM / CSAE") }
                 
                 TextButton(onClick = { showReportDialog = true }) {
                     Text("Report", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
@@ -97,13 +98,47 @@ fun ContentCard(unit: ContentUnit) {
                     AlertDialog(
                         onDismissRequest = { showReportDialog = false },
                         title = { Text("Report Content") },
-                        text = { Text("Are you sure you want to report this content for violating community guidelines? This will send the content hash to the moderation queue.") },
+                        text = {
+                            Column {
+                                Text("Please select a reason for reporting this content:", style = MaterialTheme.typography.bodyMedium)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                val reasons = listOf(
+                                    "Child Safety / CSAM / CSAE",
+                                    "Harassment or Bullying",
+                                    "Violence or Terrorism",
+                                    "Hate Speech",
+                                    "Other Community Guideline Violation"
+                                )
+                                
+                                reasons.forEach { reason ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { selectedReason = reason }
+                                            .padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(
+                                            selected = selectedReason == reason,
+                                            onClick = { selectedReason = reason }
+                                        )
+                                        Text(reason, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 8.dp))
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    "Note: Reports are uploaded securely to the developer database to comply with Google Play Developer policies. Illegal content, especially CSAM, will be reported to competent national and regional authorities.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        },
                         confirmButton = {
                             TextButton(
                                 onClick = { 
-                                    coroutineScope.launch {
-                                        app.clearspace.network.moderation.ContentReporter(context).reportContent(unit.contentHash, "User Reported via UI")
-                                    }
+                                    onReportContent(unit, selectedReason)
                                     showReportDialog = false 
                                 },
                                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)

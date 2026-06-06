@@ -79,7 +79,7 @@ fun OnboardingScreen(
                     Text("• Please be responsible. You are accountable for the content you choose to share.")
                     Text("• Public content is subject to community moderation and may be removed from the network if it violates safety guidelines.")
                     Text("• This app runs on physical devices only.")
-                    Text("• You must be at least 18 years old to use this app.")
+                    Text("• You must be at least 12 years old to use this app.")
                     Text("• You agree to not upload abusive, illegal, or objectional content, as outlined in the Terms of Service.")
                     Text("• This app utilizes the absolute minimum tracking necessary (via Firebase) because remote content moderation is mandatory to comply with Google Play Store policies and GDPR.")
                 }
@@ -112,7 +112,7 @@ fun OnboardingScreen(
                         checked = acceptedAge,
                         onCheckedChange = { acceptedAge = it }
                     )
-                    Text("I confirm that I am at least 18 years old.", style = MaterialTheme.typography.bodyMedium)
+                    Text("I confirm that I am at least 12 years old.", style = MaterialTheme.typography.bodyMedium)
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(

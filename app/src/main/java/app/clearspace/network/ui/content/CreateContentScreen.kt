@@ -289,13 +289,20 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                     }
 
                     coroutineScope.launch {
-                        if (selectedMediaUri != null && (visibility == Visibility.PUBLIC || visibility == Visibility.TRUSTED)) {
+                        if (visibility == Visibility.PUBLIC || visibility == Visibility.TRUSTED) {
                             val filterAgent = app.clearspace.network.security.guard.ContentFilterAgent(context)
-                            val isSafe = filterAgent.isImageSafe(selectedMediaUri!!)
-                            if (!isSafe) {
+                            if (!filterAgent.isTextSafe(title) || !filterAgent.isTextSafe(body)) {
                                 isError = true
-                                errorMessage = "This image was flagged by the on-device safety filter and cannot be broadcast."
+                                errorMessage = "This content contains words flagged by the on-device safety filter and cannot be broadcast."
                                 return@launch
+                            }
+                            if (selectedMediaUri != null) {
+                                val isSafe = filterAgent.isImageSafe(selectedMediaUri!!)
+                                if (!isSafe) {
+                                    isError = true
+                                    errorMessage = "This image was flagged by the on-device safety filter and cannot be broadcast."
+                                    return@launch
+                                }
                             }
                         }
 

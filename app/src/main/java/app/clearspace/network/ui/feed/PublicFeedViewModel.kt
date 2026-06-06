@@ -1,6 +1,7 @@
 package app.clearspace.network.ui.feed
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,8 +13,10 @@ import app.clearspace.network.discovery.ContentIndexer
 import app.clearspace.network.storage.db.AetherDatabase
 import app.clearspace.network.storage.db.entity.ContentUnit
 import app.clearspace.network.storage.db.entity.Visibility
+import app.clearspace.network.reputation.ReputationAgent
+import app.clearspace.network.crypto.KeyManager
 
-class PublicFeedViewModel : ViewModel() {
+class PublicFeedViewModel(application: Application) : AndroidViewModel(application) {
     val indexer = ContentIndexer()
     
     private val _rawContent = MutableStateFlow<List<ContentUnit>>(emptyList())
@@ -47,6 +50,26 @@ class PublicFeedViewModel : ViewModel() {
                 _rawContent.value = content
             } catch (e: Exception) {
                 // Not initialized
+            }
+        }
+    }
+
+    fun reportContent(unit: ContentUnit, reason: String) {
+        viewModelScope.launch {
+            try {
+                // Delete locally so it's not rendered or shared further
+                val db = AetherDatabase.getSharedDatabase()
+                db.contentDao().delete(unit.contentHash)
+                loadContent()
+                
+                // Upload report to Firestore and the global blacklist
+                val context = getApplication<Application>()
+                app.clearspace.network.moderation.ContentReporter(context).reportContent(unit.contentHash, reason)
+                
+                val repAgent = ReputationAgent(context, KeyManager(context))
+                repAgent.submitReport(unit.contentHash)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }

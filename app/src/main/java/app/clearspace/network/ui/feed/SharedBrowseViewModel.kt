@@ -253,14 +253,24 @@ class SharedBrowseViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
-    fun reportContent(unit: ContentUnit) {
+    fun reportContent(unit: ContentUnit, reason: String) {
         viewModelScope.launch {
             // Delete locally so it's not rendered or shared further
             sharedDb.contentDao().delete(unit.contentHash)
             if (_viewingContent.value?.contentHash == unit.contentHash) {
                 _viewingContent.value = null
             }
-            // In a full implementation, this hash would also be uploaded to the moderation server
+            
+            // Upload the report to the moderation database (Firestore) and register in global blacklist
+            try {
+                val context = getApplication<Application>()
+                app.clearspace.network.moderation.ContentReporter(context).reportContent(unit.contentHash, reason)
+                
+                val repAgent = ReputationAgent(context, KeyManager(context))
+                repAgent.submitReport(unit.contentHash)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

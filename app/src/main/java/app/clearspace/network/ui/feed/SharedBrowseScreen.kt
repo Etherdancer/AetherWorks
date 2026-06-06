@@ -78,8 +78,8 @@ fun SharedBrowseScreen(
             onDeepLinkContent = { hash ->
                 viewModel.openContent("local:0", hash)
             },
-            onReportContent = { hash ->
-                viewingContent?.let { viewModel.reportContent(it) }
+            onReportContent = { reason ->
+                viewingContent?.let { viewModel.reportContent(it, reason) }
             },
             onBlockAuthor = { authorId ->
                 viewModel.blockAuthor(authorId)
@@ -234,6 +234,8 @@ fun ContentDetailOverlay(
             
             val context = LocalContext.current
             var htmlContent by remember { mutableStateOf<String?>(null) }
+            var showReportDialog by remember { mutableStateOf(false) }
+            var selectedReason by remember { mutableStateOf("Child Safety / CSAM / CSAE") }
             
             DisposableEffect(content.body) {
                 var binder: IContentRenderer? = null
@@ -424,11 +426,69 @@ fun ContentDetailOverlay(
             Spacer(modifier = Modifier.height(8.dp))
             
             OutlinedButton(
-                onClick = { onReportContent(content.contentHash) },
+                onClick = { showReportDialog = true },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
             ) {
                 Text("Report Content (Violates UGC Policy)")
+            }
+
+            if (showReportDialog) {
+                AlertDialog(
+                    onDismissRequest = { showReportDialog = false },
+                    title = { Text("Report Content") },
+                    text = {
+                        Column {
+                            Text("Please select a reason for reporting this content:", style = MaterialTheme.typography.bodyMedium)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            val reasons = listOf(
+                                "Child Safety / CSAM / CSAE",
+                                "Harassment or Bullying",
+                                "Violence or Terrorism",
+                                "Hate Speech",
+                                "Other Community Guideline Violation"
+                            )
+                            
+                            reasons.forEach { reason ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { selectedReason = reason }
+                                        .padding(vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = selectedReason == reason,
+                                        onClick = { selectedReason = reason }
+                                    )
+                                    Text(reason, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 8.dp))
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Note: Reports are uploaded securely to the developer database to comply with Google Play Developer policies. Illegal content, especially CSAM, will be reported to competent national and regional authorities.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                onReportContent(selectedReason)
+                                showReportDialog = false
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Submit Report")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showReportDialog = false }) { Text("Cancel") }
+                    }
+                )
             }
             
             OutlinedButton(
