@@ -9,8 +9,18 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# Extract version info from build.gradle.kts
+# Auto-bump versionCode in build.gradle.kts
 $gradleFile = "app\build.gradle.kts"
+$content = Get-Content $gradleFile -Raw
+if ($content -match 'versionCode\s*=\s*(\d+)') {
+    $oldVersionCode = [int]$Matches[1]
+    $newVersionCode = $oldVersionCode + 1
+    $content = $content -replace "versionCode\s*=\s*$oldVersionCode", "versionCode = $newVersionCode"
+    Set-Content $gradleFile -Value $content
+    Write-Host "Auto-bumped versionCode from $oldVersionCode to $newVersionCode" -ForegroundColor Yellow
+}
+
+# Extract version info from build.gradle.kts
 $content = Get-Content $gradleFile -Raw
 $versionCode = if ($content -match 'versionCode\s*=\s*(\d+)') { $Matches[1] } else { "unknown" }
 $versionName = if ($content -match 'versionName\s*=\s*"([^"]+)"') { $Matches[1] } else { "unknown" }
