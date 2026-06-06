@@ -20,8 +20,8 @@ android {
         applicationId = "app.clearspace.network"
         minSdk = 26
         targetSdk = 36
-        versionCode = 22
-        versionName = "0.4.2.1_beta"
+        versionCode = 28
+        versionName = "0.4.2.1"
     }
 
     val keystorePropertiesFile = rootProject.file("app/keystore.properties")
