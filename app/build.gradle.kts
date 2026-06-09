@@ -56,7 +56,7 @@ android {
     buildFeatures {
       compose = true
       aidl = true
-      buildConfig = false
+      buildConfig = true
       shaders = false
     }
 

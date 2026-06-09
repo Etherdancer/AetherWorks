@@ -36,6 +36,7 @@ import app.clearspace.network.networking.SharingStateManager
 import app.clearspace.network.networking.SharingToggleViewModel
 import app.clearspace.network.ui.feed.SharedBrowseViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : FragmentActivity() {
   private lateinit var gatekeeperRepo: GatekeeperRepository
   private lateinit var gatekeeperViewModel: GatekeeperViewModel
