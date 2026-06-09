@@ -20,8 +20,8 @@ android {
         applicationId = "app.clearspace.network"
         minSdk = 26
         targetSdk = 36
-        versionCode = 34
-        versionName = "0.4.2.1"
+        versionCode = 36
+        versionName = "0.4.2.2"
     }
 
     val keystorePropertiesFile = rootProject.file("app/keystore.properties")
@@ -192,6 +192,7 @@ dependencies {
   // Open Source Licenses UI
   implementation(libs.aboutlibraries.compose)
 }
+
 
 
 

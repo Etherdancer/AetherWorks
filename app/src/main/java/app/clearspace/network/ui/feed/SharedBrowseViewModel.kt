@@ -179,7 +179,17 @@ class SharedBrowseViewModel(application: Application) : AndroidViewModel(applica
                     if (localStub != null && content !== localStub) {
                         val repAgent = ReputationAgent(getApplication(), KeyManager(getApplication()))
                         content = repAgent.mergeReputation(localStub, content!!)
-                        sharedDb.contentDao().insert(content!!)
+                        
+                        val totalInteractions = content!!.likeTokens.size + content!!.dislikeTokens.size
+                        val dynamicThreshold = maxOf(10, (totalInteractions * 0.05).toInt())
+                        
+                        if (content!!.reportTokens.size >= dynamicThreshold) {
+                            sharedDb.contentDao().delete(hash)
+                            db.blacklistDao().insertAll(listOf(app.clearspace.network.storage.db.entity.BlacklistEntry(hash, System.currentTimeMillis())))
+                            content = null
+                        } else {
+                            sharedDb.contentDao().insert(content!!)
+                        }
                     }
                 }
                 _viewingContent.value = content
