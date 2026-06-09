@@ -73,8 +73,7 @@
             android:exported="false"
             android:isolatedProcess="true" />
 
-        <!-- Shopping List Alarm Receiver -->
-        <receiver android:name=".ui.utilities.ShoppingAlarmReceiver" android:exported="false" />
+
 
         <!-- Firebase Messaging Service -->
         <service
@@ -90,9 +89,7 @@
             android:name=".network.FirestoreDeadDropService"
             android:exported="false" />
             
-        <service
-            android:name=".network.WebRTCMediaService"
-            android:exported="false" />
+
 
         <!-- All other components must have android:exported="false" -->
     </application>

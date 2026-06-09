@@ -125,13 +125,12 @@ class ReputationAgent(context: Context, private val keyManager: KeyManager) {
                     auth.signInAnonymously().await()
                 }
                 db.collection("global_blacklist").document(contentHash)
+                  .collection("reports").document(reportToken)
                   .set(
                       hashMapOf(
-                          "hash" to contentHash, 
                           "reportToken" to reportToken,
                           "timestamp" to System.currentTimeMillis()
-                      ), 
-                      com.google.firebase.firestore.SetOptions.merge()
+                      )
                   ).await()
             } catch (e: Exception) {
                 // Fail silently

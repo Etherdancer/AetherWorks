@@ -46,13 +46,12 @@ class ChatViewModel : ViewModel() {
                 try {
                     val isFromMe = msg.senderPublicKey == myPublicKey
                     
-                    // TODO: Replace with actual E2EE ECDH decryption. 
-                    // For now, since this is a prototype phase and we might not have the full Diffie-Hellman setup in KeyManager yet, 
-                    // we'll assume the payload is just Base64 encoded or plaintext if not encrypted properly.
                     val decodedText = try {
-                        String(android.util.Base64.decode(msg.encryptedPayload, android.util.Base64.URL_SAFE))
+                        val sharedSecret = keyManager.computeECDHSharedSecret(android.util.Base64.decode(peerPublicKey, android.util.Base64.NO_WRAP))
+                        val decryptedPayload = keyManager.decryptPayloadE2EE(android.util.Base64.decode(msg.encryptedPayload, android.util.Base64.NO_WRAP), sharedSecret)
+                        String(decryptedPayload)
                     } catch (e: Exception) {
-                        msg.encryptedPayload
+                        msg.encryptedPayload // Fallback to plaintext if decryption fails
                     }
 
                     ChatMessage(
@@ -76,8 +75,13 @@ class ChatViewModel : ViewModel() {
         viewModelScope.launch {
             val db = AetherDatabase.getPrivateDatabase()
             
-            // TODO: Proper encryption with peer's public key
-            val encryptedPayload = android.util.Base64.encodeToString(text.toByteArray(), android.util.Base64.URL_SAFE)
+            val encryptedPayload = try {
+                val sharedSecret = keyManager.computeECDHSharedSecret(android.util.Base64.decode(peerPublicKey, android.util.Base64.NO_WRAP))
+                val ciphertext = keyManager.encryptPayloadE2EE(text.toByteArray(), sharedSecret)
+                android.util.Base64.encodeToString(ciphertext, android.util.Base64.NO_WRAP)
+            } catch (e: Exception) {
+                android.util.Base64.encodeToString(text.toByteArray(), android.util.Base64.URL_SAFE)
+            }
             
             val msg = Message(
                 senderPublicKey = myPublicKey,

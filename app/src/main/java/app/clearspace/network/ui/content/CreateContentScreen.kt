@@ -124,9 +124,53 @@ fun CreateContentScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Uni
                 Text("Live Preview")
             }
             if (showPreview) {
-                // Live preview placeholder. In full implementation, this binds to ContentRendererService
                 Surface(modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp), tonalElevation = 2.dp) {
-                    Text(body, modifier = Modifier.padding(8.dp))
+                    var htmlContent by remember { mutableStateOf<String?>(null) }
+                    
+                    DisposableEffect(body) {
+                        var binder: app.clearspace.network.IContentRenderer? = null
+                        val connection = object : android.content.ServiceConnection {
+                            override fun onServiceConnected(name: android.content.ComponentName?, service: android.os.IBinder?) {
+                                binder = app.clearspace.network.IContentRenderer.Stub.asInterface(service)
+                                try {
+                                    htmlContent = binder?.renderMarkdownToHtml(body) ?: "Renderer error"
+                                } catch (e: Exception) {
+                                    htmlContent = "Error: ${e.message}"
+                                }
+                            }
+                            override fun onServiceDisconnected(name: android.content.ComponentName?) {
+                                binder = null
+                            }
+                        }
+                        
+                        val intent = android.content.Intent(context, app.clearspace.network.security.guard.ContentRendererService::class.java)
+                        context.bindService(intent, connection, android.content.Context.BIND_AUTO_CREATE)
+                        
+                        onDispose {
+                            context.unbindService(connection)
+                        }
+                    }
+
+                    if (htmlContent == null) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        androidx.compose.ui.viewinterop.AndroidView(
+                            factory = { ctx ->
+                                android.webkit.WebView(ctx).apply {
+                                    settings.javaScriptEnabled = false
+                                    settings.domStorageEnabled = false
+                                    setBackgroundColor(0)
+                                    loadDataWithBaseURL(null, htmlContent!!, "text/html", "UTF-8", null)
+                                }
+                            },
+                            update = { webView ->
+                                webView.loadDataWithBaseURL(null, htmlContent!!, "text/html", "UTF-8", null)
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
             } else {
                 OutlinedTextField(

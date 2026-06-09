@@ -34,7 +34,7 @@ fun QrVerificationScreen(modifier: Modifier = Modifier, onBack: () -> Unit) {
     
     // Generate a one-time nonce
     val nonce = remember { java.util.UUID.randomUUID().toString().substring(0, 8) }
-    val pubKeyFingerprint = remember { "fingerprint-placeholder" } // TODO: actual Ed25519 fingerprint
+    val pubKeyFingerprint = remember { keyManager.getEd25519Fingerprint() }
     val qrContent = "ClearSpace://trust?pk=$pubKeyFingerprint&n=$nonce"
 
     var hasCameraPermission by remember { mutableStateOf(false) }

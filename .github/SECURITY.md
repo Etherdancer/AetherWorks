@@ -14,7 +14,7 @@ ClearSpace takes security and privacy very seriously because it is the core foun
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-Instead, please send an email to `security@ClearSpace.org` (placeholder, contact the developer directly if this is a personal repo).
+Instead, please report the vulnerability privately using GitHub's Security Advisory feature, or send an email to `etherdancer.zero553@aleeas.com`.
 
 Please include:
 * A description of the vulnerability.

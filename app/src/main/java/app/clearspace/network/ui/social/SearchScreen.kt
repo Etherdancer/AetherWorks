@@ -12,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.background
 import kotlinx.coroutines.launch
 import app.clearspace.network.discovery.GlobalDiscoveryAgent
 import app.clearspace.network.discovery.GlobalProfile
@@ -111,9 +113,25 @@ fun GlobalProfileCard(profile: GlobalProfile, onPing: () -> Unit) {
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Placeholder for Avatar
-            Box(modifier = Modifier.size(50.dp)) {
-                Icon(Icons.Filled.Search, contentDescription = "Avatar", modifier = Modifier.fillMaxSize())
+            // Dynamic Avatar generated from ID
+            val colorHash = kotlin.math.abs(profile.id.hashCode())
+            val avatarColor = Color(
+                red = (colorHash and 0xFF) / 255f,
+                green = ((colorHash shr 8) and 0xFF) / 255f,
+                blue = ((colorHash shr 16) and 0xFF) / 255f,
+                alpha = 1f
+            )
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .background(avatarColor, shape = androidx.compose.foundation.shape.CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = profile.alias.take(1).uppercase(),
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {

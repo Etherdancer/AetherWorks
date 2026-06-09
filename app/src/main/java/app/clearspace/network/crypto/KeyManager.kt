@@ -15,6 +15,7 @@ import org.bouncycastle.crypto.generators.X25519KeyPairGenerator
 import org.bouncycastle.crypto.params.X25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.X25519PublicKeyParameters
+import org.bouncycastle.crypto.agreement.X25519Agreement
 import java.security.KeyStore
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -232,6 +233,51 @@ class KeyManager(context: Context) {
         signer.init(false, Ed25519PublicKeyParameters(pubKey, 0))
         signer.update(data, 0, data.size)
         return signer.verifySignature(signature)
+    }
+
+    fun getEd25519Fingerprint(): String {
+        val pub = getOrGenerateIdentity().second
+        val digest = java.security.MessageDigest.getInstance("SHA-256").digest(pub)
+        return Base64.encodeToString(digest, Base64.NO_WRAP)
+    }
+
+    fun computeECDHSharedSecret(peerPublicKey: ByteArray): ByteArray {
+        val myPrivEncStr = prefs.getString(KEY_X25519_PRIV, null) ?: throw IllegalStateException("No X25519 identity key found")
+        val myPrivBytes = decryptData(Base64.decode(myPrivEncStr, Base64.DEFAULT))
+
+        val agreement = X25519Agreement()
+        agreement.init(X25519PrivateKeyParameters(myPrivBytes, 0))
+        val sharedSecret = ByteArray(agreement.agreementSize)
+        agreement.calculateAgreement(X25519PublicKeyParameters(peerPublicKey, 0), sharedSecret, 0)
+        
+        java.util.Arrays.fill(myPrivBytes, 0.toByte())
+        return sharedSecret
+    }
+
+    fun encryptPayloadE2EE(payload: ByteArray, sharedSecret: ByteArray): ByteArray {
+        val iv = ByteArray(GCM_IV_LENGTH).apply { SecureRandom().nextBytes(this) }
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        val keyBytes = java.security.MessageDigest.getInstance("SHA-256").digest(sharedSecret)
+        val keySpec = javax.crypto.spec.SecretKeySpec(keyBytes, "AES")
+        
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, GCMParameterSpec(GCM_TAG_LENGTH, iv))
+        val encrypted = cipher.doFinal(payload)
+        java.util.Arrays.fill(keyBytes, 0.toByte())
+        return iv + encrypted
+    }
+
+    fun decryptPayloadE2EE(data: ByteArray, sharedSecret: ByteArray): ByteArray {
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        val keyBytes = java.security.MessageDigest.getInstance("SHA-256").digest(sharedSecret)
+        val keySpec = javax.crypto.spec.SecretKeySpec(keyBytes, "AES")
+        
+        val iv = data.copyOfRange(0, GCM_IV_LENGTH)
+        val encrypted = data.copyOfRange(GCM_IV_LENGTH, data.size)
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, GCMParameterSpec(GCM_TAG_LENGTH, iv))
+        
+        val decrypted = cipher.doFinal(encrypted)
+        java.util.Arrays.fill(keyBytes, 0.toByte())
+        return decrypted
     }
 
     // --- Biometric Authentication Support ---

@@ -10,6 +10,8 @@ class SharingStateManager(private val context: Context) {
     private val _isSharingEnabled = MutableStateFlow(false)
     val isSharingEnabled: StateFlow<Boolean> = _isSharingEnabled.asStateFlow()
 
+    private var discoveryManager: app.clearspace.network.discovery.DiscoveryManager? = null
+
     private val _isRootWarningActive = MutableStateFlow(false)
     val isRootWarningActive: StateFlow<Boolean> = _isRootWarningActive.asStateFlow()
 
@@ -29,7 +31,20 @@ class SharingStateManager(private val context: Context) {
             _isSharingEnabled.value = false
         }
         
-        // TODO: Start the DiscoveryManager and P2P services here when implemented
+        val protocols = listOf(
+            app.clearspace.network.discovery.BleDiscovery(context),
+            app.clearspace.network.discovery.WifiDirectDiscovery(context),
+            app.clearspace.network.discovery.NsdDiscovery(context)
+        )
+        discoveryManager = app.clearspace.network.discovery.DiscoveryManager(protocols)
+        
+        val packet = app.clearspace.network.discovery.PresencePacket(
+            peerId = java.util.UUID.randomUUID().toString().substring(0, 8),
+            hasProfile = true,
+            categoryBitmask = 0L,
+            tcpPort = 8080
+        )
+        discoveryManager?.start(packet)
     }
 
     fun disableSharing() {
@@ -40,6 +55,7 @@ class SharingStateManager(private val context: Context) {
         val intent = Intent(context, app.clearspace.network.discovery.DiscoveryForegroundService::class.java)
         context.stopService(intent)
         
-        // TODO: Stop all discovery, close connections, unregister network services here
+        discoveryManager?.stop()
+        discoveryManager = null
     }
 }

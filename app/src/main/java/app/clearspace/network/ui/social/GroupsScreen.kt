@@ -47,13 +47,23 @@ fun GroupsScreen(modifier: Modifier = Modifier, onBack: () -> Unit, viewModel: G
                 }
             } else {
                 items(groups) { groupWithMembers ->
+                    var showDetailDialog by remember { mutableStateOf(false) }
                     Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable {
-                        // TODO: Navigate to Group Detail to add/remove members
+                        showDetailDialog = true
                     }) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(groupWithMembers.group.name, style = MaterialTheme.typography.titleMedium)
                             Text("${groupWithMembers.members.size} members", style = MaterialTheme.typography.bodyMedium)
                         }
+                    }
+                    if (showDetailDialog) {
+                        GroupDetailDialog(
+                            groupName = groupWithMembers.group.name,
+                            members = groupWithMembers.members.map { it.publicKeyBase64 },
+                            onDismiss = { showDetailDialog = false },
+                            onAddMember = { viewModel.addMemberToGroup(groupWithMembers.group.groupId, it) },
+                            onRemoveMember = { viewModel.removeMemberFromGroup(groupWithMembers.group.groupId, it) }
+                        )
                     }
                 }
             }
@@ -89,4 +99,59 @@ fun GroupsScreen(modifier: Modifier = Modifier, onBack: () -> Unit, viewModel: G
             )
         }
     }
+}
+
+@Composable
+fun GroupDetailDialog(
+    groupName: String,
+    members: List<String>,
+    onDismiss: () -> Unit,
+    onAddMember: (String) -> Unit,
+    onRemoveMember: (String) -> Unit
+) {
+    var newMemberAlias by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(groupName) },
+        text = {
+            Column {
+                Text("Members:", style = MaterialTheme.typography.labelLarge)
+                if (members.isEmpty()) {
+                    Text("No members yet.", style = MaterialTheme.typography.bodySmall)
+                } else {
+                    LazyColumn(modifier = Modifier.heightIn(max = 150.dp)) {
+                        items(members) { member ->
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Text(member.take(16) + "...")
+                                IconButton(onClick = { onRemoveMember(member) }) {
+                                    Text("X", color = MaterialTheme.colorScheme.error)
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = newMemberAlias,
+                    onValueChange = { newMemberAlias = it },
+                    label = { Text("Add Member Public Key") }
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                if (newMemberAlias.isNotBlank()) {
+                    onAddMember(newMemberAlias)
+                    newMemberAlias = ""
+                }
+            }) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
 }
