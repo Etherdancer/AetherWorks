@@ -110,7 +110,7 @@ fun SharedBrowseScreen(
                 ) {
                     item {
                         Text(
-                            "This feed shows 'Public' content from nearby devices and your Remote Trusted Users, as well as private 'Trusted' content synced globally over the internet.",
+                            "This feed shows 'Public' content from nearby devices and your Remote Trusted Users, as well as private 'Trusted' content synced securely over the internet only with trusted users.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 8.dp)

@@ -57,7 +57,7 @@ fun GlobalSharingToggle(
         AlertDialog(
             onDismissRequest = { showConsentDialog = false },
             title = { Text("Start Sharing Data?") },
-            text = { Text("You are about to enable data sharing. 'Public' content will be shared with nearby devices AND securely synced over the internet with your Remote Trusted Users. 'Trusted' content will only sync with authorized remote contacts. Your private data is completely isolated and stays entirely on your device. Do you want to continue?\n\nNote: Once public, content propagates to others and cannot be recalled. We use Firebase to receive background wake-up pings and for a centralized moderation blacklist. This minimal tracking is strictly necessary to publish on the Google Play Store and to satisfy laws and regulations regarding content moderation.") },
+            text = { Text("You are about to enable data sharing. 'Public' content will be shared with nearby devices AND securely synced over the internet with your Remote Trusted Users. 'Trusted' content will securely sync over the internet only with authorized remote contacts. Your private data is completely isolated and stays entirely on your device. Do you want to continue?\n\nNote: Once public, content propagates to others and cannot be recalled. We use Firebase to receive background wake-up pings and for a centralized moderation blacklist. This minimal tracking is strictly necessary to publish on the Google Play Store and to satisfy laws and regulations regarding content moderation.") },
             confirmButton = {
                 TextButton(onClick = {
                     showConsentDialog = false

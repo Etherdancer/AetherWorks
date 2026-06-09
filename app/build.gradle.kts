@@ -20,7 +20,7 @@ android {
         applicationId = "app.clearspace.network"
         minSdk = 26
         targetSdk = 36
-        versionCode = 31
+        versionCode = 32
         versionName = "0.4.2.1"
     }
 
@@ -191,6 +191,7 @@ dependencies {
   // Open Source Licenses UI
   implementation(libs.aboutlibraries.compose)
 }
+
 
 
 

@@ -1,6 +1,6 @@
 # Privacy Policy for Clear Space
 
-**Plain language:** This app is designed to maximize your privacy. It operates on a hybrid network: Public content is shared offline and peer-to-peer, while Trusted content syncs globally over the internet. Your private data is completely isolated and stays entirely on your device. You are in full control over what is shared. We use minimal tracking just to be able to publish on the Google Play store and to satisfy laws and regulations regarding content moderation.
+**Plain language:** This app is designed to maximize your privacy. It operates on a hybrid network: Public content is shared offline and peer-to-peer, while Trusted content syncs securely over the internet only with trusted users. Your private data is completely isolated and stays entirely on your device. You are in full control over what is shared. We use minimal tracking just to be able to publish on the Google Play store and to satisfy laws and regulations regarding content moderation.
 
 ## 1. Data Collection and Usage
 - **No Personal Data:** The app does not ask for or collect your real name, email, phone number, or location. Any profile you create is a fictional persona and remains entirely on your device unless you explicitly choose to share it.
@@ -12,7 +12,7 @@
 - **No Cloud Backups:** We explicitly disable Android system backups to ensure your private database never leaves your physical device without your active consent.
 
 ## 3. Data Sharing (Hybrid Local & Global)
-- **Hybrid Networking:** When you turn the "Sharing Toggle" ON, the app communicates with nearby devices via Bluetooth and Wi-Fi Direct for Public content, and connects over the internet to sync data with your Remote Trusted Users. No persistent identifiers (MAC addresses, IMEIs) are exchanged.
+- **Hybrid Networking:** When you turn the "Sharing Toggle" ON, the app communicates with nearby devices via Bluetooth and Wi-Fi Direct for Public content, and connects securely over the internet to sync data only with your Remote Trusted Users. No persistent identifiers (MAC addresses, IMEIs) are exchanged.
 - **Explicit Consent:** Every feature that changes content visibility to "Public" or "Trusted" triggers a mandatory confirmation dialog. You are always in control of what is shared.
 - **End-to-End Encryption:** Any private messages sent to trusted users are end-to-end encrypted using hardware-backed keys.
 

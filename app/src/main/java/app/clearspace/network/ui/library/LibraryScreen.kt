@@ -71,7 +71,7 @@ fun LibraryScreen(
         
         item {
             Text(
-                "This is your vault. 'Private' content is isolated and never leaves your device. 'Trusted' content syncs globally over the internet. 'Public' content is broadcast to nearby devices AND shared securely over the internet with your Remote Trusted Users.",
+                "This is your vault. 'Private' content is isolated and never leaves your device. 'Trusted' content syncs securely over the internet only with trusted users. 'Public' content is broadcast to nearby devices AND shared securely over the internet with your Remote Trusted Users.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp)
