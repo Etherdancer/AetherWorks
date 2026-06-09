@@ -87,6 +87,30 @@ class MainActivity : FragmentActivity() {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
           when (val state = uiState) {
             is GatekeeperUiState.Loading -> { } // Show empty or splash
+            is GatekeeperUiState.UpdateRequired -> {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                    androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "Update Required",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(8.dp))
+                        Text(
+                            "A mandatory security update is available. You must update the app to continue.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(16.dp))
+                        Button(onClick = {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(state.downloadUrl))
+                            this@MainActivity.startActivity(intent)
+                        }) {
+                            Text("Download Latest Version")
+                        }
+                    }
+                }
+            }
             is GatekeeperUiState.Onboarding -> OnboardingScreen(onComplete = {
                 val chars = it.toCharArray()
                 gatekeeperViewModel.completeOnboarding(chars)

@@ -8,8 +8,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import app.clearspace.network.security.GatekeeperRepository
+import app.clearspace.network.security.VersionCheckRepository
 
-class GatekeeperViewModel(private val repository: GatekeeperRepository) : ViewModel() {
+class GatekeeperViewModel(
+    private val repository: GatekeeperRepository,
+    private val versionCheckRepository: VersionCheckRepository = VersionCheckRepository()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<GatekeeperUiState>(GatekeeperUiState.Loading)
     val uiState: StateFlow<GatekeeperUiState> = _uiState.asStateFlow()
@@ -19,10 +23,18 @@ class GatekeeperViewModel(private val repository: GatekeeperRepository) : ViewMo
     }
 
     private fun checkInitialState() {
-        if (!repository.hasCompletedOnboarding()) {
-            _uiState.value = GatekeeperUiState.Onboarding
-        } else {
-            updateLockoutState()
+        viewModelScope.launch {
+            val updateUrl = versionCheckRepository.checkForUpdate()
+            if (updateUrl != null) {
+                _uiState.value = GatekeeperUiState.UpdateRequired(updateUrl)
+                return@launch
+            }
+            
+            if (!repository.hasCompletedOnboarding()) {
+                _uiState.value = GatekeeperUiState.Onboarding
+            } else {
+                updateLockoutState()
+            }
         }
     }
 
@@ -102,4 +114,5 @@ sealed class GatekeeperUiState {
     data class LockedOut(val remainingSeconds: Long) : GatekeeperUiState()
     data class Authenticated(val dbKey: ByteArray) : GatekeeperUiState()
     object Active : GatekeeperUiState()
+    data class UpdateRequired(val downloadUrl: String) : GatekeeperUiState()
 }

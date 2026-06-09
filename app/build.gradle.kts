@@ -177,6 +177,7 @@ dependencies {
   implementation(libs.firebase.messaging)
   implementation(libs.firebase.firestore)
   implementation(libs.firebase.auth)
+  implementation(libs.firebase.appcheck.playintegrity)
   
   // WebRTC Data Channels (Hybrid Media Sync)
   // implementation(libs.webrtc.android) // Temporarily disabled pending mavenCentral resolution
