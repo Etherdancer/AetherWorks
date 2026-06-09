@@ -38,3 +38,18 @@ app/google-services.json
 
 # AAB release archives (stored locally, too large for Git)
 /releases/
+
+# Secrets
+app/keystore.properties
+app/release.keystore
+*.keystore
+keystore.properties
+
+# Build/Tools
+*.apk
+*.aab
+*.exe
+*.zip
+logcat*.txt
+bandit_report.html
+python_embed/
