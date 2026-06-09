@@ -60,7 +60,7 @@ fun RadarAnimation(
     )
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Canvas(modifier = Modifier.size(200.dp)) {
+        Canvas(modifier = Modifier.matchParentSize()) {
             val center = this.center
             val maxRadius = size.minDimension / 2
             
@@ -79,7 +79,7 @@ fun RadarAnimation(
             // Core dot
             drawCircle(
                 color = color,
-                radius = 8.dp.toPx(),
+                radius = (size.minDimension / 8).coerceAtMost(8.dp.toPx()),
                 center = center
             )
         }

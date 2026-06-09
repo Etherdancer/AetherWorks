@@ -37,6 +37,11 @@ class FirestoreDeadDropService : Service() {
             serviceScope.launch {
                 uploadContent(contentJson)
             }
+        } else if (action == ACTION_GOSSIP_TOP_RATED) {
+            val contentJson = intent.getStringExtra(EXTRA_CONTENT_JSON) ?: return START_NOT_STICKY
+            serviceScope.launch {
+                uploadGossipContent(contentJson)
+            }
         }
         return START_NOT_STICKY
     }
@@ -123,6 +128,65 @@ class FirestoreDeadDropService : Service() {
         }
     }
 
+    private suspend fun uploadGossipContent(contentJson: String) {
+        try {
+            val contentUnit = Json.decodeFromString<ContentUnit>(contentJson)
+            
+            if (contentUnit.visibility != Visibility.PUBLIC) {
+                Log.w("FirestoreDeadDrop", "Gossip prevented: Content is not PUBLIC.")
+                return
+            }
+
+            val privateDb = AetherDatabase.getPrivateDatabase()
+            val recipientMap = mutableMapOf<String, String>()
+
+            val trustedPeers = privateDb.peerDao().getByTrustLevel(TrustLevel.TRUSTED_REMOTE_VERIFIED) +
+                               privateDb.peerDao().getByTrustLevel(TrustLevel.TRUSTED_IN_PERSON)
+            trustedPeers.forEach { peer ->
+                peer.encryptionPublicKeyBase64?.let {
+                    recipientMap[peer.publicKeyBase64] = it
+                }
+            }
+
+            if (recipientMap.isEmpty()) {
+                Log.d("FirestoreDeadDrop", "Gossip aborted: no trusted peers to gossip to.")
+                return
+            }
+
+            val encryptedPayload = GroupEncryption.encryptPayloadForRecipients(
+                plaintextBytes = contentJson.toByteArray(Charsets.UTF_8),
+                recipientPublicKeys = recipientMap
+            )
+
+            val auth = FirebaseAuth.getInstance()
+            if (auth.currentUser == null) {
+                try {
+                    auth.signInAnonymously().await()
+                } catch (e: Exception) {
+                    return
+                }
+            }
+            val uid = auth.currentUser?.uid ?: ""
+
+            val documentData = hashMapOf(
+                "hash" to contentUnit.contentHash,
+                "payload" to encryptedPayload,
+                "timestamp" to System.currentTimeMillis(),
+                "senderUid" to uid,
+                "isGossip" to true
+            )
+
+            db.collection("trusted_drops")
+                .document("gossip_${contentUnit.contentHash}")
+                .set(documentData)
+                .addOnSuccessListener {
+                    Log.d("FirestoreDeadDrop", "Successfully gossiped top-rated content to trusted peers.")
+                }
+        } catch (e: Exception) {
+            Log.e("FirestoreDeadDrop", "Error gossiping content", e)
+        }
+    }
+
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
@@ -134,6 +198,7 @@ class FirestoreDeadDropService : Service() {
 
     companion object {
         const val ACTION_UPLOAD = "app.clearspace.network.UPLOAD_DEAD_DROP"
+        const val ACTION_GOSSIP_TOP_RATED = "app.clearspace.network.GOSSIP_TOP_RATED"
         const val EXTRA_CONTENT_JSON = "extra_content_json"
     }
 }

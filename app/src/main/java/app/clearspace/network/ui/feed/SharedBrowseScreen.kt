@@ -23,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material3.*
@@ -65,8 +66,8 @@ fun SharedBrowseScreen(
         ContentDetailOverlay(
             content = viewingContent!!,
             onClose = { viewModel.clearViewingContent() },
-            onSave = {
-                viewModel.saveToPrivateLibrary(viewingContent!!)
+            onSave = { visibility ->
+                viewModel.saveToPrivateLibrary(viewingContent!!, visibility)
             },
             onVote = { isUpvote ->
                 viewModel.vote(viewingContent!!, isUpvote)
@@ -109,7 +110,7 @@ fun SharedBrowseScreen(
                 ) {
                     item {
                         Text(
-                            "This feed shows 'Public' content broadcast locally from people physically near you, and 'Trusted/Group' content synced globally over the internet.",
+                            "This feed shows 'Public' content from nearby devices and your Remote Trusted Users, as well as private 'Trusted' content synced globally over the internet.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -193,7 +194,7 @@ fun HeaderCard(ipPort: String, header: ContentHeader, onClick: () -> Unit) {
 fun ContentDetailOverlay(
     content: ContentUnit,
     onClose: () -> Unit,
-    onSave: () -> Unit,
+    onSave: (app.clearspace.network.storage.db.entity.Visibility) -> Unit,
     onVote: (Boolean) -> Unit,
     onFlagVote: (FlagType, String) -> Unit,
     onShareToGroup: (String, String) -> Unit,
@@ -212,11 +213,27 @@ fun ContentDetailOverlay(
                 },
                 actions = {
                     val context = LocalContext.current
-                    IconButton(onClick = {
-                        onSave()
-                        android.widget.Toast.makeText(context, "Saved to Private Library", android.widget.Toast.LENGTH_SHORT).show()
-                    }) {
-                        Icon(Icons.Default.Download, contentDescription = "Save to Private Library")
+                    var expanded by remember { mutableStateOf(false) }
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More Options")
+                    }
+                    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Save to Private Vault") },
+                            onClick = {
+                                expanded = false
+                                onSave(app.clearspace.network.storage.db.entity.Visibility.PRIVATE)
+                                android.widget.Toast.makeText(context, "Saved to Vault", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Forward to Trusted Users") },
+                            onClick = {
+                                expanded = false
+                                onSave(app.clearspace.network.storage.db.entity.Visibility.TRUSTED)
+                                android.widget.Toast.makeText(context, "Forwarding to Trusted Users...", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        )
                     }
                 }
             )

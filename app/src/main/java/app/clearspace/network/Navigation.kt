@@ -20,7 +20,13 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -43,6 +49,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+@androidx.compose.material3.ExperimentalMaterial3Api
 @Composable
 fun MainNavigation(
     sharingToggleViewModel: SharingToggleViewModel,
@@ -62,41 +69,104 @@ fun MainNavigation(
   val currentKey = backStack.lastOrNull() ?: FeedTab
   val isMainTab = currentKey == FeedTab || currentKey == SocialTab || currentKey == LibraryTab
 
-  Scaffold(
-      bottomBar = {
+  val drawerState = androidx.compose.material3.rememberDrawerState(initialValue = androidx.compose.material3.DrawerValue.Closed)
+  val scope = rememberCoroutineScope()
+
+  androidx.compose.material3.ModalNavigationDrawer(
+      drawerState = drawerState,
+      drawerContent = {
+          androidx.compose.material3.ModalDrawerSheet {
+              androidx.compose.foundation.layout.Spacer(Modifier.height(16.dp))
+              Text("ClearSpace", modifier = Modifier.padding(16.dp), style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+              androidx.compose.material3.HorizontalDivider()
+              androidx.compose.material3.NavigationDrawerItem(
+                  label = { Text("Profile") },
+                  selected = false,
+                  onClick = { 
+                      scope.launch { drawerState.close() }
+                      backStack.add(ProfileSettings) 
+                  },
+                  icon = { Icon(Icons.Filled.Person, contentDescription = null) }
+              )
+              androidx.compose.material3.NavigationDrawerItem(
+                  label = { Text("About") },
+                  selected = false,
+                  onClick = { 
+                      scope.launch { drawerState.close() }
+                      backStack.add(AboutSettings) 
+                  },
+                  icon = { Icon(Icons.Filled.Info, contentDescription = null) }
+              )
+          }
+      }
+  ) {
+      Scaffold(
+          topBar = {
               if (isMainTab) {
-                  NavigationBar {
+                  androidx.compose.material3.TopAppBar(
+                      title = { 
+                          val title = when (currentKey) {
+                              FeedTab -> "Explore"
+                              SocialTab -> "Network"
+                              LibraryTab -> "Vault"
+                              else -> "ClearSpace"
+                          }
+                          Text(title)
+                      },
+                      navigationIcon = {
+                          androidx.compose.material3.IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                              Icon(Icons.Filled.AccountCircle, contentDescription = "Menu")
+                          }
+                      },
+                      actions = {
+                          androidx.compose.material3.IconButton(onClick = { backStack.add(GlobalSearch) }) {
+                              Icon(Icons.Filled.Search, contentDescription = "Global Search")
+                          }
+                          GlobalSharingToggle(
+                              isSharingEnabled = isSharingEnabled,
+                              onEnableSharing = { sharingToggleViewModel.enableSharing() },
+                              onDisableSharing = { sharingToggleViewModel.disableSharing() }
+                          )
+                      }
+                  )
+              }
+          },
+          bottomBar = {
+                  if (isMainTab) {
+                      NavigationBar {
+                          NavigationBarItem(
+                          selected = currentKey == FeedTab,
+                          onClick = { backStack.add(FeedTab) },
+                          icon = { Icon(Icons.Filled.Public, contentDescription = "Explore") },
+                          label = { Text("Explore") }
+                      )
                       NavigationBarItem(
-                      selected = currentKey == FeedTab,
-                      onClick = { backStack.add(FeedTab) },
-                      icon = { Icon(Icons.Filled.Public, contentDescription = "Feed") },
-                      label = { Text("Feed") }
-                  )
-                  NavigationBarItem(
-                      selected = currentKey == SocialTab,
-                      onClick = { backStack.add(SocialTab) },
-                      icon = { Icon(Icons.Filled.Person, contentDescription = "Social") },
-                      label = { Text("Social") }
-                  )
-                  NavigationBarItem(
-                      selected = currentKey == LibraryTab,
-                      onClick = { backStack.add(LibraryTab) },
-                      icon = { Icon(Icons.Filled.List, contentDescription = "Library") },
-                      label = { Text("Library") }
-                  )
+                          selected = currentKey == SocialTab,
+                          onClick = { backStack.add(SocialTab) },
+                          icon = { Icon(Icons.Filled.Person, contentDescription = "Network") },
+                          label = { Text("Network") }
+                      )
+                      NavigationBarItem(
+                          selected = currentKey == LibraryTab,
+                          onClick = { backStack.add(LibraryTab) },
+                          icon = { Icon(Icons.Filled.List, contentDescription = "Vault") },
+                          label = { Text("Vault") }
+                      )
+                      }
+                  }
+          },
+          floatingActionButton = {
+              if (isMainTab) {
+                  androidx.compose.material3.FloatingActionButton(
+                      onClick = { backStack.add(CreateContent()) }
+                  ) {
+                      Icon(Icons.Filled.Add, contentDescription = "Create Content")
                   }
               }
-      },
-      floatingActionButton = {
-          GlobalSharingToggle(
-              isSharingEnabled = isSharingEnabled,
-              onEnableSharing = { sharingToggleViewModel.enableSharing() },
-              onDisableSharing = { sharingToggleViewModel.disableSharing() }
-          )
-      }
-  ) { paddingValues ->
-      // FIX C2: Show TOFU fingerprint confirmation dialog whenever a new peer connects
-      TofuConfirmationHost()
+          }
+      ) { paddingValues ->
+          // FIX C2: Show TOFU fingerprint confirmation dialog whenever a new peer connects
+          TofuConfirmationHost()
       NavDisplay(
         backStack = backStack,
         onBack = { backStack.removeLastOrNull() },
@@ -115,16 +185,12 @@ fun MainNavigation(
               SocialScreen(
                   modifier = Modifier.padding(paddingValues),
                   onNavigateToGroups = { backStack.add(ManageGroups) },
-                  onNavigateToTrust = { backStack.add(RemoteLinkExchange) },
-                  onNavigateToSearch = { backStack.add(GlobalSearch) }
+                  onNavigateToTrust = { backStack.add(RemoteLinkExchange) }
               )
             }
             entry<LibraryTab> {
               LibraryScreen(
                   modifier = Modifier.padding(paddingValues),
-                  onNavigateToCreate = { backStack.add(CreateContent()) },
-                  onNavigateToProfile = { backStack.add(ProfileSettings) },
-                  onNavigateToAbout = { backStack.add(AboutSettings) },
                   onNavigateToMediaVault = { backStack.add(MediaVault) },
                   onNavigateToGraph = { backStack.add(GraphView) }
               )
@@ -244,4 +310,5 @@ fun MainNavigation(
           },
       )
   }
+}
 }

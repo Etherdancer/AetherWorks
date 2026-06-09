@@ -48,4 +48,7 @@ interface ContentDao {
 
     @Query("SELECT * FROM content_units WHERE visibility = 'PUBLIC' ORDER BY (length(likeTokens) - length(dislikeTokens)) ASC, timestamp ASC LIMIT :limit")
     suspend fun getLowestReputationPublicContent(limit: Int): List<ContentUnit>
+
+    @Query("SELECT * FROM content_units WHERE authorPublicKeyBase64 = :pubKey")
+    suspend fun getByAuthorPublicKey(pubKey: String): List<ContentUnit>
 }

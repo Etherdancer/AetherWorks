@@ -150,6 +150,15 @@ class KeyManager(context: Context) {
         return Pair(privBytes, pubBytes)
     }
 
+    fun regenerateIdentities() {
+        prefs.edit()
+            .remove(KEY_ED25519_PRIV)
+            .remove(KEY_ED25519_PUB)
+            .remove(KEY_X25519_PRIV)
+            .remove(KEY_X25519_PUB)
+            .apply()
+    }
+
     fun getOrGenerateEncryptionIdentity(): Pair<ByteArray, ByteArray> {
         val privEncStr = prefs.getString(KEY_X25519_PRIV, null)
         val pubStr = prefs.getString(KEY_X25519_PUB, null)

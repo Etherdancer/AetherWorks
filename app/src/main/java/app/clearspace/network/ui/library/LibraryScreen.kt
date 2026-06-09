@@ -36,9 +36,6 @@ import app.clearspace.network.ui.feed.ContentCard
 @Composable
 fun LibraryScreen(
     modifier: Modifier = Modifier,
-    onNavigateToCreate: () -> Unit,
-    onNavigateToProfile: () -> Unit,
-    onNavigateToAbout: () -> Unit,
     onNavigateToMediaVault: () -> Unit,
     onNavigateToGraph: () -> Unit,
     viewModel: LibraryViewModel = viewModel()
@@ -57,48 +54,24 @@ fun LibraryScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+            androidx.compose.foundation.layout.FlowRow(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text("My Library", style = MaterialTheme.typography.headlineMedium)
-                Column(horizontalAlignment = Alignment.End) {
-                    Button(onClick = onNavigateToCreate) {
-                        Text("Create Content")
-                    }
-                    var showMenu by remember { mutableStateOf(false) }
-                    Box {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = onNavigateToProfile) {
-                                    Text("Profile")
-                                }
-                                Button(onClick = onNavigateToAbout) {
-                                    Text("About")
-                                }
-                            }
-                            Button(onClick = onNavigateToMediaVault, modifier = Modifier.padding(top = 4.dp)) {
-                                Text("Media Vault")
-                            }
-                            Button(onClick = onNavigateToGraph, modifier = Modifier.padding(top = 4.dp)) {
-                                Text("Graph View")
-                            }
-                        }
-                    }
+                androidx.compose.material3.ElevatedButton(onClick = onNavigateToMediaVault) {
+                    Text("Media Vault")
+                }
+                androidx.compose.material3.ElevatedButton(onClick = onNavigateToGraph) {
+                    Text("Graph View")
                 }
             }
         }
         
         item {
             Text(
-                "This is your local vault. 'Private' content is encrypted and never leaves your device. 'Trusted' and 'Group' content is E2E encrypted and synced with authorized contacts globally. 'Public' content is broadcasted locally to anyone nearby.",
+                "This is your vault. 'Private' content is isolated and never leaves your device. 'Trusted' content syncs globally over the internet. 'Public' content is broadcast to nearby devices AND shared securely over the internet with your Remote Trusted Users.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp)

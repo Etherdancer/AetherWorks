@@ -62,6 +62,29 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
     var vedicRasi by remember { mutableStateOf(profile?.vedicRasi?.value ?: "") }
     var vedicRasiVis by remember { mutableStateOf(profile?.vedicRasi?.visibility ?: VisibilityLevel.PRIVATE) }
 
+    // Dynamic Status
+    var dynamicStatus by remember { mutableStateOf(profile?.dynamicStatus?.value ?: "🎧 Listening") }
+    var dynamicStatusVis by remember { mutableStateOf(profile?.dynamicStatus?.visibility ?: VisibilityLevel.PUBLIC) }
+    val statusOptions = listOf("🎧 Listening", "🌌 Deep Dive", "🕵️ Exploring", "🛑 Offline", "✍️ Creating")
+
+    // Top Badges
+    var topBadges by remember { mutableStateOf<List<String>>(emptyList()) }
+    LaunchedEffect(personaAgent.publicKeyBase64) {
+        val db = app.clearspace.network.storage.db.AetherDatabase.getSharedDatabase()
+        val myContent = db.contentDao().getByAuthorPublicKey(personaAgent.publicKeyBase64)
+        
+        val categoryScores = mutableMapOf<String, Int>()
+        myContent.forEach { unit ->
+            val score = unit.likeTokens.size - unit.dislikeTokens.size
+            if (score > 0) {
+                unit.categoryFlags.split(",").map { it.trim() }.filter { it.isNotEmpty() }.forEach { flag ->
+                    categoryScores[flag] = (categoryScores[flag] ?: 0) + score
+                }
+            }
+        }
+        topBadges = categoryScores.entries.sortedByDescending { it.value }.take(3).map { it.key }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -93,7 +116,8 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
                             chineseZodiac = if (chineseZodiac.isNotBlank()) ProfileField(chineseZodiac, chineseZodiacVis) else null,
                             celticHoroscope = if (celticHoroscope.isNotBlank()) ProfileField(celticHoroscope, celticHoroscopeVis) else null,
                             mayanKin = if (mayanKin.isNotBlank()) ProfileField(mayanKin, mayanKinVis) else null,
-                            vedicRasi = if (vedicRasi.isNotBlank()) ProfileField(vedicRasi, vedicRasiVis) else null
+                            vedicRasi = if (vedicRasi.isNotBlank()) ProfileField(vedicRasi, vedicRasiVis) else null,
+                            dynamicStatus = ProfileField(dynamicStatus, dynamicStatusVis)
                         )
                         personaAgent.saveProfile(newProfile)
                         onNavigateBack()
@@ -112,13 +136,47 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Text("Core Identity", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                OutlinedTextField(
-                    value = alias,
-                    onValueChange = { alias = it },
-                    label = { Text("Display Alias (Required)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Text("Core Identity (Bento Box)", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                // Bento box layout for modern profiles
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        OutlinedTextField(
+                            value = alias,
+                            onValueChange = { alias = it },
+                            label = { Text("Display Alias (Required)") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        var expandedStatus by remember { mutableStateOf(false) }
+                        Box {
+                            Button(onClick = { expandedStatus = true }, modifier = Modifier.fillMaxWidth()) {
+                                Text("Current Vibe: $dynamicStatus")
+                            }
+                            DropdownMenu(expanded = expandedStatus, onDismissRequest = { expandedStatus = false }) {
+                                statusOptions.forEach { option ->
+                                    DropdownMenuItem(text = { Text(option) }, onClick = { dynamicStatus = option; expandedStatus = false })
+                                }
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Top Contribution Badges", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        if (topBadges.isEmpty()) {
+                            Text("Share public content to earn badges based on community reputation!", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        } else {
+                            @OptIn(ExperimentalLayoutApi::class)
+                            FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                topBadges.forEach { badge ->
+                                    AssistChip(onClick = {}, label = { Text(badge) })
+                                }
+                            }
+                        }
+                    }
+                }
                 Text(
                     "Your profile is a fictional persona. Do not use your real name or personal information. Your cryptographic keys act as your secure identity under the hood.",
                     style = MaterialTheme.typography.bodySmall,
@@ -306,6 +364,37 @@ fun ProfileScreen(modifier: Modifier = Modifier, onNavigateBack: () -> Unit) {
                 Spacer(modifier = Modifier.height(32.dp))
                 
                 var showWipeDialog by remember { mutableStateOf(false) }
+                var showBurnerDialog by remember { mutableStateOf(false) }
+
+                Button(
+                    onClick = { showBurnerDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                ) {
+                    Text("BURN PERSONA (Refresh Identity)")
+                }
+
+                if (showBurnerDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showBurnerDialog = false },
+                        title = { Text("Burn Persona?") },
+                        text = { Text("This will instantly delete your public identity and generate new cryptographic keys. Your Private Vault will remain intact, but you will lose all social connections. You will need to setup a new alias.") },
+                        confirmButton = {
+                            Button(
+                                onClick = { 
+                                    personaAgent.burnPersona()
+                                    android.os.Process.killProcess(android.os.Process.myPid())
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Text("BURN NOW")
+                            }
+                        },
+                        dismissButton = {
+                            Button(onClick = { showBurnerDialog = false }) { Text("Cancel") }
+                        }
+                    )
+                }
 
                 Button(
                     onClick = { showWipeDialog = true },

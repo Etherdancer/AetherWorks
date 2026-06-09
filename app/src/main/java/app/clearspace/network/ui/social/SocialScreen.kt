@@ -14,7 +14,7 @@ import app.clearspace.network.crypto.KeyManager
 import app.clearspace.network.persona.PersonaAgent
 
 @Composable
-fun SocialScreen(modifier: Modifier = Modifier, onNavigateToGroups: () -> Unit = {}, onNavigateToTrust: () -> Unit = {}, onNavigateToSearch: () -> Unit = {}, viewModel: SocialViewModel = viewModel()) {
+fun SocialScreen(modifier: Modifier = Modifier, onNavigateToGroups: () -> Unit = {}, onNavigateToTrust: () -> Unit = {}, viewModel: SocialViewModel = viewModel()) {
     val context = LocalContext.current
     val personaAgent = remember { PersonaAgent(context, KeyManager(context)) }
     var showProfile by remember { mutableStateOf(personaAgent.showProfileToNearbyUsers) }
@@ -37,9 +37,6 @@ fun SocialScreen(modifier: Modifier = Modifier, onNavigateToGroups: () -> Unit =
             ) {
                 Text("Social Network", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.align(Alignment.CenterVertically))
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = onNavigateToSearch) {
-                        Text("Search")
-                    }
                     Button(onClick = onNavigateToTrust) {
                         Text("Trust QR")
                     }

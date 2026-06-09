@@ -73,9 +73,11 @@ fun OnboardingScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("• This app uses a hybrid network: Public content is shared with nearby devices, while Trusted content is synchronized securely over the internet.")
+                    Text("• Your private data is completely isolated and stays entirely on your device.")
+                    Text("• You are in full control over what is shared and when it is shared.")
                     Text("• This app does not collect any personal data.")
                     Text("• Profiles are entirely fictional — do not use your real name or personal identity.")
-                    Text("• You are in control of your own data and interactions.")
                     Text("• Please be responsible. You are accountable for the content you choose to share.")
                     Text("• Public content is subject to community moderation and may be removed from the network if it violates safety guidelines.")
                     Text("• This app runs on physical devices only.")

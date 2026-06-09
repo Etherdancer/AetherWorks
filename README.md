@@ -18,9 +18,9 @@
 
 Clear Space is distributed via both **Google Play** and **GitHub Releases**. 
 
-To comply with Google Play's strict User Generated Content (UGC) policies and GDPR:
+To comply with Google Play's strict User Generated Content (UGC) policies, satisfy laws and regulations regarding content moderation, and ensure GDPR compliance:
 - **Mandatory Moderation:** We utilize lightweight tracking and hash-based remote blacklists (via Firebase) exclusively to remove abusive, illegal, or policy-violating content. 
-- **Privacy by Default:** Tracking is kept to the absolute minimum required for this safety moderation and global routing. We do not use analytics for marketing or advertising.
+- **Privacy by Default & User Control:** Your private data is completely isolated and stays entirely on your device. Tracking is kept to the absolute minimum required for this safety moderation and global routing. We use this minimal tracking just to be able to publish on the Google Play store and to satisfy laws and regulations. We do not use analytics for marketing or advertising.
 
 ### How to Build
 

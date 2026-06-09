@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.combine
+import kotlinx.serialization.encodeToString
 import app.clearspace.network.crypto.GroupEncryption
 import app.clearspace.network.crypto.KeyManager
 import app.clearspace.network.discovery.ContentHeader
@@ -189,10 +190,18 @@ class SharedBrowseViewModel(application: Application) : AndroidViewModel(applica
         }
     }
     
-    fun saveToPrivateLibrary(unit: ContentUnit) {
+    fun saveToPrivateLibrary(unit: ContentUnit, targetVisibility: Visibility = Visibility.PRIVATE) {
         viewModelScope.launch {
-            val privateUnit = unit.copy(visibility = Visibility.PRIVATE)
+            val privateUnit = unit.copy(visibility = targetVisibility)
             AetherDatabase.getPrivateDatabase().contentDao().insert(privateUnit)
+            
+            if (targetVisibility == Visibility.TRUSTED) {
+                val intent = android.content.Intent(getApplication<android.app.Application>(), app.clearspace.network.network.FirestoreDeadDropService::class.java).apply {
+                    action = app.clearspace.network.network.FirestoreDeadDropService.ACTION_UPLOAD
+                    putExtra(app.clearspace.network.network.FirestoreDeadDropService.EXTRA_CONTENT_JSON, kotlinx.serialization.json.Json.encodeToString(privateUnit))
+                }
+                getApplication<android.app.Application>().startService(intent)
+            }
         }
     }
 
@@ -212,6 +221,15 @@ class SharedBrowseViewModel(application: Application) : AndroidViewModel(applica
             
             sharedDb.contentDao().insert(updatedUnit.copy(importCount = 0)) // Save as stub if not exists
             app.clearspace.network.storage.StorageQuotaManager.enforcePublicQuota(getApplication())
+            
+            val likes = updatedUnit.likeTokens.size
+            val dislikes = updatedUnit.dislikeTokens.size
+            if (likes > 5 && (likes.toDouble() / kotlin.math.max(1, dislikes)) >= 2.0 && updatedUnit.visibility == Visibility.PUBLIC) {
+                val intent = android.content.Intent(getApplication<android.app.Application>(), app.clearspace.network.network.FirestoreDeadDropService::class.java)
+                intent.action = app.clearspace.network.network.FirestoreDeadDropService.ACTION_GOSSIP_TOP_RATED
+                intent.putExtra(app.clearspace.network.network.FirestoreDeadDropService.EXTRA_CONTENT_JSON, kotlinx.serialization.json.Json.encodeToString(updatedUnit))
+                getApplication<android.app.Application>().startService(intent)
+            }
             
             // Update viewing content
             if (_viewingContent.value?.contentHash == unit.contentHash) {

@@ -26,6 +26,9 @@ data class Profile(
     val avatarPath: String? = null,
     val avatarId: Int = 0,
     
+    val dynamicStatus: ProfileField? = null,
+    val pinnedContentHash: String? = null,
+    
     val about: ProfileField? = null,
     val guidingPrinciple: ProfileField? = null,
     
@@ -136,6 +139,11 @@ class PersonaAgent(context: Context, private val keyManager: KeyManager) {
 
     fun hasProfile(): Boolean {
         return prefs.contains("profile_json_enc") || prefs.contains("profile_json") || prefs.contains("alias")
+    }
+
+    fun burnPersona() {
+        prefs.edit().clear().apply()
+        keyManager.regenerateIdentities()
     }
 
     var showProfileToNearbyUsers: Boolean

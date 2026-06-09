@@ -10,6 +10,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import android.os.Build
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun GlobalSharingToggle(
@@ -28,7 +30,7 @@ fun GlobalSharingToggle(
         onEnableSharing()
     }
 
-    FloatingActionButton(
+    IconButton(
         onClick = {
             if (isSharingEnabled) {
                 onDisableSharing()
@@ -36,21 +38,26 @@ fun GlobalSharingToggle(
                 showConsentDialog = true
             }
         },
-        containerColor = if (isSharingEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = if (isSharingEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = modifier
     ) {
-        Icon(
-            imageVector = Icons.Default.Share,
-            contentDescription = if (isSharingEnabled) "Stop Sharing" else "Start Sharing"
-        )
+        if (isSharingEnabled) {
+            RadarAnimation(
+                modifier = Modifier.size(24.dp),
+                color = androidx.compose.ui.graphics.Color.Green
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = "Start Sharing"
+            )
+        }
     }
 
     if (showConsentDialog) {
         AlertDialog(
             onDismissRequest = { showConsentDialog = false },
             title = { Text("Start Sharing Data?") },
-            text = { Text("You are about to enable data sharing with nearby devices. Other users of this app on the same network or in Bluetooth/Wi-Fi Direct range will be able to see content you have marked as 'Public'.\n\nNote: Once public, content propagates to others and cannot be recalled.\n\nWe use Firebase to receive background wake-up pings, and cross-reference content with a centralized blacklist. This minimum tracking is strictly necessary for remote content moderation to comply with Google Play Store policies and GDPR.\n\nTip: To save battery, keep this toggle OFF when you are at home, and only turn it ON when you are in public spaces.") },
+            text = { Text("You are about to enable data sharing. 'Public' content will be shared with nearby devices AND securely synced over the internet with your Remote Trusted Users. 'Trusted' content will only sync with authorized remote contacts. Your private data is completely isolated and stays entirely on your device. Do you want to continue?\n\nNote: Once public, content propagates to others and cannot be recalled. We use Firebase to receive background wake-up pings and for a centralized moderation blacklist. This minimal tracking is strictly necessary to publish on the Google Play Store and to satisfy laws and regulations regarding content moderation.") },
             confirmButton = {
                 TextButton(onClick = {
                     showConsentDialog = false
@@ -72,7 +79,7 @@ fun GlobalSharingToggle(
             onDismissRequest = { showRiskDialog = false },
             icon = { Icon(Icons.Default.Info, contentDescription = null) },
             title = { Text("Privacy Overview") },
-            text = { Text("This app communicates with nearby devices over your local network, Bluetooth, and Wi-Fi Direct. On public networks, other people on the same network may detect that you are running this app.\n\nBecause we use Firebase for essential background connectivity and moderation, Google servers will know your device is running this app.\n\nYou are responsible for the content you share. By continuing, you acknowledge these conditions.") },
+            text = { Text("This app communicates with nearby devices over local networks (Bluetooth/Wi-Fi Direct) and syncs both Public and Trusted content globally over the internet with your Remote Contacts. On public networks, other people may detect that you are running this app. Because we use Firebase for essential background connectivity and moderation, Google servers will know your device is running this app.\n\nWe use minimal tracking solely for legal and store compliance. You retain complete control over what leaves your device. You are responsible for the content you choose to share. You use this feature at your own risk.") },
             confirmButton = {
                 Button(
                     onClick = {
