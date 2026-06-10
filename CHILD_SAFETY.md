@@ -25,8 +25,8 @@ Strogo zabranjujemo:
 * **Plain:** We have a smart detector running right on your phone. It checks pictures and blocks bad ones before they can be saved or sent to anyone else.
 
 ### Decentralized Blacklisting (Decentralizirana crna lista)
-* **Technical:** Reported content hashes are combined using cryptographic token sets. When 20 or more peers report a hash, it is added to a global blacklist stored on Firebase and distributed P2P to purge the content from all devices.
-* **Plain:** If you report a post, it gets marked. If enough people report it, the post is automatically deleted from every phone in the network.
+* **Technical:** Reported content hashes are combined using cryptographic token sets. When the number of unique report tokens exceeds **5% of the total interactions** on the post (with a minimum floor of 10 reports), the app executes a Client-Side Consensus takedown and automatically purges the content from the device.
+* **Plain:** If you report a post, it gets marked. If enough people report it based on the post's popularity, the post is automatically deleted from every phone in the network.
 
 ### Law Enforcement Reporting (Prijavljivanje nadležnim tijelima)
 * **Technical:** Verified reports of CSAM or CSAE submitted to our Firebase database will be reported immediately by the developer to the National Center for Missing & Exploited Children (NCMEC) and relevant regional law enforcement.

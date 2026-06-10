@@ -57,8 +57,8 @@ While Clear Space values privacy and sovereignty, we strictly adhere to Google P
 *   Illegal content, including the promotion of illegal acts or the sale of illegal goods.
 
 ### In-App Moderation Enforcement
-Because Clear Space is decentralized, moderation relies on a combination of user reports and remote blacklists.
+Because Clear Space is decentralized, moderation relies on a combination of user reports and Client-Side Consensus.
 *   Users can report abusive content directly within the app.
-*   Reported content hashes may be added to a remote Firebase blacklist.
-*   When the app detects a blacklisted hash, that content is immediately purged from the local device and will no longer propagate on the network.
+*   Report tokens are synced across the network and via a lightweight Firebase routing subcollection.
+*   The app dynamically calculates a takedown threshold. When the reports cross this threshold, that content is immediately purged from the local device and will no longer propagate on the network.
 *   Repeated violations may result in the author's cryptographic identity being blacklisted across the network.

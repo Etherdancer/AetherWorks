@@ -6,7 +6,7 @@ Thank you for your interest in contributing to Clear Space! Clear Space is a dec
 While we prioritize on-device storage and local P2P mesh networking for public content, we pragmatically use cloud services (Firebase) for essential features:
 - **Global Sync:** Trusted and Group content is routed through Firestore as an encrypted "dead drop".
 - **Media Streaming:** Large media is streamed directly via WebRTC data channels.
-- **Moderation:** Firebase is used for lightweight analytics and content hash blacklists to comply with Google Play's strict UGC policies.
+- **Moderation:** Firebase is used solely to route cryptographic report tokens. Devices then independently execute a Client-Side Consensus algorithm to delete violating content locally, ensuring Google Play UGC compliance without centralized server execution.
 
 When submitting code, ensure that:
 1. Public content remains strictly offline/P2P.

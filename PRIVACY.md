@@ -5,7 +5,7 @@
 ## 1. Data Collection and Usage
 - **No Personal Data:** The app does not ask for or collect your real name, email, phone number, or location. Any profile you create is a fictional persona and remains entirely on your device unless you explicitly choose to share it.
 - **Firebase Cloud Messaging (FCM):** To preserve battery life while allowing peers to connect, the app uses Firebase Cloud Messaging to send lightweight "wake-up" pings to devices. This requires generating an anonymous device token. This token is not linked to your identity or any personal information.
-- **Content Moderation:** To satisfy laws and regulations and comply with Google Play's User Generated Content (UGC) policies, the app occasionally connects to a Firebase database solely to download a cryptographic hash-blacklist of abusive or illegal content, ensuring it is removed from the local network. This minimal tracking is strictly necessary for legal and store compliance.
+- **Content Moderation:** To satisfy laws and regulations and comply with Google Play's User Generated Content (UGC) policies, the app connects to Firebase solely to sync anonymous cryptographic "report tokens". Your device then independently calculates a Client-Side Consensus threshold to purge abusive or illegal content locally. This keeps moderation effective without relying on a centralized server authority.
 
 ## 2. Data Storage and Encryption
 - **Encrypted Local Vault:** All your content, including private notes and passwords, is stored locally in an encrypted database (SQLCipher). The key is hardware-backed (Android Keystore) and secured by a password only you know. We cannot access your data.
