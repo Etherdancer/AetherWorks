@@ -26,7 +26,9 @@ class TorManager(private val context: Context) {
         val intent = android.content.Intent().apply {
             setClassName(context.packageName, "org.torproject.android.service.TorService")
             action = "org.torproject.android.intent.action.START"
-            putExtra("org.torproject.android.intent.extra.HIDDEN_SERVICE_PORT", localHiddenServicePort)
+            putExtra("org.torproject.android.intent.extra.HIDDEN_SERVICE_PORT", localHiddenServicePort) // For Sync on 8080
+            putExtra("org.torproject.android.intent.extra.HIDDEN_SERVICE_PORT_2", 8081) // For Media on 8081
+            putExtra("org.torproject.android.intent.extra.HIDDEN_SERVICE_EXTERNAL_PORT_2", 81)
         }
         
         try {

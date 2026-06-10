@@ -183,5 +183,33 @@ object GroupEncryption {
         )
         return Json.encodeToString(wrappedMessage)
     }
+
+    /**
+     * Decrypts a payload that was encrypted for multiple recipients.
+     */
+    fun decryptPayloadForMe(
+        wrappedMessageJson: String,
+        myEd25519PubBase64: String,
+        myPrivX25519Bytes: ByteArray
+    ): ByteArray? {
+        try {
+            val wrappedMessage = Json.decodeFromString<WrappedMessage>(wrappedMessageJson)
+            val wrappedKeysMap = Json.decodeFromString<Map<String, String>>(wrappedMessage.wrappedKeysJson)
+            
+            val myWrappedKeyJson = wrappedKeysMap[myEd25519PubBase64] ?: return null
+            val aesKey = unwrapKey(myWrappedKeyJson, myPrivX25519Bytes) ?: return null
+            
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            val keySpec = SecretKeySpec(aesKey, "AES")
+            val iv = Base64.decode(wrappedMessage.ivBase64, Base64.DEFAULT)
+            val spec = GCMParameterSpec(128, iv)
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, spec)
+            
+            val ciphertext = Base64.decode(wrappedMessage.ciphertextBase64, Base64.DEFAULT)
+            return cipher.doFinal(ciphertext)
+        } catch (e: Exception) {
+            return null
+        }
+    }
 }
 

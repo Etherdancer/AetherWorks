@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
@@ -55,6 +56,18 @@ class FirestoreDeadDropService : Service() {
             if (contentUnit.visibility == Visibility.PUBLIC || contentUnit.visibility == Visibility.PRIVATE) {
                 Log.w("FirestoreDeadDrop", "Prevented upload of non-global content.")
                 return
+            }
+
+            if (contentUnit.imagePath != null || contentUnit.videoPath != null) {
+                Log.d("FirestoreDeadDrop", "Media detected. Waiting for Tor Onion Address before uploading drop...")
+                val torManager = app.clearspace.network.tor.TorManager.getInstance(applicationContext)
+                torManager.onionAddress.first { it != null }
+                
+                val mediaIntent = Intent(applicationContext, TorMediaService::class.java).apply {
+                    action = TorMediaService.ACTION_START_STREAM
+                    putExtra(TorMediaService.EXTRA_CONTENT_HASH, contentUnit.contentHash)
+                }
+                startService(mediaIntent)
             }
 
             val privateDb = AetherDatabase.getPrivateDatabase()
@@ -135,6 +148,18 @@ class FirestoreDeadDropService : Service() {
             if (contentUnit.visibility != Visibility.PUBLIC) {
                 Log.w("FirestoreDeadDrop", "Gossip prevented: Content is not PUBLIC.")
                 return
+            }
+
+            if (contentUnit.imagePath != null || contentUnit.videoPath != null) {
+                Log.d("FirestoreDeadDrop", "Media detected in Gossip. Waiting for Tor Onion Address...")
+                val torManager = app.clearspace.network.tor.TorManager.getInstance(applicationContext)
+                torManager.onionAddress.first { it != null }
+                
+                val mediaIntent = Intent(applicationContext, TorMediaService::class.java).apply {
+                    action = TorMediaService.ACTION_START_STREAM
+                    putExtra(TorMediaService.EXTRA_CONTENT_HASH, contentUnit.contentHash)
+                }
+                startService(mediaIntent)
             }
 
             val privateDb = AetherDatabase.getPrivateDatabase()
