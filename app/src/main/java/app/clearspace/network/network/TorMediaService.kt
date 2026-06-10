@@ -37,7 +37,9 @@ class TorMediaService : Service() {
         isRunning = true
         scope.launch {
             try {
-                serverSocket = ServerSocket(8081)
+                // Bind explicitly to 127.0.0.1 (localhost) to ensure the local network cannot bypass Tor
+                val loopback = java.net.InetAddress.getByName("127.0.0.1")
+                serverSocket = ServerSocket(8081, 50, loopback)
                 Log.d("TorMedia", "Tor Media Server listening on port 8081")
                 while (isRunning) {
                     val client = serverSocket?.accept() ?: break

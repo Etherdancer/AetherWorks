@@ -34,7 +34,9 @@ class ClearSyncManager(private val context: Context) : SyncManager {
         scope.launch {
             try {
                 // Listen on local port 8080 (which Tor Hidden Service forwards to)
-                serverSocket = ServerSocket(8080)
+                // Bind explicitly to 127.0.0.1 (localhost) to ensure the local network cannot bypass Tor
+                val loopback = java.net.InetAddress.getByName("127.0.0.1")
+                serverSocket = ServerSocket(8080, 50, loopback)
                 _syncState.value = SyncStatus.IDLE
                 Log.d(TAG, "ClearSync Engine listening on port 8080")
                 

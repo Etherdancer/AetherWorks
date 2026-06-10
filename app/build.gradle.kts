@@ -19,9 +19,9 @@ android {
     defaultConfig {
         applicationId = "app.clearspace.network"
         minSdk = 26
-        targetSdk = 36
-        versionCode = 36
-        versionName = "0.4.2.2"
+        targetSdk = 34
+        versionCode = 37
+        versionName = "0.4.3"
     }
 
     val keystorePropertiesFile = rootProject.file("app/keystore.properties")
@@ -162,7 +162,9 @@ dependencies {
   implementation(libs.sqlcipher)
   implementation(libs.bouncycastle)
   implementation(libs.signal.protocol)
-  implementation(libs.tor.android)
+  implementation(libs.kmp.tor.runtime)
+  implementation(libs.kmp.tor.resource.exec)
+  implementation(libs.kmp.tor.resource.noexec)
   implementation(libs.kotlinx.serialization.json)
   
   // CameraX and ZXing for Trust Verification (Phase 4)
