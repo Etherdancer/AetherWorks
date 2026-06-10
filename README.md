@@ -42,7 +42,6 @@ Clear Space balances extreme privacy with pragmatic real-world usability. Please
 ## Acknowledgements / Open Source Credits
 
 Clear Space was built upon and inspired by several excellent open-source projects:
-- **[AetherWorksCore](https://github.com/aetherworks):** Much of our underlying P2P architecture and database design evolved from the foundational F-Droid strict codebase of AetherWorks.
 - **[CoffeeHouseInfo](https://github.com/coffeehouseinfo):** Our decentralized, anonymous `ReputationAgent` and PoW token voting system is a direct evolution of the reputation mechanisms originally designed for the CoffeeHouseInfo application.
 - **Android Proximity Technologies:** We utilize Android's built-in network discovery (mDNS/NSD, Wi-Fi Direct, BLE), inspired by robust open-source `DiscoveryManager` library patterns.
 - **[TensorFlow Lite](https://www.tensorflow.org/lite):** Powering our zero-server-cost, on-device AI moderation and NSFW image filtering.
